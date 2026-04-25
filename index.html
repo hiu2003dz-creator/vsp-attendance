@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="https://i.postimg.cc/026rs9YM/1.png" type="image/png">
+<link rel="apple-touch-icon" href="https://i.postimg.cc/026rs9YM/1.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#4f46e5">
+<title>Chấm Công</title>
+
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 80% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  
+  /* HIỆU ỨNG QUẢ BÓNG RỔ NẢY */
+  @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+  .bouncing-ball { animation: bounce 0.5s infinite cubic-bezier(0.28, 0.84, 0.42, 1); }
+
+  body { margin:0; font-family: 'Roboto', sans-serif; background: #f0f2f5; height: 100vh; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+  .screen { display:none; width: 100%; height: 100%; overflow-y: auto; padding-bottom: 100px; box-sizing: border-box; } 
+  .active { display:block; animation: fadeIn 0.3s ease-out; }
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 0.8s linear infinite; margin-right: 8px; }
+  
+  #browser-block { display:none; position:fixed; inset:0; background:white; z-index:99999; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; }
+  .login-container { display: flex; flex-direction: column; justify-content: center; height: 100%; padding: 30px; align-items:center; }
+  form { width: 100%; text-align: center; }
+  input { width:100%; padding:16px; margin-bottom:15px; border:1px solid #e5e7eb; border-radius: 12px; background:#f9fafb; outline:none; transition: 0.2s; box-sizing:border-box; font-size: 16px; }
+  input:focus { border-color: #4f46e5; background: #fff; }
+  .btn { width:100%; padding:16px; background:#4f46e5; color:white; border:none; border-radius:12px; font-weight:700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.1s; font-size: 16px; }
+  .btn:active { transform: scale(0.98); }
+  .chk-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 20px; color: #555; font-size: 14px; }
+  .chk-row input { width: auto; margin: 0; }
+
+  .header { background: linear-gradient(135deg, #EF4444, #B91C1C); color: white; padding: 25px 20px; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2); }
+  .btm-nav { position:fixed; bottom:0; left:0; width:100%; background:white; height: 70px; display:flex; align-items: center; border-top:1px solid #f1f5f9; padding-bottom: env(safe-area-inset-bottom); z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
+  .nav-item { flex:1; text-align:center; color:#9ca3af; display:flex; flex-direction:column; align-items:center; gap: 4px; transition: 0.2s; font-size: 11px; font-weight: 500; }
+  .nav-item.active { color: #4f46e5; transform: translateY(-2px); }
+  .ca-card { background: white; padding: 15px; border-radius: 16px; margin-bottom: 12px; border: 1px solid #f1f5f9; box-shadow: 0 2px 5px rgba(0,0,0,0.03); position: relative; overflow: hidden; transition: transform 0.2s; }
+  .date-header { margin: 20px 0 10px 0; font-weight: 900; color: #334155; display: flex; align-items: center; gap: 5px; font-size: 14px; }
+  
+  #cam-screen { position:fixed; inset:0; background:black; z-index:99999; display:none; flex-direction:column; }
+  video { flex: 1; width: 100%; object-fit: cover; transform: scaleX(-1); } 
+  .cam-controls { height: 120px; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; position: absolute; bottom: 0; width: 100%; padding-bottom: env(safe-area-inset-bottom); }
+  
+  #detail-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9990; align-items:flex-end; justify-content:center; backdrop-filter: blur(2px); }
+  .modal-content { background:white; width:100%; height:80%; border-top-left-radius:24px; border-top-right-radius:24px; padding:25px; overflow-y:auto; box-sizing: border-box; }
+  .list-item { padding: 15px; border-bottom: 1px solid #f1f5f9; }
+  
+  #toast-container { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 10000; width: 90%; }
+  .toast { background: rgba(30, 41, 59, 0.95); color: white; padding: 12px 16px; border-radius: 30px; margin-top: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 13px; animation: fadeIn 0.3s; }
+</style>
+</head>
+<body>
+
+<div id="smooth-loader" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.85); backdrop-filter:blur(5px); z-index:99999; flex-direction:column; justify-content:center; align-items:center; opacity:0; transition:opacity 0.3s ease;">
+    <i id="loader-icon" class="material-icons bouncing-ball" style="font-size:60px; color:#EA580C; text-shadow: 0 4px 6px rgba(0,0,0,0.2);">sports_basketball</i>
+    <div id="loader-text" style="margin-top:15px; font-weight:bold; color:#334155; font-size:15px; text-shadow: 0 1px 2px rgba(255,255,255,0.8);">Đang nén ảnh...</div>
+</div>
+
+<div id="sc-login" class="screen active">
+  <div class="login-container">
+    <div style="margin-bottom:30px;text-align:center">
+       <img src="https://i.postimg.cc/tTSrX6TX/1.jpg" style="width:80px;height:80px;border-radius:15px;margin-bottom:15px;box-shadow:0 5px 15px rgba(0,0,0,0.1);object-fit:cover">
+       <h1 style="color:#1e1b4b;font-size:24px;margin:0">CHẤM CÔNG VSP</h1>
+       <p style="color:#64748b;margin:5px 0 0 0">Dành cho Nhân viên</p>
+    </div>
+    <form onsubmit="event.preventDefault(); login();">
+        <input id="u" name="username" placeholder="Mã nhân viên (VD: NV01)" autocomplete="username">
+        <input id="p" type="password" name="password" placeholder="Mật khẩu" autocomplete="current-password">
+        <div class="chk-row"><input type="checkbox" id="chk-save" checked> <label for="chk-save">Ghi nhớ thông tin</label></div>
+        <button type="submit" class="btn" id="btn-login">ĐĂNG NHẬP</button>
+    </form>
+  </div>
+</div>
+
+<div id="sc-home" class="screen"><div class="header"><div style="display:flex;justify-content:space-between;align-items:center"><div><h2 style="margin:0;font-size:22px" id="wc-name">Xin chào...</h2><div style="opacity:0.8;font-size:13px;margin-top:4px" id="wc-date">...</div></div><div onclick="logout()" style="background:rgba(255,255,255,0.2);padding:8px;border-radius:10px;cursor:pointer"><i class="material-icons">logout</i></div></div></div><div style="padding:20px;padding-bottom:80px"><div onclick="promptFreeNote()" style="background:white;border:2px dashed #818CF8;color:#6366F1;padding:15px;border-radius:16px;text-align:center;font-weight:bold;margin-bottom:20px;cursor:pointer;box-shadow:0 4px 10px rgba(99,102,241,0.1)"><i class="material-icons" style="vertical-align:bottom">add_circle</i> CHẤM CÔNG PHÁT SINH</div><div id="sch-list"><div style="text-align:center;color:#94a3b8;margin-top:50px"><div class="spinner" style="border-top-color:#4f46e5"></div> Đang tải lịch...</div></div></div></div>
+
+<div id="sc-history" class="screen"><div class="header"><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">Thống kê</h2><select id="hist-month" onchange="loadHist()" style="padding:6px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.4); background:rgba(0,0,0,0.1); color:white; font-weight:bold; outline:none; appearance:none; cursor:pointer;"><option value="" style="color:#333">Đang tải...</option></select></div></div><div style="padding:20px"><div style="display:flex;gap:15px;margin-bottom:15px"><div class="card-stat" style="flex:1;background:#ecfdf5;padding:15px;border-radius:16px;text-align:center;cursor:pointer"><div style="font-size:24px;font-weight:900;color:#059669" id="st-single">0</div><div style="font-size:11px;font-weight:bold;color:#10b981">CA ĐƠN</div></div><div class="card-stat" style="flex:1;background:#fff7ed;padding:15px;border-radius:16px;text-align:center;cursor:pointer"><div style="font-size:24px;font-weight:900;color:#ea580c" id="st-double">0</div><div style="font-size:11px;font-weight:bold;color:#f97316">CA ĐÔI</div></div></div><div onclick="showAssignedDetails()" style="background:#eef2ff;padding:12px;border-radius:12px;text-align:center;font-size:13px;color:#4f46e5;margin-bottom:15px;cursor:pointer;font-weight:bold;border:1px solid #c7d2fe;display:flex;align-items:center;justify-content:center;gap:5px"><i class="material-icons" style="font-size:16px">calendar_month</i> Xem lịch được phân công</div><div style="background:#f1f5f9;padding:10px;border-radius:12px;text-align:center;font-size:13px;color:#64748b;margin-bottom:20px">Tổng số ca đã hoàn thành: <b style="color:#333" id="st-total-done">0</b></div><h3 style="margin:0 0 15px 0;color:#334155">Nhật ký chấm công</h3><div id="hist-list"></div></div></div>
+
+<div id="sc-profile" class="screen"><div style="text-align:center;padding:50px 20px"><div style="position:relative;display:inline-block"><img id="pf-img" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:4px solid white;box-shadow:0 10px 20px rgba(0,0,0,0.1);background:#e2e8f0"><div style="position:absolute;bottom:0;right:0;background:#4f46e5;color:white;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;cursor:pointer"><i class="material-icons" style="font-size:18px">camera_alt</i></div></div><h2 id="pf-name" style="margin:15px 0 5px 0;color:#1e293b">...</h2><div id="pf-code" style="color:#64748b;font-weight:500">...</div><div style="margin-top:40px;text-align:left"><div style="padding:15px;background:white;border-radius:12px;margin-bottom:10px;display:flex;align-items:center;gap:15px;box-shadow:0 2px 5px rgba(0,0,0,0.05)"><i class="material-icons" style="color:#64748b">info</i> <span>Phiên bản: PWA v14.0 (Offline)</span></div><button class="btn" style="background:#fee2e2;color:#ef4444;margin-top:20px" onclick="logout()">Đăng xuất tài khoản</button></div></div></div>
+
+<div id="cam-screen" style="position:fixed; inset:0; background:black; z-index:99999; display:none; flex-direction:column;">
+  <div style="position:absolute;top:50px;left:0;width:100%;text-align:center;z-index:10"><span id="gps-txt" style="background:rgba(0,0,0,0.6);color:white;padding:5px 12px;border-radius:20px;font-size:12px">Đang khởi động...</span></div>
+  <video id="video" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover; background: #000; display:none;"></video>
+</div>
+
+<div id="detail-modal" style="display:none"><div class="modal-content"><div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;padding-bottom:15px;margin-bottom:15px"><h3 id="dm-title" style="margin:0;color:#1e293b">Chi tiết</h3><button onclick="document.getElementById('detail-modal').style.display='none'" style="border:none;background:none;font-size:24px;cursor:pointer">✕</button></div><div id="dm-content" style="max-height:400px;overflow-y:auto">Đang tải...</div></div></div>
+
+<div id="nav" class="btm-nav" style="display:none"><div class="nav-item active" onclick="go('home')"><i class="material-icons">home_filled</i><span>Trang chủ</span></div><div class="nav-item" onclick="go('history')"><i class="material-icons">history</i><span>Lịch sử</span></div><div class="nav-item" onclick="go('profile')"><i class="material-icons">person</i><span>Tài khoản</span></div></div>
+<div id="toast-container"></div>
+
+<input type="file" id="native-cam" accept="image/*" capture="environment" style="display:none" onchange="processNativePhoto(event)">
+
+<script>
+// --- CHẶN TRÌNH DUYỆT APP (Zalo/FB) ---
+(function() {
+  var ua = navigator.userAgent.toLowerCase();
+  var isInApp = ua.indexOf('zalo') > -1 || ua.indexOf('fbav') > -1 || ua.indexOf('fbios') > -1 || ua.indexOf('instagram') > -1;
+  if (isInApp) {
+      if (ua.indexOf('android') > -1) {
+          var url = window.location.href.replace(/^https?:\/\//, "");
+          window.location.href = "intent://" + url + "#Intent;scheme=https;package=com.android.chrome;end";
+          return;
+      } else {
+          document.write('<div style="position:fixed;inset:0;background:#fff;z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;"><h2 style="color:#007AFF;">Vui lòng mở bằng Safari</h2><p>Zalo/Facebook không hỗ trợ Camera.<br>Bấm vào dấu <b>...</b> ở góc màn hình và chọn <b>Mở bằng trình duyệt</b></p></div>');
+          window.stop(); throw new Error("Stop");
+      }
+  }
+})();
+
+// ==========================================================
+// CẤU HÌNH API VÀ ĐỘNG CƠ LƯU TRỮ OFFLINE
+// ==========================================================
+const API_URL = 'https://script.google.com/macros/s/AKfycbyXQEg8ZLJLqw4TcDrdwmKnxcVRV-IFhY4f2S7laKdVfPLIo0GTaS_pyXU84-HQBf-dHg/exec'; // 🔴 NHỚ DÁN LINK VÀO ĐÂY
+
+// Hàm gọi API chuẩn CÓ TRANG BỊ BỘ ĐẾM GIỜ (TIMEOUT) CHỐNG MẠNG YẾU
+async function callAPI(action, payload = {}) {
+    payload.action = action;
+    
+    // Tạo bộ đếm thời gian: Tối đa 7 giây (7000 mili-giây)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 7000); 
+
+    try {
+        let res = await fetch(API_URL, { 
+            method: 'POST', 
+            body: JSON.stringify(payload),
+            signal: controller.signal // Gắn bộ khóa an toàn vào lệnh gửi đi
+        });
+        clearTimeout(timeoutId); // Nếu Google trả lời trước 7s thì hủy bộ đếm
+        return await res.json();
+    } catch (e) { 
+        clearTimeout(timeoutId);
+        // Dù là mất mạng hẳn hay do quá 7 giây bị ép ngắt kết nối, 
+        // đều ném ra lỗi để App tự động kích hoạt chế độ Lưu Offline
+        throw new Error("Offline"); 
+    }
+}
+
+var USER=null, LOC=null, CUR_CA='', CUR_LOC='', CUR_TIME='', CUR_END='', CUR_TYPE='', CUR_NOTE='', MODE='CHECKIN';
+var DB_KEY = 'CC_USER_V11'; 
+
+function setCookieVal(name, value, days) {
+    var d = new Date(); d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+    document.cookie = name + "=" + encodeURIComponent(value) + ";expires=" + d.toUTCString() + ";path=/";
+}
+function getCookieVal(name) {
+    var n = name + "="; var ca = decodeURIComponent(document.cookie).split(';');
+    for(var i=0; i<ca.length; i++) {
+        var c = ca[i]; while(c.charAt(0)==' ') c = c.substring(1);
+        if(c.indexOf(n)==0) return c.substring(n.length, c.length);
+    }
+    return "";
+}
+
+(function checkAutoLogin() {
+    var s = localStorage.getItem(DB_KEY) || getCookieVal("CC_USER_DATA");
+    if(s){ try { USER = JSON.parse(s); setTimeout(initApp, 100); return; } catch(e) { } } 
+    window.addEventListener('load', function() {
+        var savedU = localStorage.getItem('MY_SAVED_U') || getCookieVal("CC_SAVED_U");
+        var savedP = localStorage.getItem('MY_SAVED_P') || getCookieVal("CC_SAVED_P");
+        if(savedU) document.getElementById('u').value = savedU;
+        if(savedP) document.getElementById('p').value = savedP;
+    });
+})();
+
+function showToast(msg){ var d=document.createElement('div'); d.className='toast'; d.innerHTML='<i class="material-icons">info</i> '+msg; document.getElementById('toast-container').appendChild(d); setTimeout(()=>d.remove(),3000); }
+function startLoad(id){ var b=document.getElementById(id); if(b){b.dataset.tx=b.innerText; b.innerHTML='<div class="spinner"></div>'; b.classList.add('loading')} }
+function stopLoad(id){ var b=document.getElementById(id); if(b){b.innerHTML=b.dataset.tx; b.classList.remove('loading')} }
+
+function login(){
+  document.activeElement.blur();
+  var u=document.getElementById('u').value.trim(), p=document.getElementById('p').value.trim();
+  var isRemember = document.getElementById('chk-save').checked;
+  if(!u||!p) return alert("Vui lòng nhập đủ thông tin");
+  
+  startLoad('btn-login');
+  callAPI('loginUser', {u: u, p: p}).then(r => {
+      stopLoad('btn-login');
+      if(r.success){ 
+          USER=r; 
+          if(isRemember) {
+              localStorage.setItem(DB_KEY, JSON.stringify(r)); 
+              localStorage.setItem('MY_SAVED_U', u); localStorage.setItem('MY_SAVED_P', p);
+              setCookieVal("CC_USER_DATA", JSON.stringify(r), 365); setCookieVal("CC_SAVED_U", u, 365); setCookieVal("CC_SAVED_P", p, 365);
+          } else {
+              localStorage.removeItem(DB_KEY); localStorage.removeItem('MY_SAVED_U'); localStorage.removeItem('MY_SAVED_P');
+              setCookieVal("CC_USER_DATA", "", -1); setCookieVal("CC_SAVED_U", "", -1); setCookieVal("CC_SAVED_P", "", -1);
+          }
+          initApp(); 
+      } else alert("Sai mã nhân viên hoặc mật khẩu!");
+  }).catch(e => { alert("Lỗi mạng. Vui lòng thử lại!"); stopLoad('btn-login'); });
+}
+
+function logout(){ localStorage.removeItem(DB_KEY); setCookieVal("CC_USER_DATA", "", -1); location.reload(); }
+
+function initMonthSelector() {
+    var sel = document.getElementById('hist-month'); if(!sel) return;
+    var now = new Date(); var curM = now.getMonth() + 1; var curY = now.getFullYear();
+    var prevM = curM - 1; var prevY = curY; if(prevM === 0) { prevM = 12; prevY = curY - 1; }
+    var curVal = curY + "-" + (curM < 10 ? '0'+curM : curM); var prevVal = prevY + "-" + (prevM < 10 ? '0'+prevM : prevM);
+    sel.innerHTML = `<option value="${curVal}" style="color:#333">Tháng ${curM}/${curY} (Hiện tại)</option><option value="${prevVal}" style="color:#333">Tháng ${prevM}/${prevY} (Tháng trước)</option>`;
+}
+
+function initApp(){ 
+    document.getElementById('sc-login').classList.remove('active'); document.getElementById('nav').style.display='flex'; go('home'); 
+    document.getElementById('wc-name').innerText = "Chào, " + USER.name;
+    document.getElementById('wc-date').innerText = new Date().toLocaleDateString('vi-VN', {weekday:'long', day:'2-digit', month:'2-digit'}); 
+    initMonthSelector(); loadData();
+}
+
+async function loadData(){ 
+    var cachedSch = localStorage.getItem('CACHE_SCH_' + USER.id);
+    var scheduleList = cachedSch ? JSON.parse(cachedSch) : [];
+
+    // 1. Hiện lịch cũ từ Cache ngay lập tức
+    if(scheduleList.length > 0) {
+        renderSch(scheduleList);
+        var slist = document.getElementById('sch-list');
+        var mini = document.getElementById('sync-mini');
+        if(!mini) slist.insertAdjacentHTML('afterbegin', '<div id="sync-mini" style="text-align:center;font-size:11px;color:#9ca3af;margin-bottom:10px;font-style:italic;"><div class="spinner" style="width:10px;height:10px;border-width:2px;border-top-color:#9ca3af"></div> Đang kiểm tra dữ liệu...</div>');
+    } else {
+        document.getElementById('sch-list').innerHTML = '<div style="text-align:center;margin-top:50px;color:#94a3b8"><div class="spinner"></div> Đang tải lịch...</div>';
+    }
+
+    // 2. MỞ KÉT SẮT: Đè trạng thái ĐANG LÀM/ĐÃ XONG lên Giao diện nếu có ca chấm Offline
+    try {
+        let db = await initDB();
+        let store = db.transaction(["Logs"], "readonly").objectStore("Logs");
+        store.getAll().onsuccess = function(e) {
+            let offLogs = e.target.result;
+            if(offLogs.length > 0 && scheduleList.length > 0) {
+                offLogs.forEach(off => {
+                    let match = scheduleList.find(s => s.ca === off.ca);
+                    if(match) {
+                        if(off.loai === 'VÀO') match.status = 'WORKING';
+                        if(off.loai === 'RA') match.status = 'DONE';
+                    }
+                });
+                renderSch(scheduleList); // Vẽ lại thẻ ca thành màu Xanh dương
+            }
+        }
+    } catch(err) { console.log("Lỗi đọc két sắt", err); }
+
+    // 3. Gọi mạng lấy dữ liệu mới nhất từ Google
+    callAPI('getTodaySchedule', {maNV: USER.id}).then(d => {
+        localStorage.setItem('CACHE_SCH_' + USER.id, JSON.stringify(d.list));
+        renderSch(d.list); 
+        if(typeof syncOfflineData === 'function') syncOfflineData(); // Tiện có mạng thì kích hoạt Đồng bộ két sắt lên Google luôn!
+    }).catch(e => {
+        if(!cachedSch) document.getElementById('sch-list').innerHTML = '<div style="text-align:center;margin-top:50px;color:#ef4444">Lỗi mạng! Không tải được lịch.</div>';
+        var sMini = document.getElementById('sync-mini'); 
+        if(sMini) sMini.innerText = '⚠️ Đang dùng dữ liệu ngoại tuyến (Mất mạng)';
+    });
+}
+function go(t){ document.querySelectorAll('.screen').forEach(e=>e.classList.remove('active')); document.getElementById('sc-'+t).classList.add('active'); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); if(t=='home') { document.querySelectorAll('.nav-item')[0].classList.add('active'); loadData(); } if(t=='history') { document.querySelectorAll('.nav-item')[1].classList.add('active'); loadHist(); } if(t=='profile') { document.querySelectorAll('.nav-item')[2].classList.add('active'); loadProfile(); } }
+
+function renderSch(list){
+   var c = document.getElementById('sch-list');
+   if(!list || list.length==0) { c.innerHTML='<div id="empty-sch-msg" style="text-align:center;margin-top:50px;color:#94a3b8"><i class="material-icons" style="font-size:48px">event_busy</i><br>Không có lịch</div>'; return; }
+   
+   var h = '', lastDate = ''; var now = new Date(); var tDateObj = new Date(); tDateObj.setHours(0,0,0,0);
+   
+   // 🔴 BỘ LỌC CẬP NHẬT NGÀY: Ép lại ngày "Hôm nay" theo đúng đồng hồ điện thoại
+   var todayVN = ('0' + now.getDate()).slice(-2) + '/' + ('0' + (now.getMonth() + 1)).slice(-2) + '/' + now.getFullYear();
+   list.forEach(x => { x.isToday = (x.date === todayVN); });
+
+   var focusDate = '';
+   var hasUnfinishedToday = list.some(x => x.isToday && (x.status === 'PENDING' || x.status === 'WORKING'));
+   if(hasUnfinishedToday) focusDate = list.find(x => x.isToday).date;
+   else {
+       for(var i=0; i<list.length; i++){
+           var parts = list[i].date.split('/'); var iDate = new Date(parts[2], parts[1]-1, parts[0]); iDate.setHours(0,0,0,0);
+           if(iDate >= tDateObj && list[i].status !== 'DONE') { focusDate = list[i].date; break; }
+       }
+       if(!focusDate) { var tItem = list.find(x => x.isToday); if(tItem) focusDate = tItem.date; }
+   }
+
+   list.forEach(item => {
+       if(item.date !== lastDate){ 
+           lastDate = item.date; 
+           var isToday = item.isToday ? ' <span style="color:#ef4444;font-size:12px">(Hôm nay)</span>' : ''; 
+           var dateClass = item.isToday ? 'today' : ''; 
+           var anchor = (item.date === focusDate) ? 'id="focus-anchor"' : ''; 
+           h += `<div ${anchor} class="date-header ${dateClass}"><i class="material-icons" style="font-size:16px">event</i> ${item.date}${isToday}</div>`; 
+       }
+       
+       var btnHtml = ''; var cls = 'pending'; 
+       var timeDisplay = (item.status === 'WORKING' || item.status === 'DONE') ? item.start + (item.status==='DONE' ? (' - ' + item.end) : ' - ...') : `${item.start} - ${item.end}`;
+       
+       if(item.isToday){
+           var [hh, mm] = item.start.split(':'); var startTime = new Date(); startTime.setHours(hh, mm, 0, 0); 
+           var diffMin = (now - startTime) / 60000; var diffToStart = (startTime - now) / 60000;
+           if(item.status == 'PENDING') {
+               if(item.type == 'FREE') { 
+                   btnHtml = `<button class="btn" style="width:auto;padding:8px 16px;font-size:12px;background:#2563EB" onclick="preCheck('${item.ca}','${item.loc}','${item.start}','${item.end}','VÀO')">VÀO CA</button>`;
+               } else if(diffToStart <= 0) { 
+                   btnHtml = `<button class="btn" style="width:auto;padding:8px 16px;font-size:12px;background:#2563EB" onclick="preCheck('${item.ca}','${item.loc}','${item.start}','${item.end}','VÀO')">VÀO CA</button>`;
+               } else if(diffToStart <= 60) {
+                   btnHtml = `<div style="display:flex; align-items:center; gap:8px;"><div class="status-badge" style="color:#64748b; background:#f1f5f9; font-size:11px; padding:4px 8px; border-radius:12px; font-weight:bold;"><i class="material-icons" style="font-size:11px; vertical-align:middle;">update</i> Chuẩn bị</div><button class="btn" style="width:auto;padding:8px 14px;font-size:12px;background:#06b6d4;color:white;box-shadow: 0 2px 4px rgba(6, 182, 212, 0.3);" onclick="preCheck('${item.ca}','${item.loc}','${item.start}','${item.end}','VÀO')">VÀO SỚM</button></div>`;
+               } else { 
+                   btnHtml = `<button class="btn" style="background:#e2e8f0;color:#94a3b8;font-size:11px;padding:6px 12px;width:auto" disabled>⏳ SẮP ĐẾN</button>`;
+               }
+           } else if (item.status == 'WORKING') {
+               cls='working'; timeDisplay = `<span style="color:#2563EB;font-weight:bold">${item.start}</span> - ...`; var btnRaCa = '';
+               if(item.type == 'FREE' || diffMin >= 40) { 
+                   btnRaCa = `<button class="btn" style="width:auto;padding:8px 16px;font-size:12px;background:#F59E0B" onclick="preCheck('${item.ca}','${item.loc}','${item.start}','${item.end}','RA')">RA CA</button>`;
+               } else { 
+                   var conLai = Math.ceil(40 - diffMin); btnRaCa = `<button class="btn" style="width:auto;padding:8px 12px;font-size:11px;background:#e2e8f0;color:#64748b" disabled>⏳ Còn ${conLai}p</button>`; 
+               }
+               btnHtml = `<div style="display:flex;gap:10px;justify-content:flex-end;align-items:center"><button class="btn" style="width:auto;padding:8px 12px;font-size:11px;background:#64748b;color:white" onclick="cancelCurrentShift('${item.ca}')">HỦY</button>${btnRaCa}</div>`;
+           } else { 
+               cls='done'; timeDisplay = `${item.start} - ${item.end}`; btnHtml = `<div class="status-badge st-done"><i class="material-icons" style="font-size:12px">check_circle</i> ĐÃ XONG</div>`;
+           }
+       } else { 
+           var parts = item.date.split('/'); var iDate = new Date(parts[2], parts[1]-1, parts[0]); iDate.setHours(0,0,0,0);
+           if(item.status == 'DONE') { cls = 'done'; btnHtml = `<div style="font-size:12px;color:#10b981;font-weight:bold;"><i class="material-icons" style="font-size:12px">check_circle</i> ĐÃ XONG</div>`; } 
+           else if (iDate < tDateObj) { cls = 'future'; btnHtml = `<div style="font-size:12px;color:#ef4444;font-style:italic;font-weight:bold;">Đã quá ngày làm</div>`; } 
+           else { cls = 'future'; btnHtml = `<div style="font-size:12px;color:#94a3b8;font-style:italic;">Chưa diễn ra</div>`; }
+       }
+       h += `<div class="ca-card ${cls}" id="card_${item.ca.replace(/\s+/g, '')}"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:16px;font-weight:bold;color:#1e293b">${item.ca}</div><div id="time_${item.ca.replace(/\s+/g, '')}" style="font-size:13px;color:#64748b;margin-top:4px"><i class="material-icons" style="font-size:12px">schedule</i> ${timeDisplay}<br>📍 ${item.loc}</div></div><div id="action_${item.ca.replace(/\s+/g, '')}">${btnHtml}</div></div></div>`;
+   });
+   c.innerHTML = h;
+   setTimeout(() => { var el = document.getElementById('focus-anchor'); if(el) el.scrollIntoView({behavior: "smooth", block: "center"}); }, 500);
+}
+
+function preCheck(ca, loc, time, end, type){ CUR_CA=ca; CUR_LOC=loc; CUR_TIME=time; CUR_END=end; CUR_TYPE=type; if(type=='RA' && ca!='Tự do') CUR_NOTE=""; openCamUI(); }
+function promptFreeNote(){ 
+    var n = prompt("TẠO CA PHÁT SINH:\n👇 Nhập tên ca vào đây (VD: Dọn dẹp, Họp...):", "Ca Phát Sinh");
+    if(n && n.trim()){ var d = new Date(); var tStr = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); var finalName = n.trim() + " (" + tStr + ")"; CUR_NOTE="Ca phát sinh"; preCheck(finalName, "Ca phát sinh", "", "", "VÀO"); } 
+}
+
+function openCamUI() {
+  const gpsTxt = document.getElementById('gps-txt');
+  document.getElementById('cam-screen').style.display = 'flex';
+  document.getElementById('video').style.display = 'none';
+  document.querySelectorAll('.cam-controls').forEach(el => el.style.display = 'none');
+
+  gpsTxt.innerText = "📍 Đang lấy tọa độ GPS...";
+  navigator.geolocation.getCurrentPosition(
+    p => {
+      LOC = { lat: p.coords.latitude, lng: p.coords.longitude };
+      gpsTxt.innerText = "✅ GPS OK (Hãy bấm chụp ảnh)";
+      let nativeCamLabel = document.getElementById('native-cam-label');
+      if (!nativeCamLabel) {
+         nativeCamLabel = document.createElement('label'); nativeCamLabel.id = 'native-cam-label'; nativeCamLabel.setAttribute('for', 'native-cam');
+         nativeCamLabel.style.position = 'absolute'; nativeCamLabel.style.bottom = '30px'; nativeCamLabel.style.left = '50%'; nativeCamLabel.style.transform = 'translateX(-50%)'; nativeCamLabel.style.width = '70px'; nativeCamLabel.style.height = '70px'; nativeCamLabel.style.borderRadius = '50%'; nativeCamLabel.style.backgroundColor = 'white'; nativeCamLabel.style.border = '4px solid rgba(255,255,255,0.3)'; nativeCamLabel.style.cursor = 'pointer'; nativeCamLabel.style.display = 'flex'; nativeCamLabel.style.alignItems = 'center'; nativeCamLabel.style.justifyContent = 'center'; nativeCamLabel.style.zIndex = '1000';
+         nativeCamLabel.innerHTML = '<i class="material-icons" style="color: #4f46e5; font-size: 30px;">camera_alt</i>';
+         let btnHuy = document.createElement('div'); btnHuy.innerText = 'Hủy'; btnHuy.style.color = 'white'; btnHuy.style.position = 'absolute'; btnHuy.style.bottom = '55px'; btnHuy.style.left = '30px'; btnHuy.style.fontWeight = 'bold'; btnHuy.style.cursor = 'pointer'; btnHuy.onclick = closeCam;
+         document.getElementById('cam-screen').appendChild(btnHuy); document.getElementById('cam-screen').appendChild(nativeCamLabel);
+      }
+      nativeCamLabel.style.display = 'flex';
+    },
+    e => { alert("Bạn chưa bật định vị! Hãy vào Cài đặt máy > Quyền riêng tư > Dịch vụ định vị > Bật Safari."); closeCam(); },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+}
+
+function closeCam(){ document.getElementById('cam-screen').style.display='none'; let l = document.getElementById('native-cam-label'); if (l) l.style.display = 'none'; }
+
+// QUY TRÌNH CHẤM CÔNG: ĐỒNG BỘ UI & XỬ LÝ MẠNG YẾU
+function processNativePhoto(event) {
+  const file = event.target.files[0]; if (!file) return;
+  var loader = document.getElementById('smooth-loader'); 
+  var loaderTxt = document.getElementById('loader-text'); 
+  var loaderIcon = document.getElementById('loader-icon');
+  
+  if(loader) { 
+      loader.style.display = 'flex'; 
+      setTimeout(() => { loader.style.opacity = '1'; }, 10); 
+      loaderTxt.innerText = "⏳ Đang xử lý..."; 
+  }
+  let l = document.getElementById('native-cam-label'); if (l) l.style.display = 'none';
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const cv = document.createElement('canvas'); const MAX_W = 600; let w = img.width; let h = img.height;
+      if (w > MAX_W) { h = h * (MAX_W / w); w = MAX_W; }
+      cv.width = w; cv.height = h; cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      const base64 = cv.toDataURL('image/jpeg', 0.5).split(',')[1];
+      closeCam();
+
+      // 1. CẬP NHẬT GIAO DIỆN (UI) TRƯỚC TIÊN (Chưa hiện thông báo vội)
+      var safeId = CUR_CA.replace(/\s+/g, ''); var actionDiv = document.getElementById('action_' + safeId); var cardDiv = document.getElementById('card_' + safeId); var timeDiv = document.getElementById('time_' + safeId);
+      var curTimeFake = new Date().toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+      
+      if(actionDiv) {
+          if(CUR_TYPE == 'VÀO') { 
+              // Vẽ luôn nút Đếm ngược 40 phút (Giả lập để UX mượt)
+              actionDiv.innerHTML = `<div style="display:flex;gap:10px;justify-content:flex-end;align-items:center"><button class="btn" style="width:auto;padding:8px 12px;font-size:11px;background:#64748b;color:white" onclick="cancelCurrentShift('${CUR_CA}')">HỦY</button><button class="btn" style="width:auto;padding:8px 12px;font-size:11px;background:#e2e8f0;color:#64748b" disabled>⏳ Còn 40p</button></div>`; 
+              if(cardDiv) { cardDiv.classList.remove('pending'); cardDiv.classList.add('working'); } 
+              if(timeDiv) { timeDiv.innerHTML = `<i class="material-icons" style="font-size:12px">schedule</i> <span style="color:#2563EB;font-weight:bold">${curTimeFake}</span> - ...<br>📍 ${CUR_LOC}`; } 
+          } 
+          else if(CUR_TYPE == 'RA') { 
+              actionDiv.innerHTML = `<div class="status-badge st-done" style="font-size:12px;color:#10b981;font-weight:bold;"><i class="material-icons" style="font-size:12px">check_circle</i> ĐÃ XONG</div>`; 
+              if(cardDiv) { cardDiv.classList.remove('working'); cardDiv.classList.add('done'); } 
+          }
+      } else {
+          // Xử lý tạo thẻ ảo cho Ca Phát Sinh mới
+          if (CUR_TYPE == 'VÀO') {
+              var container = document.getElementById('sch-list');
+              if (container) {
+                  var emptyMsg = document.getElementById('empty-sch-msg'); if(emptyMsg) emptyMsg.remove();
+                  var newCard = document.createElement('div');
+                  newCard.className = 'ca-card working'; newCard.id = 'card_' + safeId;
+                  newCard.style.cssText = 'background:#fff; border-radius:12px; padding:15px; margin-bottom:15px; box-shadow:0 4px 6px rgba(0,0,0,0.05); border-left:4px solid #3B82F6;';
+                  newCard.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;"><div><div style="font-size:15px;font-weight:700;color:#1E293B;">${CUR_CA}</div><div id="time_${safeId}" style="font-size:12px;color:#64748B;margin-top:5px;"><i class="material-icons" style="font-size:12px">schedule</i> <span style="color:#2563EB;font-weight:bold">${curTimeFake}</span> - ...<br>📍 ${CUR_LOC}</div></div><div class="status-badge" style="background:#EFF6FF;color:#2563EB;padding:4px 8px;border-radius:20px;font-size:11px;font-weight:bold;">ĐANG LÀM</div></div><div id="action_${safeId}" style="margin-top:12px;padding-top:12px;border-top:1px dashed #E2E8F0;"><div style="display:flex;gap:10px;justify-content:flex-end;align-items:center"><button class="btn" style="width:auto;padding:8px 12px;font-size:11px;background:#64748b;color:white" onclick="cancelCurrentShift('${CUR_CA}')">HỦY</button><button class="btn" style="width:auto;padding:8px 16px;font-size:12px;background:#F59E0B" onclick="preCheck('${CUR_CA}','${CUR_LOC}','${CUR_TIME}','${CUR_END}','RA')">RA CA</button></div></div>`;
+                  container.insertBefore(newCard, container.firstChild);
+              }
+          }
+      }
+
+      // 2. CHỜ 0.3 GIÂY CHO GIAO DIỆN "NGẤM" RỒI MỚI HIỆN THÔNG BÁO
+      // ... (Phía trên giữ nguyên phần 1. Cập nhật giao diện ẩn) ...
+
+      // 2. THIẾT KẾ LẠI NHỊP ĐỘ UX (Tiêu chuẩn App Chuyên nghiệp)
+      // Ép quả bóng rổ nảy tròn 1.2 giây để nhân viên thấy hệ thống đang "làm việc"
+      setTimeout(() => {
+          if(loader) {
+              // Tắt bóng rổ, bung dấu Check Xanh
+              loaderIcon.style.display = 'none'; 
+              loader.innerHTML = `<div style="transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;"><i class="material-icons" style="font-size:70px; color:#10b981; text-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">check_circle</i></div><div style="margin-top:12px; font-weight:900; color:#10b981; font-size:18px; transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 0.1s;">✅ ĐÃ LƯU VÀO MÁY!</div>`;
+              
+              // Giữ thông báo Xanh thêm 1.5 giây để nhân viên kịp đọc
+              setTimeout(() => { 
+                  loader.style.opacity = '0'; // Bắt đầu mờ đi dần
+                  
+                  // Reset lại nguyên trạng quả bóng rổ để lần chấm công sau dùng tiếp
+                  setTimeout(() => { 
+                      loader.style.display = 'none'; 
+                      loader.innerHTML = `<i id="loader-icon" class="material-icons bouncing-ball" style="font-size:60px; color:#EA580C; text-shadow: 0 4px 6px rgba(0,0,0,0.2);">sports_basketball</i><div id="loader-text" style="margin-top:15px; font-weight:bold; color:#334155; font-size:15px; text-shadow: 0 1px 2px rgba(255,255,255,0.8);">Đang xử lý...</div>`; 
+                  }, 400); 
+              }, 1500); 
+          }
+      }, 1200); // ⏱ ĐÂY CHÍNH LÀ ĐỘ TRỄ 1.2 GIÂY ĐỂ BÓNG NẢY
+
+ 
+
+      // 3. TIẾN HÀNH ĐẨY MẠNG (Hoặc lưu Offline nếu quá 7s / mất mạng)
+      let payload = { maNV: USER.id, tenNV: USER.name, ca: CUR_CA, loai: CUR_TYPE, lat: LOC.lat, lng: LOC.lng, imgBase64: base64, locN: CUR_LOC, start: CUR_TIME, end: CUR_END, note: CUR_NOTE, timeGoc: new Date().getTime() };
+      
+      callAPI('processCheckIn', payload).then(r => {
+        if (!r.success) { showToast("⚠️ Cảnh báo Server: " + r.msg); loadData(); return; }
+        if (r.timeAlert) setTimeout(()=>alert("🔔 THÔNG BÁO:\n" + r.timeAlert), 1600);
+        if (r.durationMsg) setTimeout(()=>alert("🎉 KẾT THÚC CA!\nTổng làm việc: " + r.durationMsg.replace(" (Làm: ", "").replace(")", "")), 1600);
+        
+        // Chỉ tải lại dữ liệu thật từ Server sau khi đã chốt xong mọi thông báo
+        setTimeout(loadData, 2000); 
+      }).catch(err => {
+         showToast("⚠️ Đang mất mạng hoặc Mạng quá yếu. Đã lưu ngoại tuyến chờ đồng bộ!");
+         saveOfflineLog(USER.id, USER.name, CUR_CA, CUR_TYPE, LOC.lat, LOC.lng, base64, CUR_LOC, CUR_TIME, CUR_END, CUR_NOTE);
+      });
+
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
+// --- 1. HÀM VẼ GIAO DIỆN LỊCH SỬ (TÁCH RA ĐỂ DÙNG CHUNG CHO CẢ ONLINE VÀ OFFLINE) ---
+function renderHist(d) {
+    var h='', lastD=''; 
+    if(!d || !d.list || d.list.length === 0) {
+        document.getElementById('hist-list').innerHTML = '<div style="text-align:center;padding:20px;color:#999">Không có dữ liệu tháng này</div>';
+        return;
+    }
+    d.list.forEach(r=>{ 
+        if(r.ngay!==lastD){ lastD=r.ngay; h+=`<div style="font-weight:bold;color:#64748b;margin:15px 0 5px 0;font-size:13px">${lastD}</div>`; } 
+        var cl = r.trangthai.includes('✅') ? '#10b981' : '#ef4444'; 
+        h+=`<div class="ca-card" style="padding:12px;margin-bottom:8px;border-left:4px solid ${cl}"><div style="display:flex;justify-content:space-between"><span style="font-weight:bold">${r.ca} <span style="font-weight:normal;font-size:12px">(${r.loai})</span></span><span style="font-size:12px;font-weight:bold">${r.gio}</span></div><div style="font-size:11px;color:${cl};margin-top:2px">${r.trangthai}</div></div>`; 
+    }); 
+    document.getElementById('hist-list').innerHTML = h; 
+    document.getElementById('st-single').innerText = d.stats.single; 
+    document.getElementById('st-double').innerText = d.stats.double; 
+    document.getElementById('st-total-done').innerText = d.stats.total_done; 
+    document.getElementById('st-single').parentElement.onclick = function(){ viewStatDetail("CHI TIẾT CA ĐƠN", d.stats.details.single); };
+    document.getElementById('st-double').parentElement.onclick = function(){ viewStatDetail("CHI TIẾT CA ĐÔI", d.stats.details.double); };
+}
+
+// --- 2. HÀM TẢI LỊCH SỬ CẢI TIẾN (CÓ CACHE SIÊU TỐC & OFFLINE TỰ ĐỘNG) ---
+// --- 2. HÀM TẢI LỊCH SỬ CẢI TIẾN (CÓ BẢO HIỂM CHỐNG ĐƠ + OFFLINE TỰ ĐỘNG) ---
+async function loadHist(){ 
+    var sel = document.getElementById('hist-month'); var mStr = sel ? sel.value : "";
+    var cacheKey = 'HIST_CACHE_' + USER.id + '_' + mStr;
+    var histContainer = document.getElementById('hist-list');
+
+    // KHÓA NÚT CHỌN THÁNG LẠI CHỐNG NHÂN VIÊN ẤN LIÊN TỤC GÂY ĐƠ MÁY
+    if(sel) sel.disabled = true;
+
+    // BƯỚC 1: Hiện lịch sử cũ từ máy ra ngay lập tức (0 giây)
+    var cachedHist = localStorage.getItem(cacheKey);
+    if(cachedHist) {
+        renderHist(JSON.parse(cachedHist));
+        histContainer.insertAdjacentHTML('afterbegin', '<div id="sync-hist-stt" style="text-align:center;font-size:11px;color:#9ca3af;margin-bottom:10px;font-style:italic;"><div class="spinner" style="width:10px;height:10px;border-width:2px;border-top-color:#9ca3af"></div> Đang cập nhật dữ liệu mới...</div>');
+    } else {
+        histContainer.innerHTML='<div style="text-align:center;padding:30px;"><div class="spinner" style="border-top-color:#4f46e5"></div> Đang tải...</div>';
+    }
+
+    // BƯỚC 2: Gọi mạng lấy dữ liệu mới nhất từ Google
+    try {
+        let d = await callAPI('getUserHistory', {maNV: USER.id, targetMonth: mStr});
+        localStorage.setItem(cacheKey, JSON.stringify(d)); // Lưu lại vào máy để lần sau xem offline
+        renderHist(d);
+        if(sel) sel.disabled = false; // TẢI XONG THÀNH CÔNG -> MỞ KHÓA NÚT
+    } catch(e) { 
+        if(sel) sel.disabled = false; // DÙ RỚT MẠNG CŨNG PHẢI MỞ KHÓA NÚT
+
+        // BƯỚC 3: Nếu mất mạng -> Kiểm tra xem có ca Offline nào vừa chấm chưa kịp gửi không
+        try {
+            let db = await initDB(); 
+            let store = db.transaction(["Logs"], "readonly").objectStore("Logs");
+            store.getAll().onsuccess = function(e) {
+                let offLogs = e.target.result;
+                if(offLogs.length > 0) {
+                    let offH = '<div style="color:#b45309; background:#fffbeb; border:1px dashed #f59e0b; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; font-weight:bold;">⚠️ Có ' + offLogs.length + ' ca ngoại tuyến đang chờ đồng bộ:</div>';
+                    offLogs.forEach(l => { 
+                        offH+=`<div class="ca-card" style="padding:12px;margin-bottom:8px;border-left:4px solid #f59e0b"><div style="display:flex;justify-content:space-between"><span style="font-weight:bold">${l.ca} <span style="font-weight:normal;font-size:12px">(${l.loai})</span></span><span style="font-size:12px;font-weight:bold;color:#f59e0b">Ngoại tuyến</span></div><div style="font-size:11px;color:#f59e0b;margin-top:2px">Dữ liệu đã lưu an toàn vào máy...</div></div>`; 
+                    });
+                    
+                    if(cachedHist) {
+                        renderHist(JSON.parse(cachedHist)); // Vẽ lại cache
+                        histContainer.insertAdjacentHTML('afterbegin', offH);
+                    } else {
+                        histContainer.innerHTML = offH;
+                    }
+                } else if(!cachedHist) {
+                    histContainer.innerHTML = '<div style="color:red; text-align:center; padding:20px;">Lỗi mạng! Không thể tải dữ liệu.</div>';
+                } else {
+                    var s = document.getElementById('sync-hist-stt'); 
+                    if(s) s.innerHTML = '⚠️ Đang xem dữ liệu ngoại tuyến (Offline)';
+                }
+            }
+        } catch(dbErr) {
+            if(!cachedHist) histContainer.innerHTML = '<div style="color:red; text-align:center;">Lỗi mạng!</div>';
+        }
+    }
+}
+
+function showAssignedDetails() { 
+    var sel = document.getElementById('hist-month'); var mStr = sel ? sel.value : "";
+    document.getElementById('detail-modal').style.display='flex'; document.getElementById('dm-title').innerText='📅 Lịch được xếp'; 
+    document.getElementById('dm-content').innerHTML='<div style="text-align:center"><div class="spinner"></div> Đang tải...</div>';
+    callAPI('getMonthlyAssignedDetails', {maNV: USER.id, targetMonth: mStr}).then(l => { 
+        if(l.length == 0) { document.getElementById('dm-content').innerHTML='<div style="text-align:center;padding:20px;color:#999">Chưa có lịch</div>'; return; }
+        var locs = []; l.forEach(r => { if(r.loc && !locs.includes(r.loc)) locs.push(r.loc); });
+        var h = `<div style="background:#f8fafc; padding:15px; border-radius:12px; margin-bottom:15px; border:1px solid #e2e8f0;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><span style="color:#64748b; font-size:13px; font-weight:bold;">Tổng số ca được giao:</span><span style="color:#ef4444; font-size:18px; font-weight:900;">${l.length} <span style="font-size:12px;color:#64748b;font-weight:normal">ca</span></span></div><div style="color:#64748b; font-size:13px; font-weight:bold; margin-bottom:4px;">Các địa điểm làm việc:</div><div style="font-size:13px; color:#3b82f6; font-weight:500; line-height:1.5;">📍 ${locs.length > 0 ? locs.join('<br>📍 ') : 'Chưa cập nhật'}</div></div>`; 
+        l.forEach(r => { h += `<div class="list-item"><b>${r.ca}</b><br><small>${r.ngay} | ${r.gio}</small><br><span style="font-size:11px;color:#666">📍 ${r.loc}</span></div>`; }); 
+        document.getElementById('dm-content').innerHTML = h; 
+    }); 
+}
+
+function loadProfile(){ callAPI('getUserProfile', {maNV: USER.id}).then(u => { document.getElementById('pf-name').innerText=u.name; document.getElementById('pf-code').innerText=u.id; if(u.img) document.getElementById('pf-img').src="https://drive.google.com/thumbnail?id="+u.img+"&sz=400"; }); }
+function openCam(mode){ MODE=mode; openCamUI(); }
+
+function cancelCurrentShift(caName) { 
+    var reason = prompt("Vui lòng nhập lý do hủy ca này (Bắt buộc):"); if(reason === null) return; 
+    if(!reason.trim()){ alert("⛔ Bạn phải nhập lý do mới được hủy ca!"); return; } 
+    var safeId = caName.replace(/\s+/g, ''); var cardDiv = document.getElementById('card_' + safeId); if(cardDiv) cardDiv.style.opacity = '0.4';
+    showToast("⏳ Đang xử lý hủy ca...");
+    callAPI('cancelShift', {maNV: USER.id, caName: caName, reason: reason}).then(r => { alert("✅ " + r); if(cardDiv) cardDiv.style.display = 'none'; setTimeout(loadData, 2000); }).catch(e => alert("Lỗi mạng!"));
+}
+
+function viewStatDetail(title, list){ var modal = document.getElementById('detail-modal'); modal.style.display = 'flex'; document.getElementById('dm-title').innerText = title; var content = document.getElementById('dm-content'); if(!list || list.length == 0){ content.innerHTML = '<div style="padding:30px;text-align:center;color:#94a3b8">Không có dữ liệu.</div>'; } else { var h = ''; list.forEach(item => { h += `<div class="list-item" style="display:flex;align-items:center;gap:15px;padding:15px;border-bottom:1px solid #f1f5f9"><div style="background:#ecfdf5;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#10b981"><i class="material-icons" style="font-size:18px">check_circle</i></div><div style="font-weight:500;color:#334155;font-size:14px">${item}</div></div>`; }); content.innerHTML = h; } }
+// ==========================================================
+// KÉT SẮT LƯU TRỮ OFFLINE (INDEXED DB)
+// ==========================================================
+function initDB() {
+    return new Promise((resolve, reject) => {
+        let request = indexedDB.open("VSP_OfflineDB", 1);
+        request.onupgradeneeded = e => {
+            let db = e.target.result;
+            if (!db.objectStoreNames.contains("Logs")) {
+                db.createObjectStore("Logs", { autoIncrement: true });
+            }
+        };
+        request.onsuccess = e => resolve(e.target.result);
+        request.onerror = e => reject(e);
+    });
+}
+
+async function saveOfflineLog(maNV, tenNV, ca, loai, lat, lng, imgBase64, locN, start, end, note) {
+    try {
+        let db = await initDB();
+        let tx = db.transaction(["Logs"], "readwrite");
+        let store = tx.objectStore("Logs");
+        store.add({
+            maNV: maNV, tenNV: tenNV, ca: ca, loai: loai,
+            lat: lat, lng: lng, imgBase64: imgBase64,
+            locN: locN, start: start, end: end, note: note,
+            timeGoc: new Date().getTime()
+        });
+        tx.oncomplete = () => {
+            alert("⚠️ Mất mạng! Ảnh đã được lưu an toàn vào két sắt Offline trên máy.\nKhi nào có mạng, hãy mở lại App để hệ thống tự đẩy lên nhé!");
+            loadData();
+        };
+    } catch(e) { console.error("Lỗi lưu Offline:", e); }
+}
+// ==========================================================
+// ĐỘNG CƠ ĐỒNG BỘ DỮ LIỆU OFFLINE LÊN SERVER
+// ==========================================================
+// Lệnh này giúp App tự động đánh hơi: Cứ hễ có mạng lại là tự động chạy hàm đồng bộ
+// ==========================================================
+// ĐỘNG CƠ ĐỒNG BỘ DỮ LIỆU OFFLINE LÊN SERVER (ĐÃ VÁ LỖI)
+// ==========================================================
+window.addEventListener('online', syncOfflineData); 
+
+async function syncOfflineData() {
+    if (!navigator.onLine) return; // Nếu vẫn đang mất mạng thì không làm gì cả
+    
+    try {
+        let db = await initDB();
+        
+        // 1. GOM TẤT CẢ RA "RỔ" TRƯỚC ĐỂ TRÁNH TRÌNH DUYỆT TỰ ĐÓNG KÉT SẮT
+        let { logs, keys } = await new Promise((resolve, reject) => {
+            let tx = db.transaction(["Logs"], "readonly");
+            let store = tx.objectStore("Logs");
+            let logs = []; let keys = [];
+            
+            store.openCursor().onsuccess = function(event) {
+                let cursor = event.target.result;
+                if (cursor) {
+                    logs.push(cursor.value);
+                    keys.push(cursor.primaryKey);
+                    cursor.continue(); // Lấy liên tục không chờ đợi
+                } else {
+                    resolve({ logs, keys });
+                }
+            };
+            tx.onerror = e => reject(e);
+        });
+
+        if (logs.length === 0) return; // Két trống thì thôi
+
+        let count = 0;
+        
+        // 2. BẮT ĐẦU GỬI TỪNG BẢN GHI LÊN GOOGLE
+        for (let i = 0; i < logs.length; i++) {
+            let log = logs[i];
+            let key = keys[i];
+            
+            try {
+                showToast("🔄 Đang đồng bộ: " + log.ca + " (" + log.loai + ")...");
+                
+                // Gửi lên server
+                let res = await callAPI('processCheckIn', log);
+                
+                if (res && res.success) {
+                    // Thành công -> Xóa khỏi máy
+                    let delTx = db.transaction(["Logs"], "readwrite");
+                    delTx.objectStore("Logs").delete(key);
+                    count++;
+                } else {
+                    // Nếu server chặn (Ví dụ: báo lỗi quá giờ, lỗi sai vị trí có chứa chữ ⛔)
+                    // Bắt buộc phải xóa khỏi két để tránh bị kẹt gửi đi gửi lại mãi mãi
+                    if (res && res.msg && res.msg.includes("⛔")) {
+                        let delTx = db.transaction(["Logs"], "readwrite");
+                        delTx.objectStore("Logs").delete(key);
+                    }
+                }
+            } catch (e) { 
+                console.log("Mạng chập chờn, chờ lần sau."); 
+                break; // Nếu đang gửi mà đứt mạng lại -> Dừng ngay lập tức để bảo toàn các ca phía sau
+            }
+        }
+
+        // 3. TẢI LẠI GIAO DIỆN SAU KHI ĐỒNG BỘ XONG
+        if (count > 0) {
+            showToast("✅ ĐÃ ĐỒNG BỘ THÀNH CÔNG " + count + " LƯỢT CHẤM CÔNG!");
+            loadData(); // Tải lại Trang chủ
+            if (document.getElementById('sc-history').classList.contains('active')) loadHist(); 
+        }
+    } catch(e) { console.error("Lỗi mở Két sắt đồng bộ:", e); }
+}
+// Tích hợp PWA Offline Worker
+if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./service-worker.js'); }); }
+</script>
+</body>
+</html>
