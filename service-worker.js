@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vsp-cc-cache-v14';
+const CACHE_NAME = 'vsp-cc-cache-v15';
 const urlsToCache = [
   './',
   './index.html',

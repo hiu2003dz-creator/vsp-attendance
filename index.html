@@ -462,17 +462,20 @@ function processNativePhoto(event) {
  
 
       // 3. TIẾN HÀNH ĐẨY MẠNG (Hoặc lưu Offline nếu quá 7s / mất mạng)
-      let payload = { maNV: USER.id, tenNV: USER.name, ca: CUR_CA, loai: CUR_TYPE, lat: LOC.lat, lng: LOC.lng, imgBase64: base64, locN: CUR_LOC, start: CUR_TIME, end: CUR_END, note: CUR_NOTE, timeGoc: new Date().getTime() };
-      
       callAPI('processCheckIn', payload).then(r => {
         if (!r.success) { showToast("⚠️ Cảnh báo Server: " + r.msg); loadData(); return; }
-        if (r.timeAlert) setTimeout(()=>alert("🔔 THÔNG BÁO:\n" + r.timeAlert), 1600);
-        if (r.durationMsg) setTimeout(()=>alert("🎉 KẾT THÚC CA!\nTổng làm việc: " + r.durationMsg.replace(" (Làm: ", "").replace(")", "")), 1600);
         
-        // Chỉ tải lại dữ liệu thật từ Server sau khi đã chốt xong mọi thông báo
-        setTimeout(loadData, 2000); 
+        // Dùng showToast trượt nhẹ nhàng thay cho alert() bị khựng màn hình
+        if (r.timeAlert) showToast("🔔 THÔNG BÁO: " + r.timeAlert);
+        if (r.durationMsg) {
+            let cleanMsg = r.durationMsg.replace(" (Làm: ", "").replace(")", "");
+            showToast("🎉 KẾT THÚC CA! Tổng: " + cleanMsg);
+        }
+        
+        // Tải lại dữ liệu ngầm sau 1 giây cho mượt
+        setTimeout(loadData, 1000); 
       }).catch(err => {
-         showToast("⚠️ Đang mất mạng hoặc Mạng quá yếu. Đã lưu ngoại tuyến chờ đồng bộ!");
+         showToast("⚠️ Đang mất mạng. Đã lưu ngoại tuyến chờ đồng bộ!");
          saveOfflineLog(USER.id, USER.name, CUR_CA, CUR_TYPE, LOC.lat, LOC.lng, base64, CUR_LOC, CUR_TIME, CUR_END, CUR_NOTE);
       });
 
@@ -581,9 +584,56 @@ function openCam(mode){ MODE=mode; openCamUI(); }
 function cancelCurrentShift(caName) { 
     var reason = prompt("Vui lòng nhập lý do hủy ca này (Bắt buộc):"); if(reason === null) return; 
     if(!reason.trim()){ alert("⛔ Bạn phải nhập lý do mới được hủy ca!"); return; } 
-    var safeId = caName.replace(/\s+/g, ''); var cardDiv = document.getElementById('card_' + safeId); if(cardDiv) cardDiv.style.opacity = '0.4';
-    showToast("⏳ Đang xử lý hủy ca...");
-    callAPI('cancelShift', {maNV: USER.id, caName: caName, reason: reason}).then(r => { alert("✅ " + r); if(cardDiv) cardDiv.style.display = 'none'; setTimeout(loadData, 2000); }).catch(e => alert("Lỗi mạng!"));
+    
+    var safeId = caName.replace(/\s+/g, ''); 
+    var cardDiv = document.getElementById('card_' + safeId); 
+    
+    // 1. GỌI HIỆU ỨNG QUẢ BÓNG RỔ RA (Che đi sự giật lag)
+    var loader = document.getElementById('smooth-loader'); 
+    var loaderTxt = document.getElementById('loader-text'); 
+    var loaderIcon = document.getElementById('loader-icon');
+    
+    if(loader) { 
+        loader.style.display = 'flex'; 
+        setTimeout(() => { loader.style.opacity = '1'; }, 10); 
+        loaderTxt.innerText = "⏳ Đang xử lý hủy ca..."; 
+    }
+
+    // 2. GỌI MẠNG XỬ LÝ
+    callAPI('cancelShift', {maNV: USER.id, caName: caName, reason: reason}).then(r => { 
+        
+        // 3. ĐỔI BÓNG RỔ THÀNH ICON HỦY MÀU ĐỎ (Animation xịn)
+        setTimeout(() => {
+            loaderIcon.style.display = 'none'; 
+            loader.innerHTML = `<div style="transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;"><i class="material-icons" style="font-size:70px; color:#ef4444; text-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);">cancel</i></div><div style="margin-top:12px; font-weight:900; color:#ef4444; font-size:18px; transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 0.1s;">✅ ĐÃ HỦY CA!</div>`;
+            
+            // 4. MỞ KHÓA MÀN HÌNH VÀ LÀM MƯỢT THẺ GIAO DIỆN
+            setTimeout(() => { 
+                loader.style.opacity = '0'; // Mờ màn hình chờ đi
+                
+                setTimeout(() => { 
+                    loader.style.display = 'none'; 
+                    // Reset lại bóng rổ gốc để lần sau dùng tiếp
+                    loader.innerHTML = `<i id="loader-icon" class="material-icons bouncing-ball" style="font-size:60px; color:#EA580C; text-shadow: 0 4px 6px rgba(0,0,0,0.2);">sports_basketball</i><div id="loader-text" style="margin-top:15px; font-weight:bold; color:#334155; font-size:15px; text-shadow: 0 1px 2px rgba(255,255,255,0.8);">Đang xử lý...</div>`; 
+                    
+                    // LÀM PHÉP THUẬT: Thu nhỏ thẻ và mờ dần biến mất (Không bị giật)
+                    if(cardDiv) {
+                        cardDiv.style.transition = "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
+                        cardDiv.style.transform = "scale(0.8)";
+                        cardDiv.style.opacity = "0";
+                        setTimeout(() => cardDiv.remove(), 400); // Xóa hẳn khỏi màn hình
+                    }
+                    
+                    // Tải lại dữ liệu ngầm đằng sau để đồng bộ chuẩn xác
+                    loadData();
+                }, 400); 
+            }, 1500); 
+        }, 800); // Giả lập độ trễ bóng nảy 0.8s cho có cảm giác App đang làm việc cực nhọc 😅
+
+    }).catch(e => {
+        if(loader) { loader.style.opacity = '0'; setTimeout(()=>loader.style.display = 'none', 300); }
+        alert("Lỗi mạng! Không thể hủy ca.");
+    });
 }
 
 function viewStatDetail(title, list){ var modal = document.getElementById('detail-modal'); modal.style.display = 'flex'; document.getElementById('dm-title').innerText = title; var content = document.getElementById('dm-content'); if(!list || list.length == 0){ content.innerHTML = '<div style="padding:30px;text-align:center;color:#94a3b8">Không có dữ liệu.</div>'; } else { var h = ''; list.forEach(item => { h += `<div class="list-item" style="display:flex;align-items:center;gap:15px;padding:15px;border-bottom:1px solid #f1f5f9"><div style="background:#ecfdf5;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#10b981"><i class="material-icons" style="font-size:18px">check_circle</i></div><div style="font-weight:500;color:#334155;font-size:14px">${item}</div></div>`; }); content.innerHTML = h; } }
