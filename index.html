@@ -221,31 +221,36 @@ async function loadData(){
     var cachedSch = localStorage.getItem('CACHE_SCH_' + USER.id);
     var scheduleList = cachedSch ? JSON.parse(cachedSch) : [];
 
-    // HÀM HỢP NHẤT: Trộn dữ liệu Két sắt đè lên dữ liệu Mạng rồi mới vẽ
+    // HÀM HỢP NHẤT: Trộn dữ liệu Két sắt đè lên dữ liệu Mạng một cách an toàn tuyệt đối
     async function mergeAndRender(baseList) {
         try {
             let db = await initDB();
             let store = db.transaction(["Logs"], "readonly").objectStore("Logs");
             store.getAll().onsuccess = function(e) {
                 let offLogs = e.target.result;
-                let mergedList = JSON.parse(JSON.stringify(baseList)); // Nhân bản danh sách
+                let mergedList = JSON.parse(JSON.stringify(baseList)); 
                 
                 if(offLogs.length > 0) {
                     offLogs.forEach(off => {
-                        let match = mergedList.find(s => s.ca === off.ca);
+                        // Ràng buộc tìm kiếm cực chặt: Phải đúng tên ca và đúng ngày hôm nay
+                        let offDate = new Date(off.timeGoc);
+                        let todayStr = ('0' + offDate.getDate()).slice(-2) + '/' + ('0' + (offDate.getMonth() + 1)).slice(-2) + '/' + offDate.getFullYear();
+                        let match = mergedList.find(s => s.ca === off.ca && s.date === todayStr);
+                        
                         if(match) {
                             if(off.loai === 'VÀO') match.status = 'WORKING';
                             if(off.loai === 'RA') match.status = 'DONE';
                         } else {
-                            if(off.loai === 'VÀO') { // Tạo thẻ ảo nếu là Ca phát sinh
-                                var d = new Date();
-                                var todayStr = ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '/' + d.getFullYear();
+                            if(off.loai === 'VÀO') { // Tạo thẻ ảo an toàn 100%
+                                // Ép chuẩn định dạng giờ HH:mm để chống lỗi iPhone/Safari
+                                let safeTime = off.start ? off.start : (('0' + offDate.getHours()).slice(-2) + ':' + ('0' + offDate.getMinutes()).slice(-2));
+                                
                                 mergedList.unshift({
                                     ca: off.ca,
                                     date: todayStr,
                                     isToday: true,
                                     loc: off.locN || "Ca phát sinh",
-                                    start: off.start || new Date(off.timeGoc).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'}),
+                                    start: safeTime, // Định dạng chuẩn chống lỗi NaN
                                     end: "",
                                     status: "WORKING",
                                     type: "FREE"
@@ -254,18 +259,23 @@ async function loadData(){
                         }
                     });
                 }
-                renderSch(mergedList); // Vẽ danh sách ĐÃ ĐƯỢC TRỘN
                 
-                // Báo hiệu đang Offline nếu mất mạng
-                if(!navigator.onLine) {
-                    var sMini = document.getElementById('sync-mini'); 
-                    if(sMini) sMini.innerHTML = '<span style="color:#f59e0b;font-weight:bold">⚠️ Đang dùng dữ liệu ngoại tuyến</span>';
+                renderSch(mergedList); // Vẽ danh sách
+                
+                // HIỆN CẢNH BÁO NẾU CÓ CA BỊ KẸT TRONG MÁY
+                var sMini = document.getElementById('sync-mini'); 
+                if(sMini) {
+                    if (offLogs.length > 0) {
+                        sMini.innerHTML = `<span style="color:#f59e0b;font-weight:bold"><i class="material-icons" style="font-size:12px;vertical-align:middle">cloud_off</i> Có ${offLogs.length} ca ngoại tuyến đang chờ gửi lên hệ thống</span>`;
+                    } else if (!navigator.onLine) {
+                        sMini.innerHTML = '<span style="color:#ef4444;font-weight:bold">⚠️ Bạn đang mất kết nối mạng</span>';
+                    }
                 }
             };
         } catch(err) { renderSch(baseList); }
     }
 
-    // 1. Tải Cache và trộn Offline ngay lập tức cho mượt
+    // 1. Tải Cache và trộn Offline ngay lập tức
     if(scheduleList.length > 0) {
         mergeAndRender(scheduleList);
         var slist = document.getElementById('sch-list');
@@ -273,17 +283,17 @@ async function loadData(){
         if(!mini) slist.insertAdjacentHTML('afterbegin', '<div id="sync-mini" style="text-align:center;font-size:11px;color:#9ca3af;margin-bottom:10px;font-style:italic;"><div class="spinner" style="width:10px;height:10px;border-width:2px;border-top-color:#9ca3af"></div> Đang kiểm tra dữ liệu...</div>');
     } else {
         document.getElementById('sch-list').innerHTML = '<div style="text-align:center;margin-top:50px;color:#94a3b8"><div class="spinner"></div> Đang tải lịch...</div>';
-        mergeAndRender([]); // Vẫn phải vẽ thẻ Offline dù Cache trống
+        mergeAndRender([]); 
     }
 
-    // 2. Gọi mạng lấy lịch Server (Xong lại mang đi trộn tiếp)
+    // 2. Gọi mạng lấy lịch Server
     callAPI('getTodaySchedule', {maNV: USER.id}).then(d => {
         localStorage.setItem('CACHE_SCH_' + USER.id, JSON.stringify(d.list));
         mergeAndRender(d.list); 
         if(typeof syncOfflineData === 'function') syncOfflineData();
     }).catch(e => {
         var sMini = document.getElementById('sync-mini'); 
-        if(sMini) sMini.innerHTML = '<span style="color:#f59e0b;font-weight:bold">⚠️ Đang dùng dữ liệu ngoại tuyến (Mất mạng)</span>';
+        if(sMini) sMini.innerHTML = '<span style="color:#f59e0b;font-weight:bold">⚠️ Đang dùng dữ liệu ngoại tuyến (Sóng yếu/Mất mạng)</span>';
     });
 }
 function go(t){ document.querySelectorAll('.screen').forEach(e=>e.classList.remove('active')); document.getElementById('sc-'+t).classList.add('active'); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); if(t=='home') { document.querySelectorAll('.nav-item')[0].classList.add('active'); loadData(); } if(t=='history') { document.querySelectorAll('.nav-item')[1].classList.add('active'); loadHist(); } if(t=='profile') { document.querySelectorAll('.nav-item')[2].classList.add('active'); loadProfile(); } }
