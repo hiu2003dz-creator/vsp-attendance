@@ -231,21 +231,36 @@ async function loadData(){
         document.getElementById('sch-list').innerHTML = '<div style="text-align:center;margin-top:50px;color:#94a3b8"><div class="spinner"></div> Đang tải lịch...</div>';
     }
 
-    // 2. MỞ KÉT SẮT: Đè trạng thái ĐANG LÀM/ĐÃ XONG lên Giao diện nếu có ca chấm Offline
+    // 2. MỞ KÉT SẮT: Đè trạng thái và VẼ LẠI CA PHÁT SINH (Đã vá lỗi Ghost UI)
     try {
         let db = await initDB();
         let store = db.transaction(["Logs"], "readonly").objectStore("Logs");
         store.getAll().onsuccess = function(e) {
             let offLogs = e.target.result;
-            if(offLogs.length > 0 && scheduleList.length > 0) {
+            if(offLogs.length > 0) {
                 offLogs.forEach(off => {
                     let match = scheduleList.find(s => s.ca === off.ca);
                     if(match) {
                         if(off.loai === 'VÀO') match.status = 'WORKING';
                         if(off.loai === 'RA') match.status = 'DONE';
+                    } else {
+                        // 👇 QUAN TRỌNG: Nếu không tìm thấy, chứng tỏ đây là CA PHÁT SINH vừa tạo Offline
+                        if(off.loai === 'VÀO') {
+                            var todayStr = ('0' + new Date().getDate()).slice(-2) + '/' + ('0' + (new Date().getMonth() + 1)).slice(-2) + '/' + new Date().getFullYear();
+                            scheduleList.unshift({ // Đẩy thẻ ảo này lên đầu danh sách
+                                ca: off.ca,
+                                date: todayStr,
+                                isToday: true,
+                                loc: off.locN || "Ca phát sinh",
+                                start: off.start || new Date(off.timeGoc).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'}),
+                                end: "",
+                                status: "WORKING",
+                                type: "FREE"
+                            });
+                        }
                     }
                 });
-                renderSch(scheduleList); // Vẽ lại thẻ ca thành màu Xanh dương
+                renderSch(scheduleList); // Vẽ lại màn hình với thẻ ảo vừa được phục hồi
             }
         }
     } catch(err) { console.log("Lỗi đọc két sắt", err); }
@@ -254,7 +269,7 @@ async function loadData(){
     callAPI('getTodaySchedule', {maNV: USER.id}).then(d => {
         localStorage.setItem('CACHE_SCH_' + USER.id, JSON.stringify(d.list));
         renderSch(d.list); 
-        if(typeof syncOfflineData === 'function') syncOfflineData(); // Tiện có mạng thì kích hoạt Đồng bộ két sắt lên Google luôn!
+        if(typeof syncOfflineData === 'function') syncOfflineData();
     }).catch(e => {
         if(!cachedSch) document.getElementById('sch-list').innerHTML = '<div style="text-align:center;margin-top:50px;color:#ef4444">Lỗi mạng! Không tải được lịch.</div>';
         var sMini = document.getElementById('sync-mini'); 
