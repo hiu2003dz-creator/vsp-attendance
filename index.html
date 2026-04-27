@@ -417,23 +417,27 @@ function processNativePhoto(event) {
   }
   let l = document.getElementById('native-cam-label'); if (l) l.style.display = 'none';
   
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const img = new Image();
-    img.onload = function() {
-      const cv = document.createElement('canvas'); const MAX_W = 600; let w = img.width; let h = img.height;
+  // GIẢI PHÁP CHỐNG TRÀN RAM CAMERA & NÉN ẢNH SIÊU TỐC
+  const imgUrl = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = function() {
+      URL.revokeObjectURL(imgUrl); // Giải phóng RAM ngay lập tức
+      const cv = document.createElement('canvas'); 
+      const MAX_W = 600; let w = img.width; let h = img.height;
       if (w > MAX_W) { h = h * (MAX_W / w); w = MAX_W; }
-      cv.width = w; cv.height = h; cv.getContext('2d').drawImage(img, 0, 0, w, h);
-      const base64 = cv.toDataURL('image/jpeg', 0.5).split(',')[1];
+      cv.width = w; cv.height = h; 
+      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      
+      // Nén ảnh xuống chất lượng 40% (0.4) để file siêu nhẹ (chỉ còn khoảng 80KB)
+      const base64 = cv.toDataURL('image/jpeg', 0.4).split(',')[1];
       closeCam();
 
-      // 1. CẬP NHẬT GIAO DIỆN (UI) TRƯỚC TIÊN (Chưa hiện thông báo vội)
+      // --- 1. CẬP NHẬT GIAO DIỆN (UI) TRƯỚC TIÊN ---
       var safeId = CUR_CA.replace(/\s+/g, ''); var actionDiv = document.getElementById('action_' + safeId); var cardDiv = document.getElementById('card_' + safeId); var timeDiv = document.getElementById('time_' + safeId);
       var curTimeFake = new Date().toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
       
       if(actionDiv) {
           if(CUR_TYPE == 'VÀO') { 
-              // Vẽ luôn nút Đếm ngược 40 phút (Giả lập để UX mượt)
               actionDiv.innerHTML = `<div style="display:flex;gap:10px;justify-content:flex-end;align-items:center"><button class="btn" style="width:auto;padding:8px 12px;font-size:11px;background:#64748b;color:white" onclick="cancelCurrentShift('${CUR_CA}')">HỦY</button><button class="btn" style="width:auto;padding:8px 12px;font-size:11px;background:#e2e8f0;color:#64748b" disabled>⏳ Còn 40p</button></div>`; 
               if(cardDiv) { cardDiv.classList.remove('pending'); cardDiv.classList.add('working'); } 
               if(timeDiv) { timeDiv.innerHTML = `<i class="material-icons" style="font-size:12px">schedule</i> <span style="color:#2563EB;font-weight:bold">${curTimeFake}</span> - ...<br>📍 ${CUR_LOC}`; } 
@@ -443,7 +447,6 @@ function processNativePhoto(event) {
               if(cardDiv) { cardDiv.classList.remove('working'); cardDiv.classList.add('done'); } 
           }
       } else {
-          // Xử lý tạo thẻ ảo cho Ca Phát Sinh mới
           if (CUR_TYPE == 'VÀO') {
               var container = document.getElementById('sch-list');
               if (container) {
@@ -457,54 +460,38 @@ function processNativePhoto(event) {
           }
       }
 
-      // 2. CHỜ 0.3 GIÂY CHO GIAO DIỆN "NGẤM" RỒI MỚI HIỆN THÔNG BÁO
-      // ... (Phía trên giữ nguyên phần 1. Cập nhật giao diện ẩn) ...
-
-      // 2. THIẾT KẾ LẠI NHỊP ĐỘ UX (Tiêu chuẩn App Chuyên nghiệp)
-      // Ép quả bóng rổ nảy tròn 1.2 giây để nhân viên thấy hệ thống đang "làm việc"
+      // --- 2. HIỆU ỨNG THÔNG BÁO ---
       setTimeout(() => {
           if(loader) {
-              // Tắt bóng rổ, bung dấu Check Xanh
               loaderIcon.style.display = 'none'; 
               loader.innerHTML = `<div style="transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;"><i class="material-icons" style="font-size:70px; color:#10b981; text-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">check_circle</i></div><div style="margin-top:12px; font-weight:900; color:#10b981; font-size:18px; transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 0.1s;">✅ ĐÃ LƯU VÀO MÁY!</div>`;
-              
-              // Giữ thông báo Xanh thêm 1.5 giây để nhân viên kịp đọc
               setTimeout(() => { 
-                  loader.style.opacity = '0'; // Bắt đầu mờ đi dần
-                  
-                  // Reset lại nguyên trạng quả bóng rổ để lần chấm công sau dùng tiếp
+                  loader.style.opacity = '0'; 
                   setTimeout(() => { 
                       loader.style.display = 'none'; 
                       loader.innerHTML = `<i id="loader-icon" class="material-icons bouncing-ball" style="font-size:60px; color:#EA580C; text-shadow: 0 4px 6px rgba(0,0,0,0.2);">sports_basketball</i><div id="loader-text" style="margin-top:15px; font-weight:bold; color:#334155; font-size:15px; text-shadow: 0 1px 2px rgba(255,255,255,0.8);">Đang xử lý...</div>`; 
                   }, 400); 
               }, 1500); 
           }
-      }, 1200); // ⏱ ĐÂY CHÍNH LÀ ĐỘ TRỄ 1.2 GIÂY ĐỂ BÓNG NẢY
+      }, 1200);
 
- 
-
-      // 3. TIẾN HÀNH ĐẨY MẠNG (Hoặc lưu Offline nếu quá 7s / mất mạng)
-      callAPI('processCheckIn', payload).then(r => {
-        if (!r.success) { showToast("⚠️ Cảnh báo Server: " + r.msg); loadData(); return; }
-        
-        // Dùng showToast trượt nhẹ nhàng thay cho alert() bị khựng màn hình
-        if (r.timeAlert) showToast("🔔 THÔNG BÁO: " + r.timeAlert);
-        if (r.durationMsg) {
-            let cleanMsg = r.durationMsg.replace(" (Làm: ", "").replace(")", "");
-            showToast("🎉 KẾT THÚC CA! Tổng: " + cleanMsg);
-        }
-        
-        // Tải lại dữ liệu ngầm sau 1 giây cho mượt
+      // --- 3. ĐẨY MẠNG ---
+      callAPI('processCheckIn', {
+          action: 'processCheckIn',
+          maNV: USER.id, tenNV: USER.name, ca: CUR_CA, loai: CUR_TYPE,
+          lat: LOC.lat, lng: LOC.lng, imgBase64: base64,
+          locN: CUR_LOC, start: CUR_TIME, end: CUR_END, note: CUR_NOTE
+      }).then(r => {
+        if (!r.success) { showToast("⚠️ Lỗi Server: " + r.msg); loadData(); return; }
+        if (r.timeAlert) showToast("🔔 " + r.timeAlert);
+        if (r.durationMsg) showToast("🎉 KẾT THÚC CA! " + r.durationMsg.replace(" (Làm: ", "").replace(")", ""));
         setTimeout(loadData, 1000); 
       }).catch(err => {
-         showToast("⚠️ Đang mất mạng. Đã lưu ngoại tuyến chờ đồng bộ!");
+         showToast("⚠️ Đang mất mạng. Đã lưu ngoại tuyến!");
          saveOfflineLog(USER.id, USER.name, CUR_CA, CUR_TYPE, LOC.lat, LOC.lng, base64, CUR_LOC, CUR_TIME, CUR_END, CUR_NOTE);
       });
-
-    };
-    img.src = e.target.result;
   };
-  reader.readAsDataURL(file);
+  img.src = imgUrl; // KÍCH HOẠT QUÁ TRÌNH TẢI ẢNH (Quan trọng!)
   event.target.value = '';
 }
 
