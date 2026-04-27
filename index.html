@@ -122,25 +122,27 @@
 const API_URL = 'https://script.google.com/macros/s/AKfycbyXQEg8ZLJLqw4TcDrdwmKnxcVRV-IFhY4f2S7laKdVfPLIo0GTaS_pyXU84-HQBf-dHg/exec'; // 🔴 NHỚ DÁN LINK VÀO ĐÂY
 
 // Hàm gọi API chuẩn CÓ TRANG BỊ BỘ ĐẾM GIỜ (TIMEOUT) CHỐNG MẠNG YẾU
+// Hàm gọi API chuẩn CÓ TRANG BỊ BỘ ĐẾM GIỜ (TIMEOUT) CHỐNG MẠNG YẾU
 async function callAPI(action, payload = {}) {
     payload.action = action;
     
-    // Tạo bộ đếm thời gian: Tối đa 7 giây (7000 mili-giây)
+    // Tăng bộ đếm thời gian lên 15 giây để điện thoại tải ảnh lên (thay vì 7s)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 7000); 
+    const timeoutId = setTimeout(() => controller.abort(), 15000); 
 
     try {
         let res = await fetch(API_URL, { 
             method: 'POST', 
+            redirect: 'follow', // Quan trọng: Giấy thông hành cho iPhone
+            headers: { "Content-Type": "text/plain;charset=utf-8" }, // Vượt rào bảo mật Apple
             body: JSON.stringify(payload),
-            signal: controller.signal // Gắn bộ khóa an toàn vào lệnh gửi đi
+            signal: controller.signal // Gắn bộ khóa an toàn
         });
-        clearTimeout(timeoutId); // Nếu Google trả lời trước 7s thì hủy bộ đếm
+        clearTimeout(timeoutId); // Hủy bộ đếm nếu Google trả lời sớm
         return await res.json();
     } catch (e) { 
         clearTimeout(timeoutId);
-        // Dù là mất mạng hẳn hay do quá 7 giây bị ép ngắt kết nối, 
-        // đều ném ra lỗi để App tự động kích hoạt chế độ Lưu Offline
+        // Tự động kích hoạt chế độ Lưu Offline nếu quá 15s hoặc mất mạng
         throw new Error("Offline"); 
     }
 }
@@ -767,8 +769,18 @@ async function syncOfflineData() {
         }
     } catch(e) { console.error("Lỗi mở Két sắt đồng bộ:", e); }
 }
-// Tích hợp PWA Offline Worker
-if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./service-worker.js'); }); }
+// Tích hợp PWA Offline Worker (ÉP ĐIỆN THOẠI XÓA BẢN CŨ)
+if ('serviceWorker' in navigator) { 
+    window.addEventListener('load', () => { 
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            // Vòng lặp bắn hạ mọi Service Worker bản cũ đang kẹt trong máy
+            for(let registration of registrations) { registration.unregister(); } 
+        }).then(() => {
+            // Cài bản mới và gắn đuôi thời gian ngẫu nhiên để lừa điện thoại tải 100% code mới
+            navigator.serviceWorker.register('./service-worker.js?v=' + new Date().getTime()); 
+        });
+    }); 
+}
 </script>
 </body>
 </html>
