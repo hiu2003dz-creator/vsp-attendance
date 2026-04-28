@@ -529,7 +529,7 @@ function processNativePhoto(event) {
         if (!r.success) { showToast("⚠️ Lỗi Server: " + r.msg); loadData(); return; }
         if (r.timeAlert) showToast("🔔 " + r.timeAlert);
         if (r.durationMsg) showToast("🎉 KẾT THÚC CA! " + r.durationMsg.replace(" (Làm: ", "").replace(")", ""));
-        setTimeout(loadData, 1000); 
+        setTimeout(() => loadData(true), 1000); 
      }).catch(err => {
          // Kích hoạt bảng Dashboard bắt ấn OK
          document.getElementById('offline-alert-modal').style.display = 'flex';
@@ -681,7 +681,7 @@ function cancelCurrentShift(caName) {
                     }
                     
                     // Tải lại dữ liệu ngầm đằng sau để đồng bộ chuẩn xác
-                    loadData();
+                    loadData(true);
                 }, 400); 
             }, 1500); 
         }, 800); // Giả lập độ trễ bóng nảy 0.8s cho có cảm giác App đang làm việc cực nhọc 😅
