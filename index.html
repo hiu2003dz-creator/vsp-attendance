@@ -58,6 +58,19 @@
   .toast { background: rgba(30, 41, 59, 0.95); color: white; padding: 12px 16px; border-radius: 30px; margin-top: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 13px; animation: fadeIn 0.3s; }
 </style>
 </head>
+<div id="offline-alert-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:999999; align-items:center; justify-content:center; backdrop-filter: blur(3px);">
+  <div style="background:white; width:85%; max-width:320px; border-radius:20px; padding:25px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2); transform:scale(0); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;">
+    <div style="width:70px; height:70px; background:#FFFBEB; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 15px auto;">
+      <i class="material-icons" style="font-size:36px; color:#F59E0B;">wifi_off</i>
+    </div>
+    <h3 style="margin:0 0 10px 0; color:#1E293B; font-size:18px;">Mạng Yếu / Mất Mạng</h3>
+    <p style="color:#64748B; font-size:14px; line-height:1.5; margin:0 0 20px 0;">
+      <b style="color:#D97706;">1 ca đang lưu ngoại tuyến.</b><br>
+      Vui lòng mở lại App khi có mạng để hệ thống cập nhật lại công nhé!
+    </p>
+    <button onclick="document.getElementById('offline-alert-modal').style.display='none'" style="width:100%; padding:14px; background:#F59E0B; color:white; border:none; border-radius:12px; font-weight:bold; font-size:15px; cursor:pointer; box-shadow:0 4px 6px rgba(245, 158, 11, 0.3);">OK, TÔI ĐÃ HIỂU</button>
+  </div>
+</div>
 <body>
 
 <div id="smooth-loader" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.85); backdrop-filter:blur(5px); z-index:99999; flex-direction:column; justify-content:center; align-items:center; opacity:0; transition:opacity 0.3s ease;">
@@ -476,18 +489,26 @@ function processNativePhoto(event) {
       }, 1200);
 
       // --- 3. ĐẨY MẠNG ---
+      // CHỐT ĐÓNG BĂNG THỜI GIAN NGAY LÚC CAMERA NHÁY MÁY
+      var exactTime = new Date().getTime(); 
+
+      // --- 3. ĐẨY MẠNG ---
       callAPI('processCheckIn', {
           action: 'processCheckIn',
           maNV: USER.id, tenNV: USER.name, ca: CUR_CA, loai: CUR_TYPE,
           lat: LOC.lat, lng: LOC.lng, imgBase64: base64,
-          locN: CUR_LOC, start: CUR_TIME, end: CUR_END, note: CUR_NOTE
+          locN: CUR_LOC, start: CUR_TIME, end: CUR_END, note: CUR_NOTE,
+          clientTime: exactTime // Dán tem niêm phong gửi lên Google
       }).then(r => {
         if (!r.success) { showToast("⚠️ Lỗi Server: " + r.msg); loadData(); return; }
         if (r.timeAlert) showToast("🔔 " + r.timeAlert);
         if (r.durationMsg) showToast("🎉 KẾT THÚC CA! " + r.durationMsg.replace(" (Làm: ", "").replace(")", ""));
         setTimeout(loadData, 1000); 
-      }).catch(err => {
-         showToast("⚠️ Đang mất mạng. Đã lưu ngoại tuyến!");
+     }).catch(err => {
+         // Kích hoạt bảng Dashboard bắt ấn OK
+         document.getElementById('offline-alert-modal').style.display = 'flex';
+         
+         // Vẫn âm thầm lưu vào Két sắt cho nhân viên
          saveOfflineLog(USER.id, USER.name, CUR_CA, CUR_TYPE, LOC.lat, LOC.lng, base64, CUR_LOC, CUR_TIME, CUR_END, CUR_NOTE);
       });
   };
