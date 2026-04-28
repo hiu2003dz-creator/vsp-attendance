@@ -56,6 +56,29 @@
   
   #toast-container { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 10000; width: 90%; }
   .toast { background: rgba(30, 41, 59, 0.95); color: white; padding: 12px 16px; border-radius: 30px; margin-top: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 13px; animation: fadeIn 0.3s; }
+  /* --- HIỆU ỨNG TẢI CA MƯỢT MÀ (SKELETON) --- */
+  @keyframes slideUpFade { 
+      0% { opacity: 0; transform: translateY(15px); } 
+      100% { opacity: 1; transform: translateY(0); } 
+  }
+  .ca-card { 
+      animation: slideUpFade 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
+  }
+  @keyframes shimmer { 
+      0% { background-position: -468px 0; } 
+      100% { background-position: 468px 0; } 
+  }
+  .skeleton-card { 
+      background: #fff; padding: 15px; border-radius: 16px; margin-bottom: 12px; 
+      border: 1px solid #f1f5f9; box-shadow: 0 2px 5px rgba(0,0,0,0.03); 
+      opacity: 0; animation: slideUpFade 0.3s ease-out forwards; 
+  }
+  .skel-line { 
+      height: 12px; background: #f6f7f8; border-radius: 6px; margin-bottom: 10px; 
+      background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%); 
+      background-repeat: no-repeat; background-size: 800px 100px; 
+      animation: shimmer 1.5s infinite linear forwards; 
+  }
 </style>
 </head>
 <div id="offline-alert-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:999999; align-items:center; justify-content:center; backdrop-filter: blur(3px);">
@@ -232,7 +255,7 @@ function initApp(){
     initMonthSelector(); loadData();
 }
 
-async function loadData(){ 
+async function loadData(isRefreshing = false){ 
     var cachedSch = localStorage.getItem('CACHE_SCH_' + USER.id);
     var scheduleList = cachedSch ? JSON.parse(cachedSch) : [];
 
@@ -247,7 +270,6 @@ async function loadData(){
                 
                 if(offLogs.length > 0) {
                     offLogs.forEach(off => {
-                        // Ràng buộc tìm kiếm cực chặt: Phải đúng tên ca và đúng ngày hôm nay
                         let offDate = new Date(off.timeGoc);
                         let todayStr = ('0' + offDate.getDate()).slice(-2) + '/' + ('0' + (offDate.getMonth() + 1)).slice(-2) + '/' + offDate.getFullYear();
                         let match = mergedList.find(s => s.ca === off.ca && s.date === todayStr);
@@ -256,16 +278,14 @@ async function loadData(){
                             if(off.loai === 'VÀO') match.status = 'WORKING';
                             if(off.loai === 'RA') match.status = 'DONE';
                         } else {
-                            if(off.loai === 'VÀO') { // Tạo thẻ ảo an toàn 100%
-                                // Ép chuẩn định dạng giờ HH:mm để chống lỗi iPhone/Safari
+                            if(off.loai === 'VÀO') { 
                                 let safeTime = off.start ? off.start : (('0' + offDate.getHours()).slice(-2) + ':' + ('0' + offDate.getMinutes()).slice(-2));
-                                
                                 mergedList.unshift({
                                     ca: off.ca,
                                     date: todayStr,
                                     isToday: true,
                                     loc: off.locN || "Ca phát sinh",
-                                    start: safeTime, // Định dạng chuẩn chống lỗi NaN
+                                    start: safeTime, 
                                     end: "",
                                     status: "WORKING",
                                     type: "FREE"
@@ -275,9 +295,8 @@ async function loadData(){
                     });
                 }
                 
-                renderSch(mergedList); // Vẽ danh sách
+                renderSch(mergedList); 
                 
-                // HIỆN CẢNH BÁO NẾU CÓ CA BỊ KẸT TRONG MÁY
                 var sMini = document.getElementById('sync-mini'); 
                 if(sMini) {
                     if (offLogs.length > 0) {
@@ -290,18 +309,25 @@ async function loadData(){
         } catch(err) { renderSch(baseList); }
     }
 
-    // 1. Tải Cache và trộn Offline ngay lập tức
-    if(scheduleList.length > 0) {
-        mergeAndRender(scheduleList);
+    // 1. CHỐNG "KHỰNG": Bật hiệu ứng Skeleton đang load nếu là làm mới (Hủy/Ra/Vào ca)
+    if(isRefreshing) {
+        document.getElementById('sch-list').innerHTML = `
+            <div class="skeleton-card"><div class="skel-line" style="width: 40%;"></div><div class="skel-line" style="width: 80%;"></div><div class="skel-line" style="width: 50%;"></div></div>
+            <div class="skeleton-card" style="animation-delay: 0.1s;"><div class="skel-line" style="width: 30%;"></div><div class="skel-line" style="width: 60%;"></div></div>
+        `;
+    } else if(scheduleList.length > 0) {
+        mergeAndRender(scheduleList); // Chỉ dùng Cache khi vừa mở App lên
         var slist = document.getElementById('sch-list');
         var mini = document.getElementById('sync-mini');
-        if(!mini) slist.insertAdjacentHTML('afterbegin', '<div id="sync-mini" style="text-align:center;font-size:11px;color:#9ca3af;margin-bottom:10px;font-style:italic;"><div class="spinner" style="width:10px;height:10px;border-width:2px;border-top-color:#9ca3af"></div> Đang kiểm tra dữ liệu...</div>');
+        if(!mini) slist.insertAdjacentHTML('afterbegin', '<div id="sync-mini" style="text-align:center;font-size:11px;color:#9ca3af;margin-bottom:10px;font-style:italic;"><div class="spinner" style="width:10px;height:10px;border-width:2px;border-top-color:#9ca3af"></div> Đang làm mới...</div>');
     } else {
-        document.getElementById('sch-list').innerHTML = '<div style="text-align:center;margin-top:50px;color:#94a3b8"><div class="spinner"></div> Đang tải lịch...</div>';
+        document.getElementById('sch-list').innerHTML = `
+            <div class="skeleton-card"><div class="skel-line" style="width: 40%;"></div><div class="skel-line" style="width: 80%;"></div></div>
+        `;
         mergeAndRender([]); 
     }
 
-    // 2. Gọi mạng lấy lịch Server
+    // 2. Gọi mạng lấy lịch Server (ĐOẠN CỦA SẾP GIỮ NGUYÊN)
     callAPI('getTodaySchedule', {maNV: USER.id}).then(d => {
         localStorage.setItem('CACHE_SCH_' + USER.id, JSON.stringify(d.list));
         mergeAndRender(d.list); 
