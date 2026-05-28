@@ -443,6 +443,7 @@ function openCamUI() {
 function closeCam(){ document.getElementById('cam-screen').style.display='none'; let l = document.getElementById('native-cam-label'); if (l) l.style.display = 'none'; }
 
 // QUY TRÌNH CHẤM CÔNG: ĐỒNG BỘ UI & XỬ LÝ MẠNG YẾU
+// QUY TRÌNH CHẤM CÔNG: ĐỒNG BỘ UI & XỬ LÝ MẠNG YẾU (ĐÃ FIX LỖI TRÔI NÚT VÀ LOAD CHẬM)
 function processNativePhoto(event) {
   const file = event.target.files[0]; if (!file) return;
   var loader = document.getElementById('smooth-loader'); 
@@ -467,36 +468,28 @@ function processNativePhoto(event) {
       cv.width = w; cv.height = h; 
       cv.getContext('2d').drawImage(img, 0, 0, w, h);
       
-      // Nén ảnh xuống chất lượng 40% (0.4) để file siêu nhẹ (chỉ còn khoảng 80KB)
+      // Nén ảnh xuống chất lượng 40% (0.4) để file siêu nhẹ
       const base64 = cv.toDataURL('image/jpeg', 0.4).split(',')[1];
       closeCam();
 
-      // --- 1. CẬP NHẬT GIAO DIỆN (UI) TRƯỚC TIÊN ---
-      var safeId = CUR_CA.replace(/\s+/g, ''); var actionDiv = document.getElementById('action_' + safeId); var cardDiv = document.getElementById('card_' + safeId); var timeDiv = document.getElementById('time_' + safeId);
+      // --- 1. CẬP NHẬT CACHE GIAO DIỆN LẬP TỨC ĐỂ CHỐNG "TRÔI NÚT" ---
       var curTimeFake = new Date().toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+      var todayVN = ('0' + new Date().getDate()).slice(-2) + '/' + ('0' + (new Date().getMonth() + 1)).slice(-2) + '/' + new Date().getFullYear();
       
-      if(actionDiv) {
-          if(CUR_TYPE == 'VÀO') { 
-              actionDiv.innerHTML = `<div style="display:flex;gap:10px;justify-content:flex-end;align-items:center"><button class="btn" style="width:auto;padding:8px 12px;font-size:11px;background:#64748b;color:white" onclick="cancelCurrentShift('${CUR_CA}')">HỦY</button><button class="btn" style="width:auto;padding:8px 12px;font-size:11px;background:#e2e8f0;color:#64748b" disabled>⏳ Còn 40p</button></div>`; 
-              if(cardDiv) { cardDiv.classList.remove('pending'); cardDiv.classList.add('working'); } 
-              if(timeDiv) { timeDiv.innerHTML = `<i class="material-icons" style="font-size:12px">schedule</i> <span style="color:#2563EB;font-weight:bold">${curTimeFake}</span> - ...<br>📍 ${CUR_LOC}`; } 
-          } 
-          else if(CUR_TYPE == 'RA') { 
-              actionDiv.innerHTML = `<div class="status-badge st-done" style="font-size:12px;color:#10b981;font-weight:bold;"><i class="material-icons" style="font-size:12px">check_circle</i> ĐÃ XONG</div>`; 
-              if(cardDiv) { cardDiv.classList.remove('working'); cardDiv.classList.add('done'); } 
+      var cachedSch = localStorage.getItem('CACHE_SCH_' + USER.id);
+      if(cachedSch) {
+          let list = JSON.parse(cachedSch);
+          let match = list.find(s => s.ca === CUR_CA && s.date === todayVN);
+          if(match) {
+              if (CUR_TYPE === 'VÀO') { match.status = 'WORKING'; match.start = curTimeFake; }
+              if (CUR_TYPE === 'RA') { match.status = 'DONE'; match.end = curTimeFake; }
+          } else if (CUR_TYPE === 'VÀO') {
+              // Ghi nhận ngay ca phát sinh vào điện thoại
+              list.unshift({ ca: CUR_CA, date: todayVN, isToday: true, loc: CUR_LOC || "Ca phát sinh", start: curTimeFake, end: "", status: "WORKING", type: "FREE" });
           }
-      } else {
-          if (CUR_TYPE == 'VÀO') {
-              var container = document.getElementById('sch-list');
-              if (container) {
-                  var emptyMsg = document.getElementById('empty-sch-msg'); if(emptyMsg) emptyMsg.remove();
-                  var newCard = document.createElement('div');
-                  newCard.className = 'ca-card working'; newCard.id = 'card_' + safeId;
-                  newCard.style.cssText = 'background:#fff; border-radius:12px; padding:15px; margin-bottom:15px; box-shadow:0 4px 6px rgba(0,0,0,0.05); border-left:4px solid #3B82F6;';
-                  newCard.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;"><div><div style="font-size:15px;font-weight:700;color:#1E293B;">${CUR_CA}</div><div id="time_${safeId}" style="font-size:12px;color:#64748B;margin-top:5px;"><i class="material-icons" style="font-size:12px">schedule</i> <span style="color:#2563EB;font-weight:bold">${curTimeFake}</span> - ...<br>📍 ${CUR_LOC}</div></div><div class="status-badge" style="background:#EFF6FF;color:#2563EB;padding:4px 8px;border-radius:20px;font-size:11px;font-weight:bold;">ĐANG LÀM</div></div><div id="action_${safeId}" style="margin-top:12px;padding-top:12px;border-top:1px dashed #E2E8F0;"><div style="display:flex;gap:10px;justify-content:flex-end;align-items:center"><button class="btn" style="width:auto;padding:8px 12px;font-size:11px;background:#64748b;color:white" onclick="cancelCurrentShift('${CUR_CA}')">HỦY</button><button class="btn" style="width:auto;padding:8px 16px;font-size:12px;background:#F59E0B" onclick="preCheck('${CUR_CA}','${CUR_LOC}','${CUR_TIME}','${CUR_END}','RA')">RA CA</button></div></div>`;
-                  container.insertBefore(newCard, container.firstChild);
-              }
-          }
+          // Lưu lại và vẽ lại giao diện TỨC THÌ (Khóa nút ngay lập tức)
+          localStorage.setItem('CACHE_SCH_' + USER.id, JSON.stringify(list));
+          renderSch(list); 
       }
 
       // --- 2. HIỆU ỨNG THÔNG BÁO ---
@@ -510,35 +503,38 @@ function processNativePhoto(event) {
                       loader.style.display = 'none'; 
                       loader.innerHTML = `<i id="loader-icon" class="material-icons bouncing-ball" style="font-size:60px; color:#EA580C; text-shadow: 0 4px 6px rgba(0,0,0,0.2);">sports_basketball</i><div id="loader-text" style="margin-top:15px; font-weight:bold; color:#334155; font-size:15px; text-shadow: 0 1px 2px rgba(255,255,255,0.8);">Đang xử lý...</div>`; 
                   }, 400); 
-              }, 1500); 
+              }, 1200); // Rút ngắn thời gian hiển thị mặt cười để thoát ra nhanh hơn
           }
-      }, 1200);
+      }, 600); 
 
-      // --- 3. ĐẨY MẠNG ---
-      // CHỐT ĐÓNG BĂNG THỜI GIAN NGAY LÚC CAMERA NHÁY MÁY
+      // --- 3. ĐẨY MẠNG ÂM THẦM ---
       var exactTime = new Date().getTime(); 
 
-      // --- 3. ĐẨY MẠNG ---
       callAPI('processCheckIn', {
           action: 'processCheckIn',
           maNV: USER.id, tenNV: USER.name, ca: CUR_CA, loai: CUR_TYPE,
           lat: LOC.lat, lng: LOC.lng, imgBase64: base64,
           locN: CUR_LOC, start: CUR_TIME, end: CUR_END, note: CUR_NOTE,
-          clientTime: exactTime // Dán tem niêm phong gửi lên Google
+          clientTime: exactTime 
       }).then(r => {
-        if (!r.success) { showToast("⚠️ Lỗi Server: " + r.msg); loadData(); return; }
+        if (!r.success) { 
+            showToast("⚠️ Lỗi: " + r.msg); 
+            // Nếu có lỗi (Ví dụ: sai định vị), mới nhả lại nút cũ để nhân viên thử lại
+            setTimeout(() => loadData(false), 500); 
+            return; 
+        }
         if (r.timeAlert) showToast("🔔 " + r.timeAlert);
         if (r.durationMsg) showToast("🎉 KẾT THÚC CA! " + r.durationMsg.replace(" (Làm: ", "").replace(")", ""));
-        setTimeout(() => loadData(true), 1000); 
+        
+        // SỬA LỖI TẢI CHẬM VÀ TRÔI NÚT: Đổi 'true' thành 'false' để tải mượt (không có skeletons). 
+        // Delay 3 giây để đủ thời gian Google Sheet xử lý xong dữ liệu nội bộ.
+        setTimeout(() => loadData(false), 3000); 
      }).catch(err => {
-         // Kích hoạt bảng Dashboard bắt ấn OK
          document.getElementById('offline-alert-modal').style.display = 'flex';
-         
-         // Vẫn âm thầm lưu vào Két sắt cho nhân viên
          saveOfflineLog(USER.id, USER.name, CUR_CA, CUR_TYPE, LOC.lat, LOC.lng, base64, CUR_LOC, CUR_TIME, CUR_END, CUR_NOTE);
       });
   };
-  img.src = imgUrl; // KÍCH HOẠT QUÁ TRÌNH TẢI ẢNH (Quan trọng!)
+  img.src = imgUrl; 
   event.target.value = '';
 }
 
