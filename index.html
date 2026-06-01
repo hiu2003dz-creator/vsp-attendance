@@ -443,101 +443,140 @@ function openCamUI() {
 function closeCam(){ document.getElementById('cam-screen').style.display='none'; let l = document.getElementById('native-cam-label'); if (l) l.style.display = 'none'; }
 
 // QUY TRÌNH CHẤM CÔNG: ĐỒNG BỘ UI & XỬ LÝ MẠNG YẾU
-// QUY TRÌNH CHẤM CÔNG: ĐỒNG BỘ UI & XỬ LÝ MẠNG YẾU (ĐÃ FIX LỖI TRÔI NÚT VÀ LOAD CHẬM)
+// QUY TRÌNH CHẤM CÔNG: ĐỒNG BỘ UI & XỬ LÝ MẠNG YẾU (ĐÃ FIX LỖI KHỰNG VÀ THÊM HIỆU ỨNG MƯỢT)
 function processNativePhoto(event) {
   const file = event.target.files[0]; if (!file) return;
+  
+  // BƯỚC 1: ĐÓNG CAMERA VÀ BẬT HIỆU ỨNG TẢI NGAY LẬP TỨC (CHỐNG KHỰNG MAIN THREAD)
+  closeCam(); 
   var loader = document.getElementById('smooth-loader'); 
   var loaderTxt = document.getElementById('loader-text'); 
   var loaderIcon = document.getElementById('loader-icon');
   
   if(loader) { 
       loader.style.display = 'flex'; 
+      // Đợi 10ms để trình duyệt kịp vẽ UI mượt mà trước khi chạy tác vụ nặng
       setTimeout(() => { loader.style.opacity = '1'; }, 10); 
-      loaderTxt.innerText = "⏳ Đang xử lý..."; 
+      loaderTxt.innerText = "⏳ Đang xử lý ảnh..."; 
   }
   let l = document.getElementById('native-cam-label'); if (l) l.style.display = 'none';
   
-  // GIẢI PHÁP CHỐNG TRÀN RAM CAMERA & NÉN ẢNH SIÊU TỐC
-  const imgUrl = URL.createObjectURL(file);
-  const img = new Image();
-  img.onload = function() {
-      URL.revokeObjectURL(imgUrl); // Giải phóng RAM ngay lập tức
-      const cv = document.createElement('canvas'); 
-      const MAX_W = 600; let w = img.width; let h = img.height;
-      if (w > MAX_W) { h = h * (MAX_W / w); w = MAX_W; }
-      cv.width = w; cv.height = h; 
-      cv.getContext('2d').drawImage(img, 0, 0, w, h);
-      
-      // Nén ảnh xuống chất lượng 40% (0.4) để file siêu nhẹ
-      const base64 = cv.toDataURL('image/jpeg', 0.4).split(',')[1];
-      closeCam();
+  // BƯỚC 2: ĐẨY TÁC VỤ NÉN ẢNH RA KHỎI LUỒNG CHÍNH (Dùng setTimeout)
+  setTimeout(() => {
+      const imgUrl = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = function() {
+          URL.revokeObjectURL(imgUrl); // Giải phóng RAM
+          const cv = document.createElement('canvas'); 
+          const MAX_W = 600; let w = img.width; let h = img.height;
+          if (w > MAX_W) { h = h * (MAX_W / w); w = MAX_W; }
+          cv.width = w; cv.height = h; 
+          cv.getContext('2d').drawImage(img, 0, 0, w, h);
+          
+          const base64 = cv.toDataURL('image/jpeg', 0.4).split(',')[1];
 
-      // --- 1. CẬP NHẬT CACHE GIAO DIỆN LẬP TỨC ĐỂ CHỐNG "TRÔI NÚT" ---
-      var curTimeFake = new Date().toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
-      var todayVN = ('0' + new Date().getDate()).slice(-2) + '/' + ('0' + (new Date().getMonth() + 1)).slice(-2) + '/' + new Date().getFullYear();
-      
-      var cachedSch = localStorage.getItem('CACHE_SCH_' + USER.id);
-      if(cachedSch) {
-          let list = JSON.parse(cachedSch);
-          let match = list.find(s => s.ca === CUR_CA && s.date === todayVN);
-          if(match) {
-              if (CUR_TYPE === 'VÀO') { match.status = 'WORKING'; match.start = curTimeFake; }
-              if (CUR_TYPE === 'RA') { match.status = 'DONE'; match.end = curTimeFake; }
-          } else if (CUR_TYPE === 'VÀO') {
-              // Ghi nhận ngay ca phát sinh vào điện thoại
-              list.unshift({ ca: CUR_CA, date: todayVN, isToday: true, loc: CUR_LOC || "Ca phát sinh", start: curTimeFake, end: "", status: "WORKING", type: "FREE" });
+          // --- 1. CẬP NHẬT CACHE GIAO DIỆN LẬP TỨC ĐỂ CHỐNG "TRÔI NÚT" ---
+          var curTimeFake = new Date().toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+          var todayVN = ('0' + new Date().getDate()).slice(-2) + '/' + ('0' + (new Date().getMonth() + 1)).slice(-2) + '/' + new Date().getFullYear();
+          
+          var cachedSch = localStorage.getItem('CACHE_SCH_' + USER.id);
+          if(cachedSch) {
+              let list = JSON.parse(cachedSch);
+              let match = list.find(s => s.ca === CUR_CA && s.date === todayVN);
+              if(match) {
+                  if (CUR_TYPE === 'VÀO') { match.status = 'WORKING'; match.start = curTimeFake; }
+                  if (CUR_TYPE === 'RA') { match.status = 'DONE'; match.end = curTimeFake; }
+              } else if (CUR_TYPE === 'VÀO') {
+                  list.unshift({ ca: CUR_CA, date: todayVN, isToday: true, loc: CUR_LOC || "Ca phát sinh", start: curTimeFake, end: "", status: "WORKING", type: "FREE" });
+              }
+              localStorage.setItem('CACHE_SCH_' + USER.id, JSON.stringify(list));
+              renderSch(list); 
+
+              // HIỆU ỨNG "MAGIC": THẺ CA VỪA CHẤM SẼ NỔI BẬT VÀ PHÁT SÁNG MÀU XANH
+              let safeId = CUR_CA.replace(/\s+/g, '');
+              let cardDiv = document.getElementById('card_' + safeId);
+              if(cardDiv) {
+                  cardDiv.style.transition = "all 0.5s ease-out";
+                  cardDiv.style.boxShadow = "0 0 20px rgba(16, 185, 129, 0.6)"; // Tỏa hào quang xanh
+                  cardDiv.style.transform = "scale(1.03)"; // Phóng to thẻ nhẹ nhàng
+                  cardDiv.style.border = "2px solid #10b981"; // Đổi viền xanh
+                  
+                  // Tự động thu gọn và tắt sáng sau 1 giây
+                  setTimeout(() => {
+                      cardDiv.style.boxShadow = "0 2px 5px rgba(0,0,0,0.03)";
+                      cardDiv.style.transform = "scale(1)";
+                      cardDiv.style.border = "1px solid #f1f5f9";
+                  }, 1000);
+              }
           }
-          // Lưu lại và vẽ lại giao diện TỨC THÌ (Khóa nút ngay lập tức)
-          localStorage.setItem('CACHE_SCH_' + USER.id, JSON.stringify(list));
-          renderSch(list); 
-      }
 
-      // --- 2. HIỆU ỨNG THÔNG BÁO ---
-      setTimeout(() => {
-          if(loader) {
-              loaderIcon.style.display = 'none'; 
-              loader.innerHTML = `<div style="transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;"><i class="material-icons" style="font-size:70px; color:#10b981; text-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">check_circle</i></div><div style="margin-top:12px; font-weight:900; color:#10b981; font-size:18px; transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 0.1s;">✅ ĐÃ LƯU VÀO MÁY!</div>`;
-              setTimeout(() => { 
-                  loader.style.opacity = '0'; 
+          // --- 2. HIỆU ỨNG THÔNG BÁO MẶT CƯỜI ---
+          setTimeout(() => {
+              if(loader) {
+                  loaderIcon.style.display = 'none'; 
+                  loader.innerHTML = `<div style="transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;"><i class="material-icons" style="font-size:70px; color:#10b981; text-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">check_circle</i></div><div style="margin-top:12px; font-weight:900; color:#10b981; font-size:18px; transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 0.1s;">✅ ĐÃ LƯU VÀO MÁY!</div>`;
                   setTimeout(() => { 
-                      loader.style.display = 'none'; 
-                      loader.innerHTML = `<i id="loader-icon" class="material-icons bouncing-ball" style="font-size:60px; color:#EA580C; text-shadow: 0 4px 6px rgba(0,0,0,0.2);">sports_basketball</i><div id="loader-text" style="margin-top:15px; font-weight:bold; color:#334155; font-size:15px; text-shadow: 0 1px 2px rgba(255,255,255,0.8);">Đang xử lý...</div>`; 
-                  }, 400); 
-              }, 1200); // Rút ngắn thời gian hiển thị mặt cười để thoát ra nhanh hơn
-          }
-      }, 600); 
+                      loader.style.opacity = '0'; 
+                      setTimeout(() => { 
+                          loader.style.display = 'none'; 
+                          loader.innerHTML = `<i id="loader-icon" class="material-icons bouncing-ball" style="font-size:60px; color:#EA580C; text-shadow: 0 4px 6px rgba(0,0,0,0.2);">sports_basketball</i><div id="loader-text" style="margin-top:15px; font-weight:bold; color:#334155; font-size:15px; text-shadow: 0 1px 2px rgba(255,255,255,0.8);">Đang xử lý...</div>`; 
+                      }, 400); 
+                  }, 1000); 
+              }
+          }, 400); 
 
-      // --- 3. ĐẨY MẠNG ÂM THẦM ---
-      var exactTime = new Date().getTime(); 
+          // --- 3. ĐẨY MẠNG ÂM THẦM (ĐÃ NÂNG CẤP: BỎ VÀO KÉT SẮT TRƯỚC KHI GỬI) ---
+          var exactTime = new Date().getTime(); 
+          var logData = {
+              maNV: USER.id, tenNV: USER.name, ca: CUR_CA, loai: CUR_TYPE,
+              lat: LOC.lat, lng: LOC.lng, imgBase64: base64,
+              locN: CUR_LOC, start: CUR_TIME, end: CUR_END, note: CUR_NOTE,
+              timeGoc: exactTime, clientTime: exactTime
+          };
 
-      callAPI('processCheckIn', {
-          action: 'processCheckIn',
-          maNV: USER.id, tenNV: USER.name, ca: CUR_CA, loai: CUR_TYPE,
-          lat: LOC.lat, lng: LOC.lng, imgBase64: base64,
-          locN: CUR_LOC, start: CUR_TIME, end: CUR_END, note: CUR_NOTE,
-          clientTime: exactTime 
-      }).then(r => {
-        if (!r.success) { 
-            showToast("⚠️ Lỗi: " + r.msg); 
-            // Nếu có lỗi (Ví dụ: sai định vị), mới nhả lại nút cũ để nhân viên thử lại
-            setTimeout(() => loadData(false), 500); 
-            return; 
-        }
-        if (r.timeAlert) showToast("🔔 " + r.timeAlert);
-        if (r.durationMsg) showToast("🎉 KẾT THÚC CA! " + r.durationMsg.replace(" (Làm: ", "").replace(")", ""));
-        
-        // SỬA LỖI TẢI CHẬM VÀ TRÔI NÚT: Đổi 'true' thành 'false' để tải mượt (không có skeletons). 
-        // Delay 3 giây để đủ thời gian Google Sheet xử lý xong dữ liệu nội bộ.
-        setTimeout(() => loadData(false), 3000); 
-     }).catch(err => {
-         document.getElementById('offline-alert-modal').style.display = 'flex';
-         saveOfflineLog(USER.id, USER.name, CUR_CA, CUR_TYPE, LOC.lat, LOC.lng, base64, CUR_LOC, CUR_TIME, CUR_END, CUR_NOTE);
-      });
-  };
-  img.src = imgUrl; 
+          // BƯỚC QUAN TRỌNG NHẤT: LƯU VÀO KÉT SẮT (INDEXED DB) NGAY LẬP TỨC!
+          initDB().then(db => {
+              let tx = db.transaction(["Logs"], "readwrite");
+              let store = tx.objectStore("Logs");
+              let request = store.add(logData); // Nhét data vào két
+              
+              request.onsuccess = function(e) {
+                  let logId = e.target.result; // Lấy mã số của bản ghi vừa lưu trong két
+
+                  // BÂY GIỜ MỚI CHO GỬI LÊN GOOGLE
+                  callAPI('processCheckIn', { action: 'processCheckIn', ...logData }).then(r => {
+                      if (r.success) {
+                          // Nếu Google báo lưu thành công -> Mở két sắt xóa bản lưu tạm đi
+                          let delTx = db.transaction(["Logs"], "readwrite");
+                          delTx.objectStore("Logs").delete(logId);
+                          
+                          if (r.timeAlert) showToast("🔔 " + r.timeAlert);
+                          if (r.durationMsg) showToast("🎉 KẾT THÚC CA! " + r.durationMsg.replace(" (Làm: ", "").replace(")", ""));
+                          setTimeout(() => loadData(false), 3000); 
+                      } else {
+                          showToast("⚠️ Lỗi: " + r.msg); 
+                          // Nếu bị Admin chặn cứng (ví dụ: sai vị trí, chưa đủ giờ), phải xóa khỏi két để không bị gửi lại mãi mãi
+                          if (r.msg.includes("⛔")) {
+                              let delTx = db.transaction(["Logs"], "readwrite");
+                              delTx.objectStore("Logs").delete(logId);
+                          }
+                          setTimeout(() => loadData(false), 500); 
+                      }
+                  }).catch(err => {
+                      // NẾU RỚT MẠNG HOẶC GIÁO VIÊN TẮT APP NGANG 
+                      // -> KHÔNG SAO CẢ! Dữ liệu đã nằm an toàn trong Két sắt từ đầu rồi.
+                      // App sẽ tự động quét và gửi lại khi giáo viên mở app lần sau.
+                      document.getElementById('offline-alert-modal').style.display = 'flex';
+                  });
+              };
+          });
+          
+      };
+      img.src = imgUrl; 
+  }, 50); // Delay 50ms nhường luồng xử lý
+
   event.target.value = '';
 }
-
 // --- 1. HÀM VẼ GIAO DIỆN LỊCH SỬ (TÁCH RA ĐỂ DÙNG CHUNG CHO CẢ ONLINE VÀ OFFLINE) ---
 function renderHist(d) {
     var h='', lastD=''; 
