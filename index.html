@@ -155,7 +155,7 @@
 // ==========================================================
 // CẤU HÌNH API VÀ ĐỘNG CƠ LƯU TRỮ OFFLINE
 // ==========================================================
-const API_URL = 'https://script.google.com/macros/s/AKfycbyXQEg8ZLJLqw4TcDrdwmKnxcVRV-IFhY4f2S7laKdVfPLIo0GTaS_pyXU84-HQBf-dHg/exec'; // 🔴 NHỚ DÁN LINK VÀO ĐÂY
+const API_URL = 'https://script.google.com/macros/s/AKfycbxr_aLA_KeTg5OUCWcxlXteMnZCkoLtpCgNcsK7Vfuc5UoslaKqzHjUDfQY0Zx9JEBv/exec'; // 🔴 NHỚ DÁN LINK VÀO ĐÂY
 
 // Hàm gọi API chuẩn CÓ TRANG BỊ BỘ ĐẾM GIỜ (TIMEOUT) CHỐNG MẠNG YẾU
 // Hàm gọi API chuẩn CÓ TRANG BỊ BỘ ĐẾM GIỜ (TIMEOUT) CHỐNG MẠNG YẾU
@@ -632,7 +632,10 @@ async function loadHist(){
             store.getAll().onsuccess = function(e) {
                 let offLogs = e.target.result;
                 if(offLogs.length > 0) {
-                    let offH = '<div style="color:#b45309; background:#fffbeb; border:1px dashed #f59e0b; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; font-weight:bold;">⚠️ Có ' + offLogs.length + ' ca ngoại tuyến đang chờ đồng bộ:</div>';
+                    let offH = '<div style="color:#b45309; background:#fffbeb; border:1px dashed #f59e0b; padding:12px; border-radius:8px; margin-bottom:15px; font-size:13px; font-weight:bold; text-align:center;">' + 
+           '⚠️ Có ' + offLogs.length + ' ca ngoại tuyến chưa đồng bộ:<br>' + 
+           '<button onclick="syncOfflineData()" style="margin-top:10px; width:100%; padding:8px 0; background:#f59e0b; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold; box-shadow:0 2px 4px rgba(245, 158, 11, 0.3);">' + 
+           '<i class="material-icons" style="font-size:16px; vertical-align:middle;">sync</i> BẤM VÀO ĐÂY ĐỂ ĐỒNG BỘ LÊN MẠNG</button></div>';
                     offLogs.forEach(l => { 
                         offH+=`<div class="ca-card" style="padding:12px;margin-bottom:8px;border-left:4px solid #f59e0b"><div style="display:flex;justify-content:space-between"><span style="font-weight:bold">${l.ca} <span style="font-weight:normal;font-size:12px">(${l.loai})</span></span><span style="font-size:12px;font-weight:bold;color:#f59e0b">Ngoại tuyến</span></div><div style="font-size:11px;color:#f59e0b;margin-top:2px">Dữ liệu đã lưu an toàn vào máy...</div></div>`; 
                     });
@@ -769,7 +772,9 @@ async function saveOfflineLog(maNV, tenNV, ca, loai, lat, lng, imgBase64, locN, 
 // ==========================================================
 // ĐỘNG CƠ ĐỒNG BỘ DỮ LIỆU OFFLINE LÊN SERVER (ĐÃ VÁ LỖI)
 // ==========================================================
-window.addEventListener('online', syncOfflineData); 
+document.addEventListener("visibilitychange", function() {
+    if (!document.hidden) syncOfflineData();
+});
 
 async function syncOfflineData() {
     if (!navigator.onLine) return; // Nếu vẫn đang mất mạng thì không làm gì cả
