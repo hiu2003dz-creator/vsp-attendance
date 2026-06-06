@@ -238,7 +238,11 @@ function login(){
   }).catch(e => { alert("Lỗi mạng. Vui lòng thử lại!"); stopLoad('btn-login'); });
 }
 
-function logout(){ localStorage.removeItem(DB_KEY); setCookieVal("CC_USER_DATA", "", -1); location.reload(); }
+function logout(){ 
+    localStorage.clear(); // HỦY DIỆT TOÀN BỘ RÁC CACHE THÁNG CŨ
+    setCookieVal("CC_USER_DATA", "", -1); 
+    location.reload(); 
+}
 
 function initMonthSelector() {
     var sel = document.getElementById('hist-month'); if(!sel) return;
