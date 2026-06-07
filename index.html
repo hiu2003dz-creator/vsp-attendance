@@ -695,6 +695,94 @@ function cancelCurrentShift(caName) {
     var safeId = caName.replace(/\s+/g, ''); 
     var cardDiv = document.getElementById('card_' + safeId); 
     
+    var loader = document.getElementById('smooth-loader'); 
+    var loaderTxt = document.getElementById('loader-text'); 
+    var loaderIcon = document.getElementById('loader-icon');
+    
+    if(loader) { 
+        loader.style.display = 'flex'; 
+        setTimeout(() => { loader.style.opacity = '1'; }, 10); 
+        if(loaderTxt) loaderTxt.innerText = "⏳ Đang xử lý hủy ca..."; 
+    }
+
+    const closeLoaderSafe = (msgHtml, waitTime = 1000) => {
+        if(!loader) return;
+        loader.innerHTML = msgHtml;
+        setTimeout(() => { 
+            loader.style.opacity = '0'; 
+            setTimeout(() => { 
+                loader.style.display = 'none'; 
+                loader.innerHTML = `<i id="loader-icon" class="material-icons bouncing-ball" style="font-size:60px; color:#EA580C; text-shadow: 0 4px 6px rgba(0,0,0,0.2);">sports_basketball</i><div id="loader-text" style="margin-top:15px; font-weight:bold; color:#334155; font-size:15px; text-shadow: 0 1px 2px rgba(255,255,255,0.8);">Đang xử lý...</div>`; 
+                if(cardDiv) {
+                    cardDiv.style.transition = "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
+                    cardDiv.style.transform = "scale(0.8)";
+                    cardDiv.style.opacity = "0";
+                    setTimeout(() => cardDiv.remove(), 400); 
+                }
+                loadData(true);
+            }, 400); 
+        }, waitTime);
+    };
+
+    // ĐÓNG GÓI DỮ LIỆU ĐỂ CHO VÀO KÉT SẮT
+    var logData = {
+        apiAction: 'cancelShift', // Báo cho máy đồng bộ biết đây là lệnh HỦY
+        maNV: USER.id, 
+        caName: caName, 
+        reason: reason,
+        timeGoc: new Date().getTime(),
+        ca: caName,  // Dùng để hiển thị UI lúc đồng bộ
+        loai: 'HỦY'  // Dùng để hiển thị UI lúc đồng bộ
+    };
+
+    // MỞ KÉT SẮT VÀ LƯU NGAY LẬP TỨC
+    initDB().then(db => {
+        let tx = db.transaction(["Logs"], "readwrite");
+        let request = tx.objectStore("Logs").add(logData);
+        
+        request.onsuccess = function(e) {
+            let logId = e.target.result; 
+            
+            // Cập nhật giao diện xóa ca đó đi luôn dù đang mất mạng
+            try {
+                var todayVN = ('0' + new Date().getDate()).slice(-2) + '/' + ('0' + (new Date().getMonth() + 1)).slice(-2) + '/' + new Date().getFullYear();
+                var cachedSch = localStorage.getItem('CACHE_SCH_' + USER.id);
+                if(cachedSch && cachedSch !== "undefined") {
+                    let list = JSON.parse(cachedSch);
+                    list = list.filter(s => !(s.ca === caName && s.date === todayVN));
+                    localStorage.setItem('CACHE_SCH_' + USER.id, JSON.stringify(list));
+                }
+            } catch(err) {}
+
+            let successHtml = `<div style="transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;"><i class="material-icons" style="font-size:70px; color:#10b981;">check_circle</i></div><div style="margin-top:12px; font-weight:900; color:#10b981; font-size:18px; transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 0.1s;">✅ ĐÃ HỦY (LƯU TẠM)!</div>`;
+            closeLoaderSafe(successHtml, 1000);
+
+            // Có mạng thì gửi lên để xóa khỏi két
+            callAPI('cancelShift', logData).then(r => {
+                let delTx = db.transaction(["Logs"], "readwrite");
+                delTx.objectStore("Logs").delete(logId);
+                showToast("✅ Đã hủy ca thành công!");
+            }).catch(err => {
+                document.getElementById('offline-alert-modal').style.display = 'flex';
+            });
+        };
+    }).catch(err => {
+        let syncHtml = `<div style="transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;"><i class="material-icons" style="font-size:70px; color:#f59e0b;">cloud_sync</i></div><div style="margin-top:12px; font-weight:900; color:#f59e0b; font-size:18px;">⏳ Đang gửi lệnh hủy...</div>`;
+        closeLoaderSafe(syncHtml, 1500);
+        
+        callAPI('cancelShift', logData).then(r => {
+            showToast("✅ Đã hủy ca thành công!");
+        }).catch(e => {
+            document.getElementById('offline-alert-modal').style.display = 'flex';
+        });
+    });
+} 
+    var reason = prompt("Vui lòng nhập lý do hủy ca này (Bắt buộc):"); if(reason === null) return; 
+    if(!reason.trim()){ alert("⛔ Bạn phải nhập lý do mới được hủy ca!"); return; } 
+    
+    var safeId = caName.replace(/\s+/g, ''); 
+    var cardDiv = document.getElementById('card_' + safeId); 
+    
     // 1. GỌI HIỆU ỨNG QUẢ BÓNG RỔ RA (Che đi sự giật lag)
     var loader = document.getElementById('smooth-loader'); 
     var loaderTxt = document.getElementById('loader-text'); 
@@ -827,7 +915,37 @@ async function syncOfflineData() {
                 showToast("🔄 Đang đồng bộ: " + log.ca + " (" + log.loai + ")...");
                 
                 // Gửi lên server
-                let res = await callAPI('processCheckIn', log);
+                // 2. BẮT ĐẦU GỬI TỪNG BẢN GHI LÊN GOOGLE
+        for (let i = 0; i < logs.length; i++) {
+            let log = logs[i];
+            let key = keys[i];
+            
+            try {
+                showToast("🔄 Đang đồng bộ: " + log.ca + " (" + log.loai + ")...");
+                
+                // 🔴 TRÍ TUỆ NHÂN TẠO NHỎ: Tự biết phân biệt Chấm Công và Hủy Ca
+                let apiActionToCall = log.apiAction ? log.apiAction : 'processCheckIn';
+                
+                // Gửi lên server
+                let res = await callAPI(apiActionToCall, log);
+                
+                if (res && (res.success || typeof res === 'string')) { // cancelShift trả về string
+                    // Thành công -> Xóa khỏi máy
+                    let delTx = db.transaction(["Logs"], "readwrite");
+                    delTx.objectStore("Logs").delete(key);
+                    count++;
+                } else {
+                    // Nếu server chặn (báo lỗi có chữ ⛔) thì xóa để không kẹt
+                    if (res && res.msg && res.msg.includes("⛔")) {
+                        let delTx = db.transaction(["Logs"], "readwrite");
+                        delTx.objectStore("Logs").delete(key);
+                    }
+                }
+            } catch (e) { 
+                console.log("Mạng chập chờn, chờ lần sau."); 
+                break; 
+            }
+        }
                 
                 if (res && res.success) {
                     // Thành công -> Xóa khỏi máy
