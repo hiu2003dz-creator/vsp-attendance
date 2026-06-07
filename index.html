@@ -400,11 +400,15 @@ function renderSch(list){
                }
            } else if (item.status == 'WORKING') {
                cls='working'; timeDisplay = `<span style="color:#2563EB;font-weight:bold">${item.start}</span> - ...`; var btnRaCa = '';
-               if(item.type == 'FREE' || diffMin >= 40) { 
+               
+               // ĐÃ FIX: Chặn 40 phút cho TẤT CẢ CÁC CA (Bao gồm cả Ca Phát Sinh)
+               if(diffMin >= 40) { 
                    btnRaCa = `<button class="btn" style="width:auto;padding:8px 16px;font-size:12px;background:#F59E0B" onclick="preCheck('${item.ca}','${item.loc}','${item.start}','${item.end}','RA')">RA CA</button>`;
                } else { 
-                   var conLai = Math.ceil(40 - diffMin); btnRaCa = `<button class="btn" style="width:auto;padding:8px 12px;font-size:11px;background:#e2e8f0;color:#64748b" disabled>⏳ Còn ${conLai}p</button>`; 
+                   var conLai = Math.ceil(40 - diffMin); 
+                   btnRaCa = `<button class="btn" style="width:auto;padding:8px 12px;font-size:11px;background:#e2e8f0;color:#64748b" disabled>⏳ Còn ${conLai}p</button>`; 
                }
+               
                btnHtml = `<div style="display:flex;gap:10px;justify-content:flex-end;align-items:center"><button class="btn" style="width:auto;padding:8px 12px;font-size:11px;background:#64748b;color:white" onclick="cancelCurrentShift('${item.ca}')">HỦY</button>${btnRaCa}</div>`;
            } else { 
                cls='done'; timeDisplay = `${item.start} - ${item.end}`; btnHtml = `<div class="status-badge st-done"><i class="material-icons" style="font-size:12px">check_circle</i> ĐÃ XONG</div>`;
@@ -457,7 +461,132 @@ function closeCam(){ document.getElementById('cam-screen').style.display='none';
 
 // QUY TRÌNH CHẤM CÔNG: ĐỒNG BỘ UI & XỬ LÝ MẠNG YẾU
 // QUY TRÌNH CHẤM CÔNG: ĐỒNG BỘ UI & XỬ LÝ MẠNG YẾU (ĐÃ FIX LỖI KHỰNG VÀ THÊM HIỆU ỨNG MƯỢT)
+// QUY TRÌNH CHẤM CÔNG: ĐỒNG BỘ UI & XỬ LÝ MẠNG YẾU (ĐÃ FIX CRASH KẸT MÀN HÌNH)
 function processNativePhoto(event) {
+  const file = event.target.files[0]; if (!file) return;
+  
+  closeCam(); 
+  var loader = document.getElementById('smooth-loader'); 
+  var loaderTxt = document.getElementById('loader-text'); 
+  var loaderIcon = document.getElementById('loader-icon');
+  
+  // KIỂM TRA DOM ĐỂ CHỐNG CRASH
+  if(loader) { 
+      loader.style.display = 'flex'; 
+      setTimeout(() => { loader.style.opacity = '1'; }, 10); 
+      if(loaderTxt) loaderTxt.innerText = "⏳ Đang xử lý ảnh..."; 
+  }
+  let l = document.getElementById('native-cam-label'); if (l) l.style.display = 'none';
+  
+  // Hàm con: Tắt Loader an toàn và Khôi phục DOM gốc
+  const closeLoaderSafe = (msgHtml, waitTime = 1000) => {
+      if(!loader) return;
+      loader.innerHTML = msgHtml;
+      setTimeout(() => { 
+          loader.style.opacity = '0'; 
+          setTimeout(() => { 
+              loader.style.display = 'none'; 
+              // Bắt buộc khôi phục lại bóng rổ để lần chấm công sau không bị Crash Null DOM
+              loader.innerHTML = `<i id="loader-icon" class="material-icons bouncing-ball" style="font-size:60px; color:#EA580C; text-shadow: 0 4px 6px rgba(0,0,0,0.2);">sports_basketball</i><div id="loader-text" style="margin-top:15px; font-weight:bold; color:#334155; font-size:15px; text-shadow: 0 1px 2px rgba(255,255,255,0.8);">⏳ Đang xử lý ảnh...</div>`;
+          }, 400);
+      }, waitTime);
+  };
+
+  setTimeout(() => {
+      const imgUrl = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = function() {
+          try {
+              URL.revokeObjectURL(imgUrl); 
+              const cv = document.createElement('canvas'); 
+              const MAX_W = 600; let w = img.width; let h = img.height;
+              if (w > MAX_W) { h = h * (MAX_W / w); w = MAX_W; }
+              cv.width = w; cv.height = h; 
+              cv.getContext('2d').drawImage(img, 0, 0, w, h);
+              const base64 = cv.toDataURL('image/jpeg', 0.4).split(',')[1];
+
+              var curTimeFake = new Date().toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+              var todayVN = ('0' + new Date().getDate()).slice(-2) + '/' + ('0' + (new Date().getMonth() + 1)).slice(-2) + '/' + new Date().getFullYear();
+              
+              try {
+                  var cachedSch = localStorage.getItem('CACHE_SCH_' + USER.id);
+                  if(cachedSch && cachedSch !== "undefined") {
+                      let list = JSON.parse(cachedSch);
+                      let match = list.find(s => s.ca === CUR_CA && s.date === todayVN);
+                      if(match) {
+                          if (CUR_TYPE === 'VÀO') { match.status = 'WORKING'; match.start = curTimeFake; }
+                          if (CUR_TYPE === 'RA') { match.status = 'DONE'; match.end = curTimeFake; }
+                      } else if (CUR_TYPE === 'VÀO') {
+                          list.unshift({ ca: CUR_CA, date: todayVN, isToday: true, loc: CUR_LOC || "Ca phát sinh", start: curTimeFake, end: "", status: "WORKING", type: "FREE" });
+                      }
+                      localStorage.setItem('CACHE_SCH_' + USER.id, JSON.stringify(list));
+                      renderSch(list); 
+                  }
+              } catch(e) {}
+
+              var exactTime = new Date().getTime(); 
+              var safeLat = LOC ? LOC.lat : 0;
+              var safeLng = LOC ? LOC.lng : 0;
+
+              var logData = {
+                  maNV: USER.id, tenNV: USER.name, ca: CUR_CA, loai: CUR_TYPE,
+                  lat: safeLat, lng: safeLng, imgBase64: base64,
+                  locN: CUR_LOC, start: CUR_TIME, end: CUR_END, note: CUR_NOTE,
+                  timeGoc: exactTime, clientTime: exactTime
+              };
+
+              initDB().then(db => {
+                  let tx = db.transaction(["Logs"], "readwrite");
+                  let request = tx.objectStore("Logs").add(logData);
+                  
+                  request.onsuccess = function(e) {
+                      let logId = e.target.result; 
+                      
+                      // Báo Đã lưu tạm và tự động thoát màn hình mượt mà
+                      let successHtml = `<div style="transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;"><i class="material-icons" style="font-size:70px; color:#10b981;">check_circle</i></div><div style="margin-top:12px; font-weight:900; color:#10b981; font-size:18px; transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 0.1s;">✅ ĐÃ LƯU TẠM!</div>`;
+                      closeLoaderSafe(successHtml, 1000);
+
+                      callAPI('processCheckIn', { action: 'processCheckIn', ...logData }).then(r => {
+                          if (r.success) {
+                              let delTx = db.transaction(["Logs"], "readwrite");
+                              delTx.objectStore("Logs").delete(logId);
+                              
+                              if (r.timeAlert) showToast("🔔 " + r.timeAlert);
+                              if (r.durationMsg) showToast("🎉 KẾT THÚC CA! " + r.durationMsg.replace(" (Làm: ", "").replace(")", ""));
+                              setTimeout(() => loadData(false), 2000); 
+                          } else {
+                              showToast("⚠️ Lỗi: " + r.msg); 
+                              if (r.msg.includes("⛔")) {
+                                  let delTx = db.transaction(["Logs"], "readwrite");
+                                  delTx.objectStore("Logs").delete(logId);
+                              }
+                              setTimeout(() => loadData(false), 500); 
+                          }
+                      }).catch(err => {
+                          document.getElementById('offline-alert-modal').style.display = 'flex';
+                      });
+                  };
+              }).catch(err => {
+                  let syncHtml = `<div style="transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;"><i class="material-icons" style="font-size:70px; color:#f59e0b;">cloud_sync</i></div><div style="margin-top:12px; font-weight:900; color:#f59e0b; font-size:18px;">⏳ Đang gửi lên Server...</div>`;
+                  closeLoaderSafe(syncHtml, 1500);
+                  
+                  callAPI('processCheckIn', { action: 'processCheckIn', ...logData }).then(r => {
+                      if (r.success) { showToast("✅ THÀNH CÔNG!"); setTimeout(() => loadData(false), 2000); }
+                      else showToast("⚠️ Lỗi: " + r.msg);
+                  }).catch(e => {
+                      document.getElementById('offline-alert-modal').style.display = 'flex';
+                  });
+              });
+
+          } catch (fatalError) {
+              closeLoaderSafe(`<div style="color:red;font-weight:bold;">❌ Lỗi phần mềm: ${fatalError.message}</div>`, 2000);
+          }
+      };
+      img.src = imgUrl; 
+  }, 50); 
+
+  event.target.value = '';
+}
   const file = event.target.files[0]; if (!file) return;
   
   closeCam(); 
