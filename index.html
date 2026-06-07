@@ -260,8 +260,14 @@ function initApp(){
 }
 
 async function loadData(isRefreshing = false){ 
-    var cachedSch = localStorage.getItem('CACHE_SCH_' + USER.id);
-    var scheduleList = cachedSch ? JSON.parse(cachedSch) : [];
+    var scheduleList = [];
+    try {
+        var cachedSch = localStorage.getItem('CACHE_SCH_' + USER.id);
+        // Chặn đứng lỗi "undefined" hoặc "null" giả danh chuỗi
+        if(cachedSch && cachedSch !== "undefined" && cachedSch !== "null") {
+            scheduleList = JSON.parse(cachedSch);
+        }
+    } catch(e) { console.error("Lỗi đọc bộ nhớ tạm:", e); }
 
     // HÀM HỢP NHẤT: Trộn dữ liệu Két sắt đè lên dữ liệu Mạng một cách an toàn tuyệt đối
     async function mergeAndRender(baseList) {
@@ -598,14 +604,16 @@ async function loadHist(){
     // KHÓA NÚT CHỌN THÁNG LẠI CHỐNG NHÂN VIÊN ẤN LIÊN TỤC GÂY ĐƠ MÁY
     if(sel) sel.disabled = true;
 
-    // BƯỚC 1: Hiện lịch sử cũ từ máy ra ngay lập tức (0 giây)
-    var cachedHist = localStorage.getItem(cacheKey);
+    var cachedHistStr = localStorage.getItem(cacheKey);
+    var cachedHist = null;
+    try {
+        if(cachedHistStr && cachedHistStr !== "undefined" && cachedHistStr !== "null") {
+            cachedHist = JSON.parse(cachedHistStr);
+        }
+    } catch(e) {}
+
     if(cachedHist) {
-        renderHist(JSON.parse(cachedHist));
-        histContainer.insertAdjacentHTML('afterbegin', '<div id="sync-hist-stt" style="text-align:center;font-size:11px;color:#9ca3af;margin-bottom:10px;font-style:italic;"><div class="spinner" style="width:10px;height:10px;border-width:2px;border-top-color:#9ca3af"></div> Đang cập nhật dữ liệu mới...</div>');
-    } else {
-        histContainer.innerHTML='<div style="text-align:center;padding:30px;"><div class="spinner" style="border-top-color:#4f46e5"></div> Đang tải...</div>';
-    }
+        renderHist(cachedHist);
 
     // BƯỚC 2: Gọi mạng lấy dữ liệu mới nhất từ Google
     try {
