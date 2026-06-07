@@ -338,6 +338,7 @@ async function loadData(isRefreshing = false){
     }
 
     // 2. Gọi mạng lấy lịch Server (ĐOẠN CỦA SẾP GIỮ NGUYÊN)
+    // 2. Gọi mạng lấy lịch Server (ĐOẠN CỦA SẾP GIỮ NGUYÊN)
     callAPI('getTodaySchedule', {maNV: USER.id}).then(d => {
         // Chỉ lưu và vẽ lịch KHI VÀ CHỈ KHI server trả về dữ liệu chuẩn
         if (d && d.list) {
@@ -346,6 +347,9 @@ async function loadData(isRefreshing = false){
         }
         if(typeof syncOfflineData === 'function') syncOfflineData();
     }).catch(e => {
+        // 🔴 ĐÃ SỬA: Ép App vẽ lại dữ liệu từ Két sắt ngoại tuyến để xóa màn hình đơ
+        mergeAndRender(scheduleList); 
+        
         var sMini = document.getElementById('sync-mini'); 
         if(sMini) sMini.innerHTML = '<span style="color:#f59e0b;font-weight:bold">⚠️ Đang dùng dữ liệu ngoại tuyến (Sóng yếu/Mất mạng)</span>';
     });
