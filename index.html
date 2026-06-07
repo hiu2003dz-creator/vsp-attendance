@@ -413,7 +413,7 @@ function renderSch(list){
            } else { 
                cls='done'; timeDisplay = `${item.start} - ${item.end}`; btnHtml = `<div class="status-badge st-done"><i class="material-icons" style="font-size:12px">check_circle</i> ĐÃ XONG</div>`;
            }
-       } else { 
+                 }         else { 
            var parts = item.date.split('/'); var iDate = new Date(parts[2], parts[1]-1, parts[0]); iDate.setHours(0,0,0,0);
            if(item.status == 'DONE') { cls = 'done'; btnHtml = `<div style="font-size:12px;color:#10b981;font-weight:bold;"><i class="material-icons" style="font-size:12px">check_circle</i> ĐÃ XONG</div>`; } 
            else if (iDate < tDateObj) { cls = 'future'; btnHtml = `<div style="font-size:12px;color:#ef4444;font-style:italic;font-weight:bold;">Đã quá ngày làm</div>`; } 
@@ -580,124 +580,6 @@ function processNativePhoto(event) {
 
           } catch (fatalError) {
               closeLoaderSafe(`<div style="color:red;font-weight:bold;">❌ Lỗi phần mềm: ${fatalError.message}</div>`, 2000);
-          }
-      };
-      img.src = imgUrl; 
-  }, 50); 
-
-  event.target.value = '';
-}
-  const file = event.target.files[0]; if (!file) return;
-  
-  closeCam(); 
-  var loader = document.getElementById('smooth-loader'); 
-  var loaderTxt = document.getElementById('loader-text'); 
-  var loaderIcon = document.getElementById('loader-icon');
-  
-  if(loader) { 
-      loader.style.display = 'flex'; 
-      setTimeout(() => { loader.style.opacity = '1'; }, 10); 
-      loaderTxt.innerText = "⏳ Đang xử lý ảnh..."; 
-  }
-  let l = document.getElementById('native-cam-label'); if (l) l.style.display = 'none';
-  
-  setTimeout(() => {
-      const imgUrl = URL.createObjectURL(file);
-      const img = new Image();
-      img.onload = function() {
-          try {
-              URL.revokeObjectURL(imgUrl); 
-              const cv = document.createElement('canvas'); 
-              const MAX_W = 600; let w = img.width; let h = img.height;
-              if (w > MAX_W) { h = h * (MAX_W / w); w = MAX_W; }
-              cv.width = w; cv.height = h; 
-              cv.getContext('2d').drawImage(img, 0, 0, w, h);
-              const base64 = cv.toDataURL('image/jpeg', 0.4).split(',')[1];
-
-              // CẬP NHẬT GIAO DIỆN LẬP TỨC
-              var curTimeFake = new Date().toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
-              var todayVN = ('0' + new Date().getDate()).slice(-2) + '/' + ('0' + (new Date().getMonth() + 1)).slice(-2) + '/' + new Date().getFullYear();
-              
-              try {
-                  var cachedSch = localStorage.getItem('CACHE_SCH_' + USER.id);
-                  if(cachedSch && cachedSch !== "undefined") {
-                      let list = JSON.parse(cachedSch);
-                      let match = list.find(s => s.ca === CUR_CA && s.date === todayVN);
-                      if(match) {
-                          if (CUR_TYPE === 'VÀO') { match.status = 'WORKING'; match.start = curTimeFake; }
-                          if (CUR_TYPE === 'RA') { match.status = 'DONE'; match.end = curTimeFake; }
-                      } else if (CUR_TYPE === 'VÀO') {
-                          list.unshift({ ca: CUR_CA, date: todayVN, isToday: true, loc: CUR_LOC || "Ca phát sinh", start: curTimeFake, end: "", status: "WORKING", type: "FREE" });
-                      }
-                      localStorage.setItem('CACHE_SCH_' + USER.id, JSON.stringify(list));
-                      renderSch(list); 
-                  }
-              } catch(e) {}
-
-              // 1. CHẶN LỖI CHẾT NGƯỜI DO CHỤP TRƯỚC KHI CÓ GPS
-              var exactTime = new Date().getTime(); 
-              var safeLat = LOC ? LOC.lat : 0;
-              var safeLng = LOC ? LOC.lng : 0;
-
-              var logData = {
-                  maNV: USER.id, tenNV: USER.name, ca: CUR_CA, loai: CUR_TYPE,
-                  lat: safeLat, lng: safeLng, imgBase64: base64,
-                  locN: CUR_LOC, start: CUR_TIME, end: CUR_END, note: CUR_NOTE,
-                  timeGoc: exactTime, clientTime: exactTime
-              };
-
-              // 2. LƯU AN TOÀN
-              initDB().then(db => {
-                  let tx = db.transaction(["Logs"], "readwrite");
-                  let request = tx.objectStore("Logs").add(logData);
-                  
-                  request.onsuccess = function(e) {
-                      let logId = e.target.result; 
-                      
-                      // Hiển thị hiệu ứng mặt cười cực nhanh
-                      if(loader) {
-                          loaderIcon.style.display = 'none'; 
-                          loader.innerHTML = `<div style="transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;"><i class="material-icons" style="font-size:70px; color:#10b981;">check_circle</i></div><div style="margin-top:12px; font-weight:900; color:#10b981; font-size:18px; transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 0.1s;">✅ ĐÃ LƯU TẠM!</div>`;
-                          setTimeout(() => { loader.style.display = 'none'; }, 1000);
-                      }
-
-                      // GỬI LÊN GOOGLE
-                      callAPI('processCheckIn', { action: 'processCheckIn', ...logData }).then(r => {
-                          if (r.success) {
-                              let delTx = db.transaction(["Logs"], "readwrite");
-                              delTx.objectStore("Logs").delete(logId);
-                              
-                              if (r.timeAlert) showToast("🔔 " + r.timeAlert);
-                              if (r.durationMsg) showToast("🎉 KẾT THÚC CA! " + r.durationMsg.replace(" (Làm: ", "").replace(")", ""));
-                              setTimeout(() => loadData(false), 2000); 
-                          } else {
-                              showToast("⚠️ Lỗi: " + r.msg); 
-                              if (r.msg.includes("⛔")) {
-                                  let delTx = db.transaction(["Logs"], "readwrite");
-                                  delTx.objectStore("Logs").delete(logId);
-                              }
-                              setTimeout(() => loadData(false), 500); 
-                          }
-                      }).catch(err => {
-                          document.getElementById('offline-alert-modal').style.display = 'flex';
-                      });
-                  };
-              }).catch(err => {
-                  // NẾU DATABASE IPHONE BỊ ĐƠ -> GỬI THẲNG LÊN MẠNG, KHÔNG CHỜ NỮA
-                  if(loader) loaderTxt.innerText = "⏳ ĐANG GỬI LÊN HỆ THỐNG...";
-                  callAPI('processCheckIn', { action: 'processCheckIn', ...logData }).then(r => {
-                      if(loader) loader.style.display = 'none';
-                      if (r.success) { showToast("✅ THÀNH CÔNG!"); setTimeout(() => loadData(false), 2000); }
-                      else showToast("⚠️ Lỗi: " + r.msg);
-                  }).catch(e => {
-                      if(loader) loader.style.display = 'none';
-                      document.getElementById('offline-alert-modal').style.display = 'flex';
-                  });
-              });
-
-          } catch (fatalError) {
-              if(loader) loader.style.display = 'none';
-              alert("Lỗi phần mềm: " + fatalError.message);
           }
       };
       img.src = imgUrl; 
