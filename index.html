@@ -270,6 +270,7 @@ async function loadData(isRefreshing = false){
     } catch(e) { console.error("Lỗi đọc bộ nhớ tạm:", e); }
 
     // HÀM HỢP NHẤT: Trộn dữ liệu Két sắt đè lên dữ liệu Mạng một cách an toàn tuyệt đối
+    // HÀM HỢP NHẤT: Trộn dữ liệu Két sắt đè lên dữ liệu Mạng một cách an toàn tuyệt đối
     async function mergeAndRender(baseList) {
         try {
             let db = await initDB();
@@ -282,11 +283,14 @@ async function loadData(isRefreshing = false){
                     offLogs.forEach(off => {
                         let offDate = new Date(off.timeGoc);
                         let todayStr = ('0' + offDate.getDate()).slice(-2) + '/' + ('0' + (offDate.getMonth() + 1)).slice(-2) + '/' + offDate.getFullYear();
-                        let match = mergedList.find(s => s.ca === off.ca && s.date === todayStr);
                         
-                        if(match) {
-                            if(off.loai === 'VÀO') match.status = 'WORKING';
-                            if(off.loai === 'RA') match.status = 'DONE';
+                        // Tìm thẻ ca tương ứng
+                        let matchIdx = mergedList.findIndex(s => s.ca === off.ca && s.date === todayStr);
+                        
+                        if(matchIdx > -1) {
+                            if(off.loai === 'VÀO') mergedList[matchIdx].status = 'WORKING';
+                            if(off.loai === 'RA') mergedList[matchIdx].status = 'DONE';
+                            if(off.loai === 'HỦY') mergedList[matchIdx].status = 'CANCELED'; // Đánh dấu tử hình
                         } else {
                             if(off.loai === 'VÀO') { 
                                 let safeTime = off.start ? off.start : (('0' + offDate.getHours()).slice(-2) + ':' + ('0' + offDate.getMinutes()).slice(-2));
@@ -305,12 +309,15 @@ async function loadData(isRefreshing = false){
                     });
                 }
                 
+                // 🔴 BỘ LỌC THẦN THÁNH: Xóa sổ vĩnh viễn các ca CANCELED khỏi màn hình
+                mergedList = mergedList.filter(s => s.status !== 'CANCELED');
+                
                 renderSch(mergedList); 
                 
                 var sMini = document.getElementById('sync-mini'); 
                 if(sMini) {
                     if (offLogs.length > 0) {
-                        sMini.innerHTML = `<span style="color:#f59e0b;font-weight:bold"><i class="material-icons" style="font-size:12px;vertical-align:middle">cloud_off</i> Có ${offLogs.length} ca ngoại tuyến đang chờ gửi lên hệ thống</span>`;
+                        sMini.innerHTML = `<span style="color:#f59e0b;font-weight:bold"><i class="material-icons" style="font-size:12px;vertical-align:middle">cloud_off</i> Có ${offLogs.length} ca ngoại tuyến đang chờ gửi</span>`;
                     } else if (!navigator.onLine) {
                         sMini.innerHTML = '<span style="color:#ef4444;font-weight:bold">⚠️ Bạn đang mất kết nối mạng</span>';
                     }

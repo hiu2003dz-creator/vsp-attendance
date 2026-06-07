@@ -1,5 +1,5 @@
 // Nâng version lên v21 để ép điện thoại nạp quy tắc mới
-const CACHE_NAME = 'vsp-cc-cache-v48'; 
+const CACHE_NAME = 'vsp-cc-cache-v49'; 
 const urlsToCache = [
   './',
   './index.html',
