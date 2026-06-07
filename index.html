@@ -155,7 +155,7 @@
 // ==========================================================
 // CẤU HÌNH API VÀ ĐỘNG CƠ LƯU TRỮ OFFLINE
 // ==========================================================
-const API_URL = 'https://script.google.com/macros/s/AKfycbwoC7F0SmS9Td-ZO0p-m32iIreugx5cRDGjl92Xg3UPapVCvyKaRj6-VxuYd7mmqCPNrg/exec'; // 🔴 NHỚ DÁN LINK VÀO ĐÂY
+const API_URL = 'https://script.google.com/macros/s/AKfycbyRd4pxRBrh072ufzHodnrmCkE6xXbYIGIaPvwgWbkImHSiOuAU0i2VBKqL6VZFSAqbhw/exec'; // 🔴 NHỚ DÁN LINK VÀO ĐÂY
 
 // Hàm gọi API chuẩn CÓ TRANG BỊ BỘ ĐẾM GIỜ (TIMEOUT) CHỐNG MẠNG YẾU
 // Hàm gọi API chuẩn CÓ TRANG BỊ BỘ ĐẾM GIỜ (TIMEOUT) CHỐNG MẠNG YẾU
@@ -339,8 +339,11 @@ async function loadData(isRefreshing = false){
 
     // 2. Gọi mạng lấy lịch Server (ĐOẠN CỦA SẾP GIỮ NGUYÊN)
     callAPI('getTodaySchedule', {maNV: USER.id}).then(d => {
-        localStorage.setItem('CACHE_SCH_' + USER.id, JSON.stringify(d.list));
-        mergeAndRender(d.list); 
+        // Chỉ lưu và vẽ lịch KHI VÀ CHỈ KHI server trả về dữ liệu chuẩn
+        if (d && d.list) {
+            localStorage.setItem('CACHE_SCH_' + USER.id, JSON.stringify(d.list));
+            mergeAndRender(d.list); 
+        }
         if(typeof syncOfflineData === 'function') syncOfflineData();
     }).catch(e => {
         var sMini = document.getElementById('sync-mini'); 
