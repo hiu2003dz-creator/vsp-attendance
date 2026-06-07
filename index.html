@@ -614,7 +614,7 @@ async function loadHist(){
 
     if(cachedHist) {
         renderHist(cachedHist);
-
+    }
     // BƯỚC 2: Gọi mạng lấy dữ liệu mới nhất từ Google
     try {
         let d = await callAPI('getUserHistory', {maNV: USER.id, targetMonth: mStr});
