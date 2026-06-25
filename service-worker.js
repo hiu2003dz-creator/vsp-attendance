@@ -1,50 +1,76 @@
-// Nâng version lên v21 để ép điện thoại nạp quy tắc mới
-const CACHE_NAME = 'vsp-cc-cache-v49'; 
+// Mỗi lần update app, tăng số version này
+const CACHE_NAME = 'vsp-cc-cache-v50';
+
 const urlsToCache = [
   './',
   './index.html',
   './manifest.json'
 ];
 
-// Cài đặt và dọn rác bản cũ
+// Cài service worker mới
 self.addEventListener('install', event => {
+  self.skipWaiting();
+
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(urlsToCache);
+    })
   );
-  self.skipWaiting(); // Ép bản mới chiếm quyền ngay lập tức
 });
 
+// Kích hoạt và xóa cache cũ
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cache => {
-          if (cache !== CACHE_NAME) return caches.delete(cache); // Xóa sạch các v19, v20 cũ đi
+          if (cache !== CACHE_NAME) {
+            return caches.delete(cache);
+          }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// CHIẾN LƯỢC MỚI: NETWORK-FIRST (Ưu tiên lấy code mới trên mạng)
+// Network-first: có mạng lấy bản mới, mất mạng dùng cache
 self.addEventListener('fetch', event => {
-  // Bỏ qua các request gọi API của Google
-  if (event.request.url.includes('script.google.com') || event.request.url.includes('script.googleusercontent.com')) return;
+  const reqUrl = event.request.url;
+
+  // Không cache API Google Script
+  if (
+    reqUrl.includes('script.google.com') ||
+    reqUrl.includes('script.googleusercontent.com')
+  ) {
+    return;
+  }
+
+  // Chỉ xử lý GET
+  if (event.request.method !== 'GET') {
+    return;
+  }
 
   event.respondWith(
     fetch(event.request)
       .then(networkResponse => {
-        // Nếu có mạng và lấy được file mới -> Cất bản copy vào kho rồi mới trả về màn hình
-        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-          let responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
+        if (
+          networkResponse &&
+          networkResponse.status === 200 &&
+          networkResponse.type === 'basic'
+        ) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseToCache);
+          });
         }
+
         return networkResponse;
       })
       .catch(() => {
-        // NẾU MẤT MẠNG -> Lúc này mới được phép lôi bản cũ trong kho ra dùng
-        return caches.match(event.request);
+        return caches.match(event.request).then(cachedResponse => {
+          // Nếu là request mở trang mà không có cache riêng, trả về index
+          return cachedResponse || caches.match('./index.html');
+        });
       })
   );
 });

@@ -164,7 +164,7 @@ async function callAPI(action, payload = {}) {
     
     // Tăng bộ đếm thời gian lên 15 giây để điện thoại tải ảnh lên (thay vì 7s)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); 
+    const timeoutId = setTimeout(() => controller.abort(), 35000); 
 
     try {
         let res = await fetch(API_URL, { 
@@ -184,6 +184,10 @@ async function callAPI(action, payload = {}) {
 }
 
 var USER=null, LOC=null, CUR_CA='', CUR_LOC='', CUR_TIME='', CUR_END='', CUR_TYPE='', CUR_NOTE='', MODE='CHECKIN';
+var CUR_KEY = '';
+var IS_SUBMITTING = false;
+var LOAD_SEQ = 0;
+var SYNCING = false;
 var DB_KEY = 'CC_USER_V11'; 
 
 function setCookieVal(name, value, days) {
@@ -253,13 +257,22 @@ function initMonthSelector() {
 }
 
 function initApp(){ 
-    document.getElementById('sc-login').classList.remove('active'); document.getElementById('nav').style.display='flex'; go('home'); 
+    document.getElementById('sc-login').classList.remove('active'); 
+    document.getElementById('nav').style.display='flex'; 
+
     document.getElementById('wc-name').innerText = "Chào, " + USER.name;
-    document.getElementById('wc-date').innerText = new Date().toLocaleDateString('vi-VN', {weekday:'long', day:'2-digit', month:'2-digit'}); 
-    initMonthSelector(); loadData();
+    document.getElementById('wc-date').innerText = new Date().toLocaleDateString('vi-VN', {
+      weekday:'long', 
+      day:'2-digit', 
+      month:'2-digit'
+    }); 
+
+    initMonthSelector(); 
+    go('home');
 }
 
 async function loadData(isRefreshing = false){ 
+    var myLoadSeq = ++LOAD_SEQ;
     var scheduleList = [];
     try {
         var cachedSch = localStorage.getItem('CACHE_SCH_' + USER.id);
@@ -337,28 +350,36 @@ async function loadData(isRefreshing = false){
         var slist = document.getElementById('sch-list');
         var mini = document.getElementById('sync-mini');
         if(!mini) slist.insertAdjacentHTML('afterbegin', '<div id="sync-mini" style="text-align:center;font-size:11px;color:#9ca3af;margin-bottom:10px;font-style:italic;"><div class="spinner" style="width:10px;height:10px;border-width:2px;border-top-color:#9ca3af"></div> Đang làm mới...</div>');
-    } else {
+        } else {
         document.getElementById('sch-list').innerHTML = `
             <div class="skeleton-card"><div class="skel-line" style="width: 40%;"></div><div class="skel-line" style="width: 80%;"></div></div>
         `;
-        mergeAndRender([]); 
     }
+    // 2. Gọi mạng lấy lịch Server (ĐOẠN CỦA SẾP GIỮ NGUYÊN)
+    // 2. Gọi mạng lấy lịch Server (ĐOẠN CỦA SẾP GIỮ NGUYÊN)
+        callAPI('getTodaySchedule', {maNV: USER.id}).then(d => {
+        if (myLoadSeq !== LOAD_SEQ) return;
 
-    // 2. Gọi mạng lấy lịch Server (ĐOẠN CỦA SẾP GIỮ NGUYÊN)
-    // 2. Gọi mạng lấy lịch Server (ĐOẠN CỦA SẾP GIỮ NGUYÊN)
-    callAPI('getTodaySchedule', {maNV: USER.id}).then(d => {
-        // Chỉ lưu và vẽ lịch KHI VÀ CHỈ KHI server trả về dữ liệu chuẩn
         if (d && d.list) {
             localStorage.setItem('CACHE_SCH_' + USER.id, JSON.stringify(d.list));
             mergeAndRender(d.list); 
         }
+
         if(typeof syncOfflineData === 'function') syncOfflineData();
     }).catch(e => {
-        // 🔴 ĐÃ SỬA: Ép App vẽ lại dữ liệu từ Két sắt ngoại tuyến để xóa màn hình đơ
-        mergeAndRender(scheduleList); 
-        
+        if (myLoadSeq !== LOAD_SEQ) return;
+
+        if(scheduleList.length > 0) {
+            mergeAndRender(scheduleList); 
+        } else {
+            document.getElementById('sch-list').innerHTML = `
+              <div style="text-align:center;margin-top:50px;color:#f59e0b">
+                ⚠️ Không tải được lịch. Kiểm tra mạng rồi thử lại.
+              </div>`;
+        }
+
         var sMini = document.getElementById('sync-mini'); 
-        if(sMini) sMini.innerHTML = '<span style="color:#f59e0b;font-weight:bold">⚠️ Đang dùng dữ liệu ngoại tuyến (Sóng yếu/Mất mạng)</span>';
+        if(sMini) sMini.innerHTML = '<span style="color:#f59e0b;font-weight:bold">⚠️ Đang dùng dữ liệu ngoại tuyến</span>';
     });
 }
 function go(t){ document.querySelectorAll('.screen').forEach(e=>e.classList.remove('active')); document.getElementById('sc-'+t).classList.add('active'); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); if(t=='home') { document.querySelectorAll('.nav-item')[0].classList.add('active'); loadData(); } if(t=='history') { document.querySelectorAll('.nav-item')[1].classList.add('active'); loadHist(); } if(t=='profile') { document.querySelectorAll('.nav-item')[2].classList.add('active'); loadProfile(); } }
@@ -385,6 +406,7 @@ function renderSch(list){
    }
 
    list.forEach(item => {
+       var safeKey = String(item.id || (item.date + "_" + item.ca)).replace(/[^a-zA-Z0-9_-]/g, '_');
        if(item.date !== lastDate){ 
            lastDate = item.date; 
            var isToday = item.isToday ? ' <span style="color:#ef4444;font-size:12px">(Hôm nay)</span>' : ''; 
@@ -401,11 +423,11 @@ function renderSch(list){
            var diffMin = (now - startTime) / 60000; var diffToStart = (startTime - now) / 60000;
            if(item.status == 'PENDING') {
                if(item.type == 'FREE') { 
-                   btnHtml = `<button class="btn" style="width:auto;padding:8px 16px;font-size:12px;background:#2563EB" onclick="preCheck('${item.ca}','${item.loc}','${item.start}','${item.end}','VÀO')">VÀO CA</button>`;
+                   btnHtml = `<button class="btn" style="width:auto;padding:8px 16px;font-size:12px;background:#2563EB" onclick="preCheck('${item.ca}','${item.loc}','${item.start}','${item.end}','VÀO','${safeKey}', this)">VÀO CA</button>`;
                } else if(diffToStart <= 0) { 
-                   btnHtml = `<button class="btn" style="width:auto;padding:8px 16px;font-size:12px;background:#2563EB" onclick="preCheck('${item.ca}','${item.loc}','${item.start}','${item.end}','VÀO')">VÀO CA</button>`;
+                   btnHtml = `<button class="btn" style="width:auto;padding:8px 16px;font-size:12px;background:#2563EB" onclick="preCheck('${item.ca}','${item.loc}','${item.start}','${item.end}','VÀO','${safeKey}', this)">VÀO CA</button>`;
                } else if(diffToStart <= 60) {
-                   btnHtml = `<div style="display:flex; align-items:center; gap:8px;"><div class="status-badge" style="color:#64748b; background:#f1f5f9; font-size:11px; padding:4px 8px; border-radius:12px; font-weight:bold;"><i class="material-icons" style="font-size:11px; vertical-align:middle;">update</i> Chuẩn bị</div><button class="btn" style="width:auto;padding:8px 14px;font-size:12px;background:#06b6d4;color:white;box-shadow: 0 2px 4px rgba(6, 182, 212, 0.3);" onclick="preCheck('${item.ca}','${item.loc}','${item.start}','${item.end}','VÀO')">VÀO SỚM</button></div>`;
+                   btnHtml = `<div style="display:flex; align-items:center; gap:8px;"><div class="status-badge" style="color:#64748b; background:#f1f5f9; font-size:11px; padding:4px 8px; border-radius:12px; font-weight:bold;"><i class="material-icons" style="font-size:11px; vertical-align:middle;">update</i> Chuẩn bị</div><button class="btn" style="width:auto;padding:8px 14px;font-size:12px;background:#06b6d4;color:white;box-shadow: 0 2px 4px rgba(6, 182, 212, 0.3);" onclick="preCheck('${item.ca}','${item.loc}','${item.start}','${item.end}','VÀO','${safeKey}', this)">VÀO SỚM</button></div>`;
                } else { 
                    btnHtml = `<button class="btn" style="background:#e2e8f0;color:#94a3b8;font-size:11px;padding:6px 12px;width:auto" disabled>⏳ SẮP ĐẾN</button>`;
                }
@@ -414,13 +436,13 @@ function renderSch(list){
                
                // ĐÃ FIX: Chặn 40 phút cho TẤT CẢ CÁC CA (Bao gồm cả Ca Phát Sinh)
                if(diffMin >= 40) { 
-                   btnRaCa = `<button class="btn" style="width:auto;padding:8px 16px;font-size:12px;background:#F59E0B" onclick="preCheck('${item.ca}','${item.loc}','${item.start}','${item.end}','RA')">RA CA</button>`;
+                   btnRaCa = `<button class="btn" style="width:auto;padding:8px 16px;font-size:12px;background:#F59E0B" onclick="preCheck('${item.ca}','${item.loc}','${item.start}','${item.end}','RA','${safeKey}', this)">RA CA</button>`;
                } else { 
                    var conLai = Math.ceil(40 - diffMin); 
                    btnRaCa = `<button class="btn" style="width:auto;padding:8px 12px;font-size:11px;background:#e2e8f0;color:#64748b" disabled>⏳ Còn ${conLai}p</button>`; 
                }
                
-               btnHtml = `<div style="display:flex;gap:10px;justify-content:flex-end;align-items:center"><button class="btn" style="width:auto;padding:8px 12px;font-size:11px;background:#64748b;color:white" onclick="cancelCurrentShift('${item.ca}')">HỦY</button>${btnRaCa}</div>`;
+               btnHtml = `<div style="display:flex;gap:10px;justify-content:flex-end;align-items:center"><button class="btn" style="width:auto;padding:8px 12px;font-size:11px;background:#64748b;color:white" onclick="cancelCurrentShift('${item.ca}','${safeKey}')">HỦY</button>${btnRaCa}</div>`;
            } else { 
                cls='done'; timeDisplay = `${item.start} - ${item.end}`; btnHtml = `<div class="status-badge st-done"><i class="material-icons" style="font-size:12px">check_circle</i> ĐÃ XONG</div>`;
            }
@@ -430,13 +452,70 @@ function renderSch(list){
            else if (iDate < tDateObj) { cls = 'future'; btnHtml = `<div style="font-size:12px;color:#ef4444;font-style:italic;font-weight:bold;">Đã quá ngày làm</div>`; } 
            else { cls = 'future'; btnHtml = `<div style="font-size:12px;color:#94a3b8;font-style:italic;">Chưa diễn ra</div>`; }
        }
-       h += `<div class="ca-card ${cls}" id="card_${item.ca.replace(/\s+/g, '')}"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:16px;font-weight:bold;color:#1e293b">${item.ca}</div><div id="time_${item.ca.replace(/\s+/g, '')}" style="font-size:13px;color:#64748b;margin-top:4px"><i class="material-icons" style="font-size:12px">schedule</i> ${timeDisplay}<br>📍 ${item.loc}</div></div><div id="action_${item.ca.replace(/\s+/g, '')}">${btnHtml}</div></div></div>`;
+       h += `<div class="ca-card ${cls}" id="card_${safeKey}">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<div>
+<div style="font-size:16px;font-weight:bold;color:#1e293b">${item.ca}</div>
+<div id="time_${safeKey}" style="font-size:13px;color:#64748b;margin-top:4px">
+<i class="material-icons" style="font-size:12px">schedule</i> ${timeDisplay}<br>📍 ${item.loc}
+</div>
+</div>
+<div id="action_${safeKey}">${btnHtml}</div>
+</div>
+</div>`;
    });
    c.innerHTML = h;
    setTimeout(() => { var el = document.getElementById('focus-anchor'); if(el) el.scrollIntoView({behavior: "smooth", block: "center"}); }, 500);
 }
 
-function preCheck(ca, loc, time, end, type){ CUR_CA=ca; CUR_LOC=loc; CUR_TIME=time; CUR_END=end; CUR_TYPE=type; if(type=='RA' && ca!='Tự do') CUR_NOTE=""; openCamUI(); }
+function preCheck(ca, loc, time, end, type, key, btn){
+  if (IS_SUBMITTING) {
+    showToast("⏳ Hệ thống đang xử lý, vui lòng chờ...");
+    return;
+  }
+
+  MODE = 'CHECKIN';
+  CUR_CA = ca;
+  CUR_LOC = loc;
+  CUR_TIME = time;
+  CUR_END = end;
+  CUR_TYPE = type;
+  CUR_KEY = key || String(ca).replace(/[^a-zA-Z0-9_-]/g, '_');
+
+  if(type == 'RA' && ca != 'Tự do') CUR_NOTE = "";
+
+  if (btn) {
+    btn.disabled = true;
+    btn.style.pointerEvents = "none";
+    btn.dataset.oldText = btn.innerText;
+    btn.innerText = type === "VÀO" ? "Đang mở camera..." : "Đang ra ca...";
+  }
+
+  openCamUI();
+}
+
+function lockCurrentActionBox(text) {
+  var actionDiv = document.getElementById('action_' + CUR_KEY);
+  if (!actionDiv) return;
+
+  actionDiv.querySelectorAll('button').forEach(function(btn){
+    btn.disabled = true;
+    btn.style.pointerEvents = 'none';
+    btn.dataset.oldText = btn.innerText;
+    btn.innerText = text || 'Đang xử lý...';
+  });
+}
+
+function unlockCurrentActionBox() {
+  var actionDiv = document.getElementById('action_' + CUR_KEY);
+  if (!actionDiv) return;
+
+  actionDiv.querySelectorAll('button').forEach(function(btn){
+    btn.disabled = false;
+    btn.style.pointerEvents = 'auto';
+    if (btn.dataset.oldText) btn.innerText = btn.dataset.oldText;
+  });
+}
 function promptFreeNote(){ 
     var n = prompt("TẠO CA PHÁT SINH:\n👇 Nhập tên ca vào đây (VD: Dọn dẹp, Họp...):", "Ca Phát Sinh");
     if(n && n.trim()){ var d = new Date(); var tStr = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); var finalName = n.trim() + " (" + tStr + ")"; CUR_NOTE="Ca phát sinh"; preCheck(finalName, "Ca phát sinh", "", "", "VÀO"); } 
@@ -468,7 +547,18 @@ function openCamUI() {
   );
 }
 
-function closeCam(){ document.getElementById('cam-screen').style.display='none'; let l = document.getElementById('native-cam-label'); if (l) l.style.display = 'none'; }
+function closeCam(keepLocked){ 
+  document.getElementById('cam-screen').style.display='none'; 
+
+  let l = document.getElementById('native-cam-label'); 
+  if (l) l.style.display = 'none'; 
+
+  // Nếu người dùng bấm Hủy hoặc GPS lỗi thì mở lại nút
+  // Còn khi đã chụp ảnh rồi thì processNativePhoto gọi closeCam(true), không mở nút vội
+  if (!keepLocked && !IS_SUBMITTING) {
+    unlockCurrentActionBox();
+  }
+}
 
 // QUY TRÌNH CHẤM CÔNG: ĐỒNG BỘ UI & XỬ LÝ MẠNG YẾU
 // QUY TRÌNH CHẤM CÔNG: ĐỒNG BỘ UI & XỬ LÝ MẠNG YẾU (ĐÃ FIX LỖI KHỰNG VÀ THÊM HIỆU ỨNG MƯỢT)
@@ -515,6 +605,8 @@ function processNativePhoto(event) {
               cv.width = w; cv.height = h; 
               cv.getContext('2d').drawImage(img, 0, 0, w, h);
               const base64 = cv.toDataURL('image/jpeg', 0.4).split(',')[1];
+              IS_SUBMITTING = true;
+              lockCurrentActionBox(CUR_TYPE === "VÀO" ? "Đang vào ca..." : "Đang ra ca...");
 
               var curTimeFake = new Date().toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
               var todayVN = ('0' + new Date().getDate()).slice(-2) + '/' + ('0' + (new Date().getMonth() + 1)).slice(-2) + '/' + new Date().getFullYear();
@@ -523,12 +615,25 @@ function processNativePhoto(event) {
                   var cachedSch = localStorage.getItem('CACHE_SCH_' + USER.id);
                   if(cachedSch && cachedSch !== "undefined") {
                       let list = JSON.parse(cachedSch);
-                      let match = list.find(s => s.ca === CUR_CA && s.date === todayVN);
+                      let match = list.find(s => {
+                      let k = String(s.id || (s.date + "_" + s.ca)).replace(/[^a-zA-Z0-9_-]/g, '_');
+                      return k === CUR_KEY || (s.ca === CUR_CA && s.date === todayVN);
+                      });
                       if(match) {
                           if (CUR_TYPE === 'VÀO') { match.status = 'WORKING'; match.start = curTimeFake; }
                           if (CUR_TYPE === 'RA') { match.status = 'DONE'; match.end = curTimeFake; }
                       } else if (CUR_TYPE === 'VÀO') {
-                          list.unshift({ ca: CUR_CA, date: todayVN, isToday: true, loc: CUR_LOC || "Ca phát sinh", start: curTimeFake, end: "", status: "WORKING", type: "FREE" });
+                          list.unshift({ 
+    id: CUR_KEY,
+    ca: CUR_CA, 
+    date: todayVN, 
+    isToday: true, 
+    loc: CUR_LOC || "Ca phát sinh", 
+    start: curTimeFake, 
+    end: "", 
+    status: "WORKING", 
+    type: "FREE" 
+});
                       }
                       localStorage.setItem('CACHE_SCH_' + USER.id, JSON.stringify(list));
                       renderSch(list); 
@@ -550,49 +655,69 @@ function processNativePhoto(event) {
                   let tx = db.transaction(["Logs"], "readwrite");
                   let request = tx.objectStore("Logs").add(logData);
                   
-                  request.onsuccess = function(e) {
-                      let logId = e.target.result; 
+                 request.onsuccess = function(e) {
+                 let logId = e.target.result;
                       
                       // Báo Đã lưu tạm và tự động thoát màn hình mượt mà
                       let successHtml = `<div style="transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;"><i class="material-icons" style="font-size:70px; color:#10b981;">check_circle</i></div><div style="margin-top:12px; font-weight:900; color:#10b981; font-size:18px; transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 0.1s;">✅ ĐÃ LƯU TẠM!</div>`;
                       closeLoaderSafe(successHtml, 1000);
 
                       callAPI('processCheckIn', { action: 'processCheckIn', ...logData }).then(r => {
-                          if (r.success) {
-                              let delTx = db.transaction(["Logs"], "readwrite");
-                              delTx.objectStore("Logs").delete(logId);
-                              
-                              if (r.timeAlert) showToast("🔔 " + r.timeAlert);
-                              if (r.durationMsg) showToast("🎉 KẾT THÚC CA! " + r.durationMsg.replace(" (Làm: ", "").replace(")", ""));
-                              setTimeout(() => loadData(false), 2000); 
-                          } else {
-                              showToast("⚠️ Lỗi: " + r.msg); 
-                              if (r.msg.includes("⛔")) {
-                                  let delTx = db.transaction(["Logs"], "readwrite");
-                                  delTx.objectStore("Logs").delete(logId);
-                              }
-                              setTimeout(() => loadData(false), 500); 
-                          }
-                      }).catch(err => {
-                          document.getElementById('offline-alert-modal').style.display = 'flex';
-                      });
+    IS_SUBMITTING = false;
+
+    if (r.success) {
+        let delTx = db.transaction(["Logs"], "readwrite");
+        delTx.objectStore("Logs").delete(logId);
+        
+        if (r.timeAlert) showToast("🔔 " + r.timeAlert);
+        if (r.durationMsg) showToast("🎉 KẾT THÚC CA! " + r.durationMsg.replace(" (Làm: ", "").replace(")", ""));
+        setTimeout(() => loadData(false), 2000); 
+    } else {
+        showToast("⚠️ Lỗi: " + r.msg); 
+        if (r.msg.includes("⛔")) {
+            let delTx = db.transaction(["Logs"], "readwrite");
+            delTx.objectStore("Logs").delete(logId);
+        }
+        setTimeout(() => loadData(false), 500); 
+    }
+}).catch(err => {
+    IS_SUBMITTING = false;
+    document.getElementById('offline-alert-modal').style.display = 'flex';
+});
                   };
               }).catch(err => {
                   let syncHtml = `<div style="transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;"><i class="material-icons" style="font-size:70px; color:#f59e0b;">cloud_sync</i></div><div style="margin-top:12px; font-weight:900; color:#f59e0b; font-size:18px;">⏳ Đang gửi lên Server...</div>`;
                   closeLoaderSafe(syncHtml, 1500);
-                  
                   callAPI('processCheckIn', { action: 'processCheckIn', ...logData }).then(r => {
-                      if (r.success) { showToast("✅ THÀNH CÔNG!"); setTimeout(() => loadData(false), 2000); }
-                      else showToast("⚠️ Lỗi: " + r.msg);
-                  }).catch(e => {
-                      document.getElementById('offline-alert-modal').style.display = 'flex';
-                  });
+                  IS_SUBMITTING = false;
+
+                 if (r.success) { 
+                  showToast("✅ THÀNH CÔNG!"); 
+                  setTimeout(() => loadData(false), 2000); 
+                } else {
+               showToast("⚠️ Lỗi: " + r.msg);
+               setTimeout(() => loadData(false), 500);
+               }
+}).catch(e => {
+    IS_SUBMITTING = false;
+    document.getElementById('offline-alert-modal').style.display = 'flex';
+});
               });
 
-          } catch (fatalError) {
+                    } catch (fatalError) {
+              IS_SUBMITTING = false;
+              unlockCurrentActionBox();
               closeLoaderSafe(`<div style="color:red;font-weight:bold;">❌ Lỗi phần mềm: ${fatalError.message}</div>`, 2000);
           }
       };
+      img.onerror = function() {
+    IS_SUBMITTING = false;
+    unlockCurrentActionBox();
+
+    try { URL.revokeObjectURL(imgUrl); } catch(e) {}
+
+    closeLoaderSafe(`<div style="color:red;font-weight:bold;">❌ Ảnh bị lỗi, vui lòng chụp lại.</div>`, 2000);
+};
       img.src = imgUrl; 
   }, 50); 
 
@@ -654,7 +779,9 @@ async function loadHist(){
             let db = await initDB(); 
             let store = db.transaction(["Logs"], "readonly").objectStore("Logs");
             store.getAll().onsuccess = function(e) {
-                let offLogs = e.target.result;
+    if (myLoadSeq !== LOAD_SEQ) return;
+
+    let offLogs = e.target.result;
                 if(offLogs.length > 0) {
                     let offH = '<div style="color:#b45309; background:#fffbeb; border:1px dashed #f59e0b; padding:12px; border-radius:8px; margin-bottom:15px; font-size:13px; font-weight:bold; text-align:center;">' + 
            '⚠️ Có ' + offLogs.length + ' ca ngoại tuyến chưa đồng bộ:<br>' + 
@@ -699,12 +826,19 @@ function showAssignedDetails() {
 function loadProfile(){ callAPI('getUserProfile', {maNV: USER.id}).then(u => { document.getElementById('pf-name').innerText=u.name; document.getElementById('pf-code').innerText=u.id; if(u.img) document.getElementById('pf-img').src="https://drive.google.com/thumbnail?id="+u.img+"&sz=400"; }); }
 function openCam(mode){ MODE=mode; openCamUI(); }
 
-    function cancelCurrentShift(caName) { 
+    function cancelCurrentShift(caName, key) {
+            if (IS_SUBMITTING) {
+        showToast("⏳ Hệ thống đang xử lý, vui lòng chờ...");
+        return;
+    } 
     var reason = prompt("Vui lòng nhập lý do hủy ca này (Bắt buộc):"); if(reason === null) return; 
     if(!reason.trim()){ alert("⛔ Bạn phải nhập lý do mới được hủy ca!"); return; } 
     
-    var safeId = caName.replace(/\s+/g, ''); 
-    var cardDiv = document.getElementById('card_' + safeId); 
+    var safeId = key || CUR_KEY || String(caName).replace(/[^a-zA-Z0-9_-]/g, '_');
+    CUR_KEY = safeId;
+    var cardDiv = document.getElementById('card_' + safeId);
+    IS_SUBMITTING = true;
+lockCurrentActionBox("Đang hủy...");
     
     var loader = document.getElementById('smooth-loader'); 
     var loaderTxt = document.getElementById('loader-text'); 
@@ -768,22 +902,36 @@ function openCam(mode){ MODE=mode; openCamUI(); }
             closeLoaderSafe(successHtml, 1000);
 
             callAPI('cancelShift', logData).then(r => {
-                let delTx = db.transaction(["Logs"], "readwrite");
-                delTx.objectStore("Logs").delete(logId);
-                showToast("✅ Đã hủy ca thành công!");
-            }).catch(err => {
-                document.getElementById('offline-alert-modal').style.display = 'flex';
-            });
+    IS_SUBMITTING = false;
+    let delTx = db.transaction(["Logs"], "readwrite");
+    delTx.objectStore("Logs").delete(logId);
+    showToast("✅ Đã hủy ca thành công!");
+}).catch(err => {
+    IS_SUBMITTING = false;
+    document.getElementById('offline-alert-modal').style.display = 'flex';
+});
         };
+        request.onerror = function() {
+    IS_SUBMITTING = false;
+    unlockCurrentActionBox();
+
+    if(loader) { 
+        loader.style.opacity = '0'; 
+        setTimeout(() => loader.style.display = 'none', 300); 
+    }
+
+    alert("Không lưu được lệnh hủy trên máy. Vui lòng thử lại.");
+};
     }).catch(err => {
         let syncHtml = `<div style="transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;"><i class="material-icons" style="font-size:70px; color:#f59e0b;">cloud_sync</i></div><div style="margin-top:12px; font-weight:900; color:#f59e0b; font-size:18px;">⏳ Đang gửi lệnh hủy...</div>`;
         closeLoaderSafe(syncHtml, 1500);
-        
         callAPI('cancelShift', logData).then(r => {
-            showToast("✅ Đã hủy ca thành công!");
-        }).catch(e => {
-            document.getElementById('offline-alert-modal').style.display = 'flex';
-        });
+    IS_SUBMITTING = false;
+    showToast("✅ Đã hủy ca thành công!");
+}).catch(e => {
+    IS_SUBMITTING = false;
+    document.getElementById('offline-alert-modal').style.display = 'flex';
+});
     });
 }
 
@@ -832,8 +980,9 @@ document.addEventListener("visibilitychange", function() {
 });
 
 async function syncOfflineData() {
-    if (!navigator.onLine) return; // Nếu vẫn đang mất mạng thì không làm gì cả
-    
+        if (SYNCING) return;
+    if (!navigator.onLine) return;
+    SYNCING = true; 
     try {
         let db = await initDB();
         
@@ -899,6 +1048,10 @@ async function syncOfflineData() {
             if (document.getElementById('sc-history').classList.contains('active')) loadHist(); 
         }
     } catch(e) { console.error("Lỗi mở Két sắt đồng bộ:", e); }
+    finally {
+        SYNCING = false;
+    }
+
 }
 if ('serviceWorker' in navigator) { 
     window.addEventListener('load', () => { 
