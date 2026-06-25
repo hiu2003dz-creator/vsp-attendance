@@ -2,7 +2,7 @@
   "name": "Chấm Công VSP Pro",
   "short_name": "Chấm công VSP",
   "description": "Hệ thống chấm công thông minh Offline-First",
-  "start_url": "./index.html?v=50",
+  "start_url": "./index.html?v=51",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f0f2f5",

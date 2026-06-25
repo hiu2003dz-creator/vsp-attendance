@@ -1,5 +1,5 @@
 // Mỗi lần update app, tăng số version này
-const CACHE_NAME = 'vsp-cc-cache-v50';
+const CACHE_NAME = 'vsp-cc-cache-v51';
 
 const urlsToCache = [
   './',
