@@ -89,7 +89,7 @@
     </div>
     <h3 style="margin:0 0 10px 0; color:#1E293B; font-size:18px;">Mạng Yếu / Mất Mạng</h3>
     <p style="color:#64748B; font-size:14px; line-height:1.5; margin:0 0 20px 0;">
-      <b style="color:#D97706;">1 ca đang lưu ngoại tuyến.</b><br>
+      <b id="offline-count-text" style="color:#D97706;">Dữ liệu đang được lưu ngoại tuyến.</b><br>
       Vui lòng mở lại App khi có mạng để hệ thống cập nhật lại công nhé!
     </p>
     <button onclick="document.getElementById('offline-alert-modal').style.display='none'" style="width:100%; padding:14px; background:#F59E0B; color:white; border:none; border-radius:12px; font-weight:bold; font-size:15px; cursor:pointer; box-shadow:0 4px 6px rgba(245, 158, 11, 0.3);">OK, TÔI ĐÃ HIỂU</button>
@@ -121,7 +121,7 @@
 
 <div id="sc-history" class="screen"><div class="header"><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">Thống kê</h2><select id="hist-month" onchange="loadHist()" style="padding:6px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.4); background:rgba(0,0,0,0.1); color:white; font-weight:bold; outline:none; appearance:none; cursor:pointer;"><option value="" style="color:#333">Đang tải...</option></select></div></div><div style="padding:20px"><div style="display:flex;gap:15px;margin-bottom:15px"><div class="card-stat" style="flex:1;background:#ecfdf5;padding:15px;border-radius:16px;text-align:center;cursor:pointer"><div style="font-size:24px;font-weight:900;color:#059669" id="st-single">0</div><div style="font-size:11px;font-weight:bold;color:#10b981">CA ĐƠN</div></div><div class="card-stat" style="flex:1;background:#fff7ed;padding:15px;border-radius:16px;text-align:center;cursor:pointer"><div style="font-size:24px;font-weight:900;color:#ea580c" id="st-double">0</div><div style="font-size:11px;font-weight:bold;color:#f97316">CA ĐÔI</div></div></div><div onclick="showAssignedDetails()" style="background:#eef2ff;padding:12px;border-radius:12px;text-align:center;font-size:13px;color:#4f46e5;margin-bottom:15px;cursor:pointer;font-weight:bold;border:1px solid #c7d2fe;display:flex;align-items:center;justify-content:center;gap:5px"><i class="material-icons" style="font-size:16px">calendar_month</i> Xem lịch được phân công</div><div style="background:#f1f5f9;padding:10px;border-radius:12px;text-align:center;font-size:13px;color:#64748b;margin-bottom:20px">Tổng số ca đã hoàn thành: <b style="color:#333" id="st-total-done">0</b></div><h3 style="margin:0 0 15px 0;color:#334155">Nhật ký chấm công</h3><div id="hist-list"></div></div></div>
 
-<div id="sc-profile" class="screen"><div style="text-align:center;padding:50px 20px"><div style="position:relative;display:inline-block"><img id="pf-img" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:4px solid white;box-shadow:0 10px 20px rgba(0,0,0,0.1);background:#e2e8f0"></div><h2 id="pf-name" style="margin:15px 0 5px 0;color:#1e293b">...</h2><div id="pf-code" style="color:#64748b;font-weight:500">...</div><div style="margin-top:40px;text-align:left"><div style="padding:15px;background:white;border-radius:12px;margin-bottom:10px;display:flex;align-items:center;gap:15px;box-shadow:0 2px 5px rgba(0,0,0,0.05)"><i class="material-icons" style="color:#64748b">info</i> <span>Phiên bản: PWA v53.0 (Offline)</span></div><button class="btn" style="background:#fee2e2;color:#ef4444;margin-top:20px" onclick="logout()">Đăng xuất tài khoản</button></div></div></div>
+<div id="sc-profile" class="screen"><div style="text-align:center;padding:50px 20px"><div style="position:relative;display:inline-block"><img id="pf-img" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:4px solid white;box-shadow:0 10px 20px rgba(0,0,0,0.1);background:#e2e8f0"></div><h2 id="pf-name" style="margin:15px 0 5px 0;color:#1e293b">...</h2><div id="pf-code" style="color:#64748b;font-weight:500">...</div><div style="margin-top:40px;text-align:left"><div style="padding:15px;background:white;border-radius:12px;margin-bottom:10px;display:flex;align-items:center;gap:15px;box-shadow:0 2px 5px rgba(0,0,0,0.05)"><i class="material-icons" style="color:#64748b">info</i> <span>Phiên bản: PWA v54.0 (Offline)</span></div><button class="btn" style="background:#fee2e2;color:#ef4444;margin-top:20px" onclick="logout()">Đăng xuất tài khoản</button></div></div></div>
 
 <div id="cam-screen" style="position:fixed; inset:0; background:black; z-index:99999; display:none; flex-direction:column;">
   <div style="position:absolute;top:50px;left:0;width:100%;text-align:center;z-index:10"><span id="gps-txt" style="background:rgba(0,0,0,0.6);color:white;padding:5px 12px;border-radius:20px;font-size:12px">Đang khởi động...</span></div>
@@ -189,6 +189,43 @@ var IS_SUBMITTING = false;
 var LOAD_SEQ = 0;
 var SYNCING = false;
 var DB_KEY = 'CC_USER_V11'; 
+
+// Tạo mã duy nhất cho từng thao tác để backend có thể chống xử lý lặp.
+function createRequestId(prefix) {
+    var safePrefix = String(prefix || "REQ").replace(/[^a-zA-Z0-9_-]/g, "_");
+
+    if (window.crypto && typeof window.crypto.randomUUID === "function") {
+        return safePrefix + "_" + window.crypto.randomUUID();
+    }
+
+    return safePrefix + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 12);
+}
+
+// Mở thông báo offline và hiển thị đúng số lượt đang chờ đồng bộ.
+async function showOfflineModal() {
+    var modal = document.getElementById("offline-alert-modal");
+    var countText = document.getElementById("offline-count-text");
+
+    if (modal) modal.style.display = "flex";
+
+    try {
+        var db = await initDB();
+        var count = await new Promise(function(resolve, reject) {
+            var tx = db.transaction(["Logs"], "readonly");
+            var request = tx.objectStore("Logs").count();
+            request.onsuccess = function() { resolve(request.result || 0); };
+            request.onerror = function() { reject(request.error); };
+        });
+
+        if (countText) {
+            countText.textContent = count > 0
+                ? count + " lượt đang lưu ngoại tuyến."
+                : "Dữ liệu chưa gửi được lên hệ thống.";
+        }
+    } catch (error) {
+        if (countText) countText.textContent = "Dữ liệu đang được lưu ngoại tuyến.";
+    }
+}
 
 function setCookieVal(name, value, days) {
     var d = new Date(); d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
@@ -673,6 +710,7 @@ function processNativePhoto(event) {
               var safeLng = LOC ? LOC.lng : 0;
 
               var logData = {
+                  requestId: createRequestId(USER.id + "_" + CUR_TYPE),
                   maNV: USER.id, tenNV: USER.name, ca: CUR_CA, loai: CUR_TYPE,
                   lat: safeLat, lng: safeLng, imgBase64: base64,
                   locN: CUR_LOC, start: CUR_TIME, end: CUR_END, note: CUR_NOTE,
@@ -687,7 +725,7 @@ function processNativePhoto(event) {
                  let logId = e.target.result;
                       
                       // Báo Đã lưu tạm và tự động thoát màn hình mượt mà
-                      let successHtml = `<div style="transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;"><i class="material-icons" style="font-size:70px; color:#10b981;">check_circle</i></div><div style="margin-top:12px; font-weight:900; color:#10b981; font-size:18px; transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 0.1s;">✅ ĐÃ LƯU TẠM!</div>`;
+                      let successHtml = `<div style="transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;"><i class="material-icons" style="font-size:70px; color:#10b981;">cloud_upload</i></div><div style="margin-top:12px; font-weight:900; color:#10b981; font-size:18px; transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 0.1s;">⏳ ĐÃ GHI NHẬN!</div><div style="margin-top:6px;color:#64748b;font-size:13px;">Đang xác nhận với hệ thống...</div>`;
                       closeLoaderSafe(successHtml, 1000);
 
                       callAPI('processCheckIn', { action: 'processCheckIn', ...logData }).then(r => {
@@ -697,8 +735,15 @@ function processNativePhoto(event) {
         let delTx = db.transaction(["Logs"], "readwrite");
         delTx.objectStore("Logs").delete(logId);
         
-        if (r.timeAlert) showToast("🔔 " + r.timeAlert);
-        if (r.durationMsg) showToast("🎉 KẾT THÚC CA! " + r.durationMsg.replace(" (Làm: ", "").replace(")", ""));
+        if (r.timeAlert) {
+            showToast("🔔 " + r.timeAlert);
+        } else {
+            showToast("✅ Chấm công thành công" + (r.time ? " lúc " + r.time : "") + ".");
+        }
+
+        if (r.durationMsg) {
+            showToast("🎉 KẾT THÚC CA! " + r.durationMsg.replace(" (Làm: ", "").replace(")", ""));
+        }
         setTimeout(() => loadData(false), 2000); 
     } else {
         showToast("⚠️ Lỗi: " + r.msg); 
@@ -710,7 +755,7 @@ function processNativePhoto(event) {
     }
 }).catch(err => {
     IS_SUBMITTING = false;
-    document.getElementById('offline-alert-modal').style.display = 'flex';
+    showOfflineModal();
 });
                   };
               }).catch(err => {
@@ -728,7 +773,7 @@ function processNativePhoto(event) {
                }
 }).catch(e => {
     IS_SUBMITTING = false;
-    document.getElementById('offline-alert-modal').style.display = 'flex';
+    showOfflineModal();
 });
               });
 
@@ -897,6 +942,7 @@ lockCurrentActionBox("Đang hủy...");
 
     // ĐÓNG GÓI DỮ LIỆU ĐỂ CHO VÀO KÉT SẮT
     var logData = {
+        requestId: createRequestId(USER.id + "_HUY"),
         apiAction: 'cancelShift',
         maNV: USER.id, 
         caName: caName, 
@@ -924,7 +970,7 @@ lockCurrentActionBox("Đang hủy...");
                 }
             } catch(err) {}
 
-            let successHtml = `<div style="transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;"><i class="material-icons" style="font-size:70px; color:#10b981;">check_circle</i></div><div style="margin-top:12px; font-weight:900; color:#10b981; font-size:18px; transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 0.1s;">✅ ĐÃ HỦY (LƯU TẠM)!</div>`;
+            let successHtml = `<div style="transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;"><i class="material-icons" style="font-size:70px; color:#10b981;">cloud_upload</i></div><div style="margin-top:12px; font-weight:900; color:#10b981; font-size:18px; transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 0.1s;">⏳ ĐÃ GHI NHẬN YÊU CẦU HỦY!</div><div style="margin-top:6px;color:#64748b;font-size:13px;">Đang xác nhận với hệ thống...</div>`;
             closeLoaderSafe(successHtml, 1000);
 
             callAPI('cancelShift', logData).then(r => {
@@ -934,7 +980,7 @@ lockCurrentActionBox("Đang hủy...");
     showToast("✅ Đã hủy ca thành công!");
 }).catch(err => {
     IS_SUBMITTING = false;
-    document.getElementById('offline-alert-modal').style.display = 'flex';
+    showOfflineModal();
 });
         };
         request.onerror = function() {
@@ -956,7 +1002,7 @@ lockCurrentActionBox("Đang hủy...");
     showToast("✅ Đã hủy ca thành công!");
 }).catch(e => {
     IS_SUBMITTING = false;
-    document.getElementById('offline-alert-modal').style.display = 'flex';
+    showOfflineModal();
 });
     });
 }
@@ -986,6 +1032,7 @@ async function saveOfflineLog(maNV, tenNV, ca, loai, lat, lng, imgBase64, locN, 
         let tx = db.transaction(["Logs"], "readwrite");
         let store = tx.objectStore("Logs");
         store.add({
+            requestId: createRequestId(maNV + "_" + loai),
             maNV: maNV, tenNV: tenNV, ca: ca, loai: loai,
             lat: lat, lng: lng, imgBase64: imgBase64,
             locN: locN, start: start, end: end, note: note,
@@ -1001,14 +1048,32 @@ async function saveOfflineLog(maNV, tenNV, ca, loai, lat, lng, imgBase64, locN, 
 // ==========================================================
 // ĐỘNG CƠ ĐỒNG BỘ DỮ LIỆU OFFLINE LÊN SERVER
 // ==========================================================
+function refreshScheduleWhenSafe() {
+    if (!USER || IS_SUBMITTING || !navigator.onLine) return;
+
+    var homeScreen = document.getElementById("sc-home");
+    if (homeScreen && homeScreen.classList.contains("active")) {
+        loadData(false);
+    }
+}
+
 document.addEventListener("visibilitychange", function() {
-    if (!document.hidden) syncOfflineData();
+    if (!document.hidden) {
+        syncOfflineData();
+        refreshScheduleWhenSafe();
+    }
 });
 
-// Khi điện thoại có mạng trở lại, chủ động đồng bộ ngay.
+// Khi điện thoại có mạng trở lại, chủ động đồng bộ và tải lịch mới.
 window.addEventListener("online", function() {
     syncOfflineData();
+    refreshScheduleWhenSafe();
 });
+
+// Khi ứng dụng đang mở, kiểm tra lịch mới mỗi 2 phút.
+setInterval(function() {
+    if (!document.hidden) refreshScheduleWhenSafe();
+}, 2 * 60 * 1000);
 
 async function syncOfflineData() {
         if (SYNCING) return;
@@ -1039,6 +1104,9 @@ async function syncOfflineData() {
         if (logs.length === 0) return; // Két trống thì thôi
 
         let count = 0;
+        let syncAlerts = [];
+
+        showToast("🔄 Đang đồng bộ " + logs.length + " lượt chấm công...");
         
         // 2. BẮT ĐẦU GỬI TỪNG BẢN GHI LÊN GOOGLE
         for (let i = 0; i < logs.length; i++) {
@@ -1046,20 +1114,29 @@ async function syncOfflineData() {
             let key = keys[i];
             
             try {
-                showToast("🔄 Đang đồng bộ: " + log.ca + " (" + log.loai + ")...");
-                
                 // 🔴 TRÍ TUỆ NHÂN TẠO NHỎ: Tự biết phân biệt Chấm Công và Hủy Ca
                 let apiActionToCall = log.apiAction ? log.apiAction : 'processCheckIn';
                 
                 // Đánh dấu đây là dữ liệu được đồng bộ từ bộ nhớ ngoại tuyến.
                 // Backend hiện tại có thể bỏ qua trường này; giữ lại để hỗ trợ
                 // xác thực thời gian gốc ở phiên bản server tiếp theo.
-                let payloadToSend = Object.assign({}, log, { offlineSync: true });
+                if (!log.requestId) {
+                    log.requestId = createRequestId((log.maNV || "NV") + "_" + (log.loai || "SYNC"));
+                }
+
+                let payloadToSend = Object.assign({}, log, {
+                    offlineSync: true,
+                    requestId: log.requestId
+                });
 
                 // Gửi lên server.
                 let res = await callAPI(apiActionToCall, payloadToSend);
                 
                 if (res && (res.success || typeof res === 'string')) { // cancelShift trả về string
+                    if (typeof res === "object" && res.timeAlert) {
+                        syncAlerts.push((log.ca || "Ca làm") + ": " + res.timeAlert);
+                    }
+
                     // Thành công -> Xóa khỏi máy
                     let delTx = db.transaction(["Logs"], "readwrite");
                     delTx.objectStore("Logs").delete(key);
@@ -1079,8 +1156,14 @@ async function syncOfflineData() {
 
         // 3. TẢI LẠI GIAO DIỆN SAU KHI ĐỒNG BỘ XONG
         if (count > 0) {
-            showToast("✅ ĐÃ ĐỒNG BỘ THÀNH CÔNG " + count + " LƯỢT CHẤM CÔNG!");
-            loadData(); // Tải lại Trang chủ
+            showToast("✅ Đã đồng bộ thành công " + count + " lượt chấm công.");
+
+            // Cảnh báo đi muộn/về sớm sau khi dữ liệu offline được xác nhận.
+            if (syncAlerts.length > 0) {
+                alert("KẾT QUẢ ĐỒNG BỘ:\n\n" + syncAlerts.join("\n"));
+            }
+
+            loadData(false); // Tải lại Trang chủ
             if (document.getElementById('sc-history').classList.contains('active')) loadHist(); 
         }
     } catch(e) { console.error("Lỗi mở Két sắt đồng bộ:", e); }
@@ -1110,7 +1193,7 @@ if ("serviceWorker" in navigator) {
 
   window.addEventListener("load", function() {
     navigator.serviceWorker
-      .register("./service-worker.js?v=53")
+      .register("./service-worker.js?v=54")
       .then(function(registration) {
         // Chủ động kiểm tra service worker mới mỗi lần mở ứng dụng.
         registration.update();

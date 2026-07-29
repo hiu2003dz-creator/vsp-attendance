@@ -1,76 +1,101 @@
-// Mỗi lần update app, tăng số version này
-const CACHE_NAME = 'vsp-cc-cache-v53';
-
-const urlsToCache = [
-  './',
-  './index.html',
-  './manifest.json'
+// Mỗi lần cập nhật ứng dụng, tăng số phiên bản này.
+const CACHE_NAME = "vsp-cc-cache-v54";
+const APP_SHELL = [
+  "./",
+  "./index.html",
+  "./manifest.json"
 ];
 
-// Cài service worker mới
-self.addEventListener('install', event => {
-  self.skipWaiting();
-
+self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(urlsToCache);
-    })
+    caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL))
   );
+
+  // Cho phép worker mới chuyển sang trạng thái kích hoạt ngay.
+  self.skipWaiting();
 });
 
-// Kích hoạt và xóa cache cũ
-self.addEventListener('activate', event => {
+self.addEventListener("activate", event => {
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cache => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
+    caches.keys()
+      .then(cacheNames => Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
           }
         })
-      );
-    }).then(() => self.clients.claim())
+      ))
+      .then(() => self.clients.claim())
   );
 });
 
-// Network-first: có mạng lấy bản mới, mất mạng dùng cache
-self.addEventListener('fetch', event => {
-  const reqUrl = event.request.url;
+function fetchWithTimeout(request, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("Network timeout")), timeoutMs);
 
-  // Không cache API Google Script
+    fetch(request)
+      .then(response => {
+        clearTimeout(timer);
+        resolve(response);
+      })
+      .catch(error => {
+        clearTimeout(timer);
+        reject(error);
+      });
+  });
+}
+
+self.addEventListener("fetch", event => {
+  const request = event.request;
+  const requestUrl = request.url;
+
+  // API Apps Script luôn đi thẳng ra mạng, không lưu cache.
   if (
-    reqUrl.includes('script.google.com') ||
-    reqUrl.includes('script.googleusercontent.com')
+    requestUrl.includes("script.google.com") ||
+    requestUrl.includes("script.googleusercontent.com")
   ) {
     return;
   }
 
-  // Chỉ xử lý GET
-  if (event.request.method !== 'GET') {
-    return;
-  }
+  if (request.method !== "GET") return;
 
-  event.respondWith(
-    fetch(event.request)
-      .then(networkResponse => {
-        if (
-          networkResponse &&
-          networkResponse.status === 200 &&
-          networkResponse.type === 'basic'
-        ) {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseToCache);
-          });
+  event.respondWith((async () => {
+    try {
+      // Trang điều hướng luôn kiểm tra GitHub để nhận giao diện mới.
+      const networkRequest = request.mode === "navigate"
+        ? new Request(request, { cache: "no-store" })
+        : request;
+
+      const networkResponse = await fetchWithTimeout(networkRequest, 8000);
+
+      if (
+        networkResponse &&
+        networkResponse.status === 200 &&
+        networkResponse.type === "basic"
+      ) {
+        const cache = await caches.open(CACHE_NAME);
+        await cache.put(request, networkResponse.clone());
+
+        // Lưu thêm bản index ổn định để dùng khi mất mạng.
+        if (request.mode === "navigate") {
+          await cache.put("./index.html", networkResponse.clone());
         }
+      }
 
-        return networkResponse;
-      })
-      .catch(() => {
-        return caches.match(event.request).then(cachedResponse => {
-          // Nếu là request mở trang mà không có cache riêng, trả về index
-          return cachedResponse || caches.match('./index.html');
-        });
-      })
-  );
+      return networkResponse;
+    } catch (error) {
+      const cachedResponse = await caches.match(request);
+      if (cachedResponse) return cachedResponse;
+
+      if (request.mode === "navigate") {
+        const cachedIndex = await caches.match("./index.html");
+        if (cachedIndex) return cachedIndex;
+      }
+
+      return new Response("Bạn đang ngoại tuyến và tài nguyên này chưa được lưu.", {
+        status: 503,
+        headers: { "Content-Type": "text/plain; charset=utf-8" }
+      });
+    }
+  })());
 });
