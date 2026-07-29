@@ -81,6 +81,7 @@
   }
 </style>
 </head>
+<body>
 <div id="offline-alert-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:999999; align-items:center; justify-content:center; backdrop-filter: blur(3px);">
   <div style="background:white; width:85%; max-width:320px; border-radius:20px; padding:25px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2); transform:scale(0); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;">
     <div style="width:70px; height:70px; background:#FFFBEB; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 15px auto;">
@@ -94,7 +95,6 @@
     <button onclick="document.getElementById('offline-alert-modal').style.display='none'" style="width:100%; padding:14px; background:#F59E0B; color:white; border:none; border-radius:12px; font-weight:bold; font-size:15px; cursor:pointer; box-shadow:0 4px 6px rgba(245, 158, 11, 0.3);">OK, TÔI ĐÃ HIỂU</button>
   </div>
 </div>
-<body>
 
 <div id="smooth-loader" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.85); backdrop-filter:blur(5px); z-index:99999; flex-direction:column; justify-content:center; align-items:center; opacity:0; transition:opacity 0.3s ease;">
     <i id="loader-icon" class="material-icons bouncing-ball" style="font-size:60px; color:#EA580C; text-shadow: 0 4px 6px rgba(0,0,0,0.2);">sports_basketball</i>
@@ -121,7 +121,7 @@
 
 <div id="sc-history" class="screen"><div class="header"><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">Thống kê</h2><select id="hist-month" onchange="loadHist()" style="padding:6px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.4); background:rgba(0,0,0,0.1); color:white; font-weight:bold; outline:none; appearance:none; cursor:pointer;"><option value="" style="color:#333">Đang tải...</option></select></div></div><div style="padding:20px"><div style="display:flex;gap:15px;margin-bottom:15px"><div class="card-stat" style="flex:1;background:#ecfdf5;padding:15px;border-radius:16px;text-align:center;cursor:pointer"><div style="font-size:24px;font-weight:900;color:#059669" id="st-single">0</div><div style="font-size:11px;font-weight:bold;color:#10b981">CA ĐƠN</div></div><div class="card-stat" style="flex:1;background:#fff7ed;padding:15px;border-radius:16px;text-align:center;cursor:pointer"><div style="font-size:24px;font-weight:900;color:#ea580c" id="st-double">0</div><div style="font-size:11px;font-weight:bold;color:#f97316">CA ĐÔI</div></div></div><div onclick="showAssignedDetails()" style="background:#eef2ff;padding:12px;border-radius:12px;text-align:center;font-size:13px;color:#4f46e5;margin-bottom:15px;cursor:pointer;font-weight:bold;border:1px solid #c7d2fe;display:flex;align-items:center;justify-content:center;gap:5px"><i class="material-icons" style="font-size:16px">calendar_month</i> Xem lịch được phân công</div><div style="background:#f1f5f9;padding:10px;border-radius:12px;text-align:center;font-size:13px;color:#64748b;margin-bottom:20px">Tổng số ca đã hoàn thành: <b style="color:#333" id="st-total-done">0</b></div><h3 style="margin:0 0 15px 0;color:#334155">Nhật ký chấm công</h3><div id="hist-list"></div></div></div>
 
-<div id="sc-profile" class="screen"><div style="text-align:center;padding:50px 20px"><div style="position:relative;display:inline-block"><img id="pf-img" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:4px solid white;box-shadow:0 10px 20px rgba(0,0,0,0.1);background:#e2e8f0"><div style="position:absolute;bottom:0;right:0;background:#4f46e5;color:white;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;cursor:pointer"><i class="material-icons" style="font-size:18px">camera_alt</i></div></div><h2 id="pf-name" style="margin:15px 0 5px 0;color:#1e293b">...</h2><div id="pf-code" style="color:#64748b;font-weight:500">...</div><div style="margin-top:40px;text-align:left"><div style="padding:15px;background:white;border-radius:12px;margin-bottom:10px;display:flex;align-items:center;gap:15px;box-shadow:0 2px 5px rgba(0,0,0,0.05)"><i class="material-icons" style="color:#64748b">info</i> <span>Phiên bản: PWA v51.0 (Offline)</span></div><button class="btn" style="background:#fee2e2;color:#ef4444;margin-top:20px" onclick="logout()">Đăng xuất tài khoản</button></div></div></div>
+<div id="sc-profile" class="screen"><div style="text-align:center;padding:50px 20px"><div style="position:relative;display:inline-block"><img id="pf-img" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:4px solid white;box-shadow:0 10px 20px rgba(0,0,0,0.1);background:#e2e8f0"></div><h2 id="pf-name" style="margin:15px 0 5px 0;color:#1e293b">...</h2><div id="pf-code" style="color:#64748b;font-weight:500">...</div><div style="margin-top:40px;text-align:left"><div style="padding:15px;background:white;border-radius:12px;margin-bottom:10px;display:flex;align-items:center;gap:15px;box-shadow:0 2px 5px rgba(0,0,0,0.05)"><i class="material-icons" style="color:#64748b">info</i> <span>Phiên bản: PWA v53.0 (Offline)</span></div><button class="btn" style="background:#fee2e2;color:#ef4444;margin-top:20px" onclick="logout()">Đăng xuất tài khoản</button></div></div></div>
 
 <div id="cam-screen" style="position:fixed; inset:0; background:black; z-index:99999; display:none; flex-direction:column;">
   <div style="position:absolute;top:50px;left:0;width:100%;text-align:center;z-index:10"><span id="gps-txt" style="background:rgba(0,0,0,0.6);color:white;padding:5px 12px;border-radius:20px;font-size:12px">Đang khởi động...</span></div>
@@ -133,7 +133,7 @@
 <div id="nav" class="btm-nav" style="display:none"><div class="nav-item active" onclick="go('home')"><i class="material-icons">home_filled</i><span>Trang chủ</span></div><div class="nav-item" onclick="go('history')"><i class="material-icons">history</i><span>Lịch sử</span></div><div class="nav-item" onclick="go('profile')"><i class="material-icons">person</i><span>Tài khoản</span></div></div>
 <div id="toast-container"></div>
 
-<input type="file" id="native-cam" accept="image/*" capture="environment" style="display:none" onchange="processNativePhoto(event)">
+<input type="file" id="native-cam" accept="image/*" capture="user" style="display:none" onchange="processNativePhoto(event)">
 
 <script>
 // --- CHẶN TRÌNH DUYỆT APP (Zalo/FB) ---
@@ -162,7 +162,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyRd4pxRBrh072ufzHodnrm
 async function callAPI(action, payload = {}) {
     payload.action = action;
     
-    // Tăng bộ đếm thời gian lên 15 giây để điện thoại tải ảnh lên (thay vì 7s)
+    // Cho phép tối đa 35 giây để điện thoại tải ảnh lên khi mạng yếu
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 35000); 
 
@@ -178,7 +178,7 @@ async function callAPI(action, payload = {}) {
         return await res.json();
     } catch (e) { 
         clearTimeout(timeoutId);
-        // Tự động kích hoạt chế độ Lưu Offline nếu quá 15s hoặc mất mạng
+        // Kích hoạt chế độ lưu Offline nếu quá thời gian hoặc mất mạng
         throw new Error("Offline"); 
     }
 }
@@ -470,21 +470,35 @@ function renderSch(list){
    setTimeout(() => { var el = document.getElementById('focus-anchor'); if(el) el.scrollIntoView({behavior: "smooth", block: "center"}); }, 500);
 }
 
-function preCheck(ca, loc, time, end, type, key, btn){
+function preCheck(ca, loc, time, end, type, key, btn) {
   if (IS_SUBMITTING) {
     showToast("⏳ Hệ thống đang xử lý, vui lòng chờ...");
     return;
   }
 
-  MODE = 'CHECKIN';
+  // Khóa ngay từ lúc bắt đầu lấy GPS và mở camera.
+  IS_SUBMITTING = true;
+
+  MODE = "CHECKIN";
   CUR_CA = ca;
   CUR_LOC = loc;
   CUR_TIME = time;
   CUR_END = end;
   CUR_TYPE = type;
-  CUR_KEY = key || String(ca).replace(/[^a-zA-Z0-9_-]/g, '_');
+  CUR_KEY = key || String(ca || "").replace(/[^a-zA-Z0-9_-]/g, "_");
 
-  if(type == 'RA' && ca != 'Tự do') CUR_NOTE = "";
+  var caLower = String(ca || "").toLowerCase();
+  var locLower = String(loc || "").toLowerCase();
+  var isFreeShift =
+    caLower.includes("phát sinh") ||
+    caLower.includes("tự do") ||
+    locLower.includes("phát sinh") ||
+    locLower.includes("tự do");
+
+  // Không để ghi chú ca phát sinh dính sang ca cố định.
+  if (!isFreeShift) {
+    CUR_NOTE = "";
+  }
 
   if (btn) {
     btn.disabled = true;
@@ -549,15 +563,20 @@ function openCamUI() {
   );
 }
 
-function closeCam(keepLocked){ 
-  document.getElementById('cam-screen').style.display='none'; 
+function closeCam(keepLocked) {
+  document.getElementById("cam-screen").style.display = "none";
 
-  let l = document.getElementById('native-cam-label'); 
-  if (l) l.style.display = 'none'; 
+  var nativeCamLabel = document.getElementById("native-cam-label");
+  if (nativeCamLabel) {
+    nativeCamLabel.style.display = "none";
+  }
 
-  // Nếu người dùng bấm Hủy hoặc GPS lỗi thì mở lại nút
-  // Còn khi đã chụp ảnh rồi thì processNativePhoto gọi closeCam(true), không mở nút vội
-  if (!keepLocked && !IS_SUBMITTING) {
+  /*
+   * keepLocked = true: đã có ảnh và đang xử lý/gửi dữ liệu.
+   * Không truyền hoặc false: người dùng bấm Hủy hoặc GPS bị lỗi.
+   */
+  if (!keepLocked) {
+    IS_SUBMITTING = false;
     unlockCurrentActionBox();
   }
 }
@@ -566,8 +585,16 @@ function closeCam(keepLocked){
 // QUY TRÌNH CHẤM CÔNG: ĐỒNG BỘ UI & XỬ LÝ MẠNG YẾU (ĐÃ FIX LỖI KHỰNG VÀ THÊM HIỆU ỨNG MƯỢT)
 // QUY TRÌNH CHẤM CÔNG: ĐỒNG BỘ UI & XỬ LÝ MẠNG YẾU (ĐÃ FIX CRASH KẸT MÀN HÌNH)
 function processNativePhoto(event) {
-  const file = event.target.files[0]; if (!file) return;
-  
+  const file = event.target.files[0];
+
+  // Người dùng mở camera nhưng bấm Hủy/quay lại.
+  if (!file) {
+    closeCam(false);
+    event.target.value = "";
+    return;
+  }
+
+  // Đã có ảnh nên tiếp tục giữ khóa.
   closeCam(true); 
   var loader = document.getElementById('smooth-loader'); 
   var loaderTxt = document.getElementById('loader-text'); 
@@ -607,7 +634,6 @@ function processNativePhoto(event) {
               cv.width = w; cv.height = h; 
               cv.getContext('2d').drawImage(img, 0, 0, w, h);
               const base64 = cv.toDataURL('image/jpeg', 0.4).split(',')[1];
-              IS_SUBMITTING = true;
               lockCurrentActionBox(CUR_TYPE === "VÀO" ? "Đang vào ca..." : "Đang ra ca...");
 
               var curTimeFake = new Date().toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
@@ -792,7 +818,7 @@ async function loadHist(){
                     });
                     
                     if(cachedHist) {
-                        renderHist(JSON.parse(cachedHist)); // Vẽ lại cache
+                        renderHist(cachedHist); // Vẽ lại cache
                         histContainer.insertAdjacentHTML('afterbegin', offH);
                     } else {
                         histContainer.innerHTML = offH;
@@ -979,6 +1005,11 @@ document.addEventListener("visibilitychange", function() {
     if (!document.hidden) syncOfflineData();
 });
 
+// Khi điện thoại có mạng trở lại, chủ động đồng bộ ngay.
+window.addEventListener("online", function() {
+    syncOfflineData();
+});
+
 async function syncOfflineData() {
         if (SYNCING) return;
     if (!navigator.onLine) return;
@@ -1020,8 +1051,13 @@ async function syncOfflineData() {
                 // 🔴 TRÍ TUỆ NHÂN TẠO NHỎ: Tự biết phân biệt Chấm Công và Hủy Ca
                 let apiActionToCall = log.apiAction ? log.apiAction : 'processCheckIn';
                 
-                // Gửi lên server
-                let res = await callAPI(apiActionToCall, log);
+                // Đánh dấu đây là dữ liệu được đồng bộ từ bộ nhớ ngoại tuyến.
+                // Backend hiện tại có thể bỏ qua trường này; giữ lại để hỗ trợ
+                // xác thực thời gian gốc ở phiên bản server tiếp theo.
+                let payloadToSend = Object.assign({}, log, { offlineSync: true });
+
+                // Gửi lên server.
+                let res = await callAPI(apiActionToCall, payloadToSend);
                 
                 if (res && (res.success || typeof res === 'string')) { // cancelShift trả về string
                     // Thành công -> Xóa khỏi máy
@@ -1053,16 +1089,36 @@ async function syncOfflineData() {
     }
 
 }
-if ('serviceWorker' in navigator) { 
-    window.addEventListener('load', () => { 
-        navigator.serviceWorker.register('./service-worker.js?v=51')
-          .then(reg => {
-            reg.update();
-          })
-          .catch(err => {
-            console.log("Service Worker lỗi:", err);
-          });
-    }); 
+if ("serviceWorker" in navigator) {
+  // Ghi nhận trang đã có worker điều khiển hay chưa để tránh reload ở lần cài đầu.
+  var hadServiceWorkerController = Boolean(navigator.serviceWorker.controller);
+  var serviceWorkerReloaded = false;
+
+  navigator.serviceWorker.addEventListener("controllerchange", function() {
+    if (!hadServiceWorkerController || serviceWorkerReloaded) return;
+
+    serviceWorkerReloaded = true;
+
+    // Không reload giữa lúc giáo viên đang chụp/gửi chấm công.
+    if (IS_SUBMITTING) {
+      showToast("🔄 Có phiên bản mới. Hãy đóng và mở lại ứng dụng sau khi hoàn tất chấm công.");
+      return;
+    }
+
+    window.location.reload();
+  });
+
+  window.addEventListener("load", function() {
+    navigator.serviceWorker
+      .register("./service-worker.js?v=53")
+      .then(function(registration) {
+        // Chủ động kiểm tra service worker mới mỗi lần mở ứng dụng.
+        registration.update();
+      })
+      .catch(function(error) {
+        console.error("Service Worker lỗi:", error);
+      });
+  });
 }
 </script>
 </body>
