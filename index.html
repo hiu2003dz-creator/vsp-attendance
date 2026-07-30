@@ -121,7 +121,7 @@
 
 <div id="sc-history" class="screen"><div class="header"><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">Thống kê</h2><select id="hist-month" onchange="loadHist()" style="padding:6px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.4); background:rgba(0,0,0,0.1); color:white; font-weight:bold; outline:none; appearance:none; cursor:pointer;"><option value="" style="color:#333">Đang tải...</option></select></div></div><div style="padding:20px"><div style="display:flex;gap:15px;margin-bottom:15px"><div class="card-stat" style="flex:1;background:#ecfdf5;padding:15px;border-radius:16px;text-align:center;cursor:pointer"><div style="font-size:24px;font-weight:900;color:#059669" id="st-single">0</div><div style="font-size:11px;font-weight:bold;color:#10b981">CA ĐƠN</div></div><div class="card-stat" style="flex:1;background:#fff7ed;padding:15px;border-radius:16px;text-align:center;cursor:pointer"><div style="font-size:24px;font-weight:900;color:#ea580c" id="st-double">0</div><div style="font-size:11px;font-weight:bold;color:#f97316">CA ĐÔI</div></div></div><div onclick="showAssignedDetails()" style="background:#eef2ff;padding:12px;border-radius:12px;text-align:center;font-size:13px;color:#4f46e5;margin-bottom:15px;cursor:pointer;font-weight:bold;border:1px solid #c7d2fe;display:flex;align-items:center;justify-content:center;gap:5px"><i class="material-icons" style="font-size:16px">calendar_month</i> Xem lịch được phân công</div><div style="background:#f1f5f9;padding:10px;border-radius:12px;text-align:center;font-size:13px;color:#64748b;margin-bottom:20px">Tổng số ca đã hoàn thành: <b style="color:#333" id="st-total-done">0</b></div><h3 style="margin:0 0 15px 0;color:#334155">Nhật ký chấm công</h3><div id="hist-list"></div></div></div>
 
-<div id="sc-profile" class="screen"><div style="text-align:center;padding:50px 20px"><div style="position:relative;display:inline-block"><img id="pf-img" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:4px solid white;box-shadow:0 10px 20px rgba(0,0,0,0.1);background:#e2e8f0"></div><h2 id="pf-name" style="margin:15px 0 5px 0;color:#1e293b">...</h2><div id="pf-code" style="color:#64748b;font-weight:500">...</div><div style="margin-top:40px;text-align:left"><div style="padding:15px;background:white;border-radius:12px;margin-bottom:10px;display:flex;align-items:center;gap:15px;box-shadow:0 2px 5px rgba(0,0,0,0.05)"><i class="material-icons" style="color:#64748b">info</i> <span>Phiên bản: PWA v56.0 (Offline)</span></div><button class="btn" style="background:#fee2e2;color:#ef4444;margin-top:20px" onclick="logout()">Đăng xuất tài khoản</button></div></div></div>
+<div id="sc-profile" class="screen"><div style="text-align:center;padding:50px 20px"><div style="position:relative;display:inline-block"><img id="pf-img" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:4px solid white;box-shadow:0 10px 20px rgba(0,0,0,0.1);background:#e2e8f0"></div><h2 id="pf-name" style="margin:15px 0 5px 0;color:#1e293b">...</h2><div id="pf-code" style="color:#64748b;font-weight:500">...</div><div style="margin-top:40px;text-align:left"><div style="padding:15px;background:white;border-radius:12px;margin-bottom:10px;display:flex;align-items:center;gap:15px;box-shadow:0 2px 5px rgba(0,0,0,0.05)"><i class="material-icons" style="color:#64748b">info</i> <span>Phiên bản: PWA v57.0 (Offline)</span></div><button class="btn" style="background:#fee2e2;color:#ef4444;margin-top:20px" onclick="logout()">Đăng xuất tài khoản</button></div></div></div>
 
 <div id="cam-screen" style="position:fixed; inset:0; background:black; z-index:99999; display:none; flex-direction:column;">
   <div style="position:absolute;top:50px;left:0;width:100%;text-align:center;z-index:10"><span id="gps-txt" style="background:rgba(0,0,0,0.6);color:white;padding:5px 12px;border-radius:20px;font-size:12px">Đang khởi động...</span></div>
@@ -304,6 +304,51 @@ function escapeHtml(value) {
 function encodeActionValue(value) {
   return encodeURIComponent(
     String(value == null ? "" : value)
+  );
+}
+
+
+function decodeActionValue(value) {
+  try {
+    return decodeURIComponent(
+      String(value == null ? "" : value)
+    );
+  } catch (error) {
+    return String(value == null ? "" : value);
+  }
+}
+
+function preCheckEncoded(
+  ca,
+  loc,
+  time,
+  end,
+  type,
+  key,
+  button,
+  shiftDate
+) {
+  return preCheck(
+    decodeActionValue(ca),
+    decodeActionValue(loc),
+    decodeActionValue(time),
+    decodeActionValue(end),
+    String(type || ""),
+    decodeActionValue(key),
+    button,
+    decodeActionValue(shiftDate)
+  );
+}
+
+function cancelCurrentShiftEncoded(
+  caName,
+  key,
+  shiftDate
+) {
+  return cancelCurrentShift(
+    decodeActionValue(caName),
+    decodeActionValue(key),
+    decodeActionValue(shiftDate)
   );
 }
 
@@ -1585,45 +1630,9 @@ function cancelCurrentShift(
     });
 }
 
-function preCheck(ca, loc, time, end, type, key, btn) {
-  if (IS_SUBMITTING) {
-    showToast("⏳ Hệ thống đang xử lý, vui lòng chờ...");
-    return;
-  }
 
-  // Khóa ngay từ lúc bắt đầu lấy GPS và mở camera.
-  IS_SUBMITTING = true;
 
-  MODE = "CHECKIN";
-  CUR_CA = ca;
-  CUR_LOC = loc;
-  CUR_TIME = time;
-  CUR_END = end;
-  CUR_TYPE = type;
-  CUR_KEY = key || String(ca || "").replace(/[^a-zA-Z0-9_-]/g, "_");
 
-  var caLower = String(ca || "").toLowerCase();
-  var locLower = String(loc || "").toLowerCase();
-  var isFreeShift =
-    caLower.includes("phát sinh") ||
-    caLower.includes("tự do") ||
-    locLower.includes("phát sinh") ||
-    locLower.includes("tự do");
-
-  // Không để ghi chú ca phát sinh dính sang ca cố định.
-  if (!isFreeShift) {
-    CUR_NOTE = "";
-  }
-
-  if (btn) {
-    btn.disabled = true;
-    btn.style.pointerEvents = "none";
-    btn.dataset.oldText = btn.innerText;
-    btn.innerText = type === "VÀO" ? "Đang mở camera..." : "Đang ra ca...";
-  }
-
-  openCamUI();
-}
 
 function lockCurrentActionBox(text) {
   var actionDiv = document.getElementById('action_' + CUR_KEY);
@@ -2061,115 +2070,9 @@ function showAssignedDetails() {
 function loadProfile(){ callAPI('getUserProfile', {maNV: USER.id}).then(u => { document.getElementById('pf-name').innerText=u.name; document.getElementById('pf-code').innerText=u.id; if(u.img) document.getElementById('pf-img').src="https://drive.google.com/thumbnail?id="+u.img+"&sz=400"; }); }
 function openCam(mode){ MODE=mode; openCamUI(); }
 
-    function cancelCurrentShift(caName, key) {
-            if (IS_SUBMITTING) {
-        showToast("⏳ Hệ thống đang xử lý, vui lòng chờ...");
-        return;
-    } 
-    var reason = prompt("Vui lòng nhập lý do hủy ca này (Bắt buộc):"); if(reason === null) return; 
-    if(!reason.trim()){ alert("⛔ Bạn phải nhập lý do mới được hủy ca!"); return; } 
     
-    var safeId = key || CUR_KEY || String(caName).replace(/[^a-zA-Z0-9_-]/g, '_');
-    CUR_KEY = safeId;
-    var cardDiv = document.getElementById('card_' + safeId);
-    IS_SUBMITTING = true;
-lockCurrentActionBox("Đang hủy...");
-    
-    var loader = document.getElementById('smooth-loader'); 
-    var loaderTxt = document.getElementById('loader-text'); 
-    var loaderIcon = document.getElementById('loader-icon');
-    
-    if(loader) { 
-        loader.style.display = 'flex'; 
-        setTimeout(() => { loader.style.opacity = '1'; }, 10); 
-        if(loaderTxt) loaderTxt.innerText = "⏳ Đang xử lý hủy ca..."; 
-    }
 
-    const closeLoaderSafe = (msgHtml, waitTime = 1000) => {
-        if(!loader) return;
-        loader.innerHTML = msgHtml;
-        setTimeout(() => { 
-            loader.style.opacity = '0'; 
-            setTimeout(() => { 
-                loader.style.display = 'none'; 
-                loader.innerHTML = `<i id="loader-icon" class="material-icons bouncing-ball" style="font-size:60px; color:#EA580C; text-shadow: 0 4px 6px rgba(0,0,0,0.2);">sports_basketball</i><div id="loader-text" style="margin-top:15px; font-weight:bold; color:#334155; font-size:15px; text-shadow: 0 1px 2px rgba(255,255,255,0.8);">Đang xử lý...</div>`; 
-                if(cardDiv) {
-                    cardDiv.style.transition = "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
-                    cardDiv.style.transform = "scale(0.8)";
-                    cardDiv.style.opacity = "0";
-                    setTimeout(() => cardDiv.remove(), 400); 
-                }
-                loadData(true);
-            }, 400); 
-        }, waitTime);
-    };
 
-    // ĐÓNG GÓI DỮ LIỆU ĐỂ CHO VÀO KÉT SẮT
-    var logData = {
-        requestId: createRequestId(USER.id + "_HUY"),
-        apiAction: 'cancelShift',
-        maNV: USER.id, 
-        caName: caName, 
-        reason: reason,
-        timeGoc: new Date().getTime(),
-        ca: caName, 
-        loai: 'HỦY'
-    };
-
-    // MỞ KÉT SẮT VÀ LƯU NGAY LẬP TỨC
-    initDB().then(db => {
-        let tx = db.transaction(["Logs"], "readwrite");
-        let request = tx.objectStore("Logs").add(logData);
-        
-        request.onsuccess = function(e) {
-            let logId = e.target.result; 
-            
-            try {
-                var todayVN = ('0' + new Date().getDate()).slice(-2) + '/' + ('0' + (new Date().getMonth() + 1)).slice(-2) + '/' + new Date().getFullYear();
-                var cachedSch = localStorage.getItem('CACHE_SCH_' + USER.id);
-                if(cachedSch && cachedSch !== "undefined") {
-                    let list = JSON.parse(cachedSch);
-                    list = list.filter(s => !(s.ca === caName && s.date === todayVN));
-                    localStorage.setItem('CACHE_SCH_' + USER.id, JSON.stringify(list));
-                }
-            } catch(err) {}
-
-            let successHtml = `<div style="transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;"><i class="material-icons" style="font-size:70px; color:#10b981;">cloud_upload</i></div><div style="margin-top:12px; font-weight:900; color:#10b981; font-size:18px; transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 0.1s;">⏳ ĐÃ GHI NHẬN YÊU CẦU HỦY!</div><div style="margin-top:6px;color:#64748b;font-size:13px;">Đang xác nhận với hệ thống...</div>`;
-            closeLoaderSafe(successHtml, 1000);
-
-            callAPI('cancelShift', logData).then(r => {
-    IS_SUBMITTING = false;
-    let delTx = db.transaction(["Logs"], "readwrite");
-    delTx.objectStore("Logs").delete(logId);
-    showToast("✅ Đã hủy ca thành công!");
-}).catch(err => {
-    IS_SUBMITTING = false;
-    showOfflineModal();
-});
-        };
-        request.onerror = function() {
-    IS_SUBMITTING = false;
-    unlockCurrentActionBox();
-
-    if(loader) { 
-        loader.style.opacity = '0'; 
-        setTimeout(() => loader.style.display = 'none', 300); 
-    }
-
-    alert("Không lưu được lệnh hủy trên máy. Vui lòng thử lại.");
-};
-    }).catch(err => {
-        let syncHtml = `<div style="transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;"><i class="material-icons" style="font-size:70px; color:#f59e0b;">cloud_sync</i></div><div style="margin-top:12px; font-weight:900; color:#f59e0b; font-size:18px;">⏳ Đang gửi lệnh hủy...</div>`;
-        closeLoaderSafe(syncHtml, 1500);
-        callAPI('cancelShift', logData).then(r => {
-    IS_SUBMITTING = false;
-    showToast("✅ Đã hủy ca thành công!");
-}).catch(e => {
-    IS_SUBMITTING = false;
-    showOfflineModal();
-});
-    });
-}
 
 function viewStatDetail(title, list){ var modal = document.getElementById('detail-modal'); modal.style.display = 'flex'; document.getElementById('dm-title').innerText = title; var content = document.getElementById('dm-content'); if(!list || list.length == 0){ content.innerHTML = '<div style="padding:30px;text-align:center;color:#94a3b8">Không có dữ liệu.</div>'; } else { var h = ''; list.forEach(item => { h += `<div class="list-item" style="display:flex;align-items:center;gap:15px;padding:15px;border-bottom:1px solid #f1f5f9"><div style="background:#ecfdf5;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#10b981"><i class="material-icons" style="font-size:18px">check_circle</i></div><div style="font-weight:500;color:#334155;font-size:14px">${item}</div></div>`; }); content.innerHTML = h; } }
 
@@ -2613,7 +2516,7 @@ if ("serviceWorker" in navigator) {
 
   window.addEventListener("load", function() {
     navigator.serviceWorker
-      .register("./service-worker.js?v=56", { updateViaCache: "none" })
+      .register("./service-worker.js?v=57", { updateViaCache: "none" })
       .then(function(registration) {
         // Chủ động kiểm tra service worker mới mỗi lần mở ứng dụng.
         registration.update();
