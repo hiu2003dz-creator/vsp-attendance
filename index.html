@@ -117,11 +117,11 @@
   </div>
 </div>
 
-<div id="sc-home" class="screen"><div class="header"><div style="display:flex;justify-content:space-between;align-items:center"><div><h2 style="margin:0;font-size:22px" id="wc-name">Xin chào...</h2><div style="opacity:0.8;font-size:13px;margin-top:4px" id="wc-date">...</div></div><div onclick="logout()" style="background:rgba(255,255,255,0.2);padding:8px;border-radius:10px;cursor:pointer"><i class="material-icons">logout</i></div></div></div><div style="padding:20px;padding-bottom:80px"><div onclick="promptFreeNote()" style="background:white;border:2px dashed #818CF8;color:#6366F1;padding:15px;border-radius:16px;text-align:center;font-weight:bold;margin-bottom:20px;cursor:pointer;box-shadow:0 4px 10px rgba(99,102,241,0.1)"><i class="material-icons" style="vertical-align:bottom">add_circle</i> CHẤM CÔNG PHÁT SINH</div><div id="sch-list"><div style="text-align:center;color:#94a3b8;margin-top:50px"><div class="spinner" style="border-top-color:#4f46e5"></div> Đang tải lịch...</div></div></div></div>
+<div id="sc-home" class="screen"><div class="header"><div style="display:flex;justify-content:space-between;align-items:center"><div><h2 style="margin:0;font-size:22px" id="wc-name">Xin chào...</h2><div style="opacity:0.8;font-size:13px;margin-top:4px" id="wc-date">...</div></div><div onclick="logout()" style="background:rgba(255,255,255,0.2);padding:8px;border-radius:10px;cursor:pointer"><i class="material-icons">logout</i></div></div></div><div style="padding:20px;padding-bottom:80px"><div onclick="promptFreeNote()" style="background:white;border:2px dashed #818CF8;color:#6366F1;padding:15px;border-radius:16px;text-align:center;font-weight:bold;margin-bottom:20px;cursor:pointer;box-shadow:0 4px 10px rgba(99,102,241,0.1)"><i class="material-icons" style="vertical-align:bottom">add_circle</i> CHẤM CÔNG PHÁT SINH</div><div id="offline-readiness" style="display:none;margin:-8px 0 14px 0;padding:10px 12px;border-radius:12px;font-size:12px;font-weight:700;line-height:1.45;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;text-align:center;">🔄 Đang kiểm tra khả năng chấm công ngoại tuyến...</div><div id="sch-list"><div style="text-align:center;color:#94a3b8;margin-top:50px"><div class="spinner" style="border-top-color:#4f46e5"></div> Đang tải lịch...</div></div></div></div>
 
 <div id="sc-history" class="screen"><div class="header"><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">Thống kê</h2><select id="hist-month" onchange="loadHist()" style="padding:6px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.4); background:rgba(0,0,0,0.1); color:white; font-weight:bold; outline:none; appearance:none; cursor:pointer;"><option value="" style="color:#333">Đang tải...</option></select></div></div><div style="padding:20px"><div style="display:flex;gap:15px;margin-bottom:15px"><div class="card-stat" style="flex:1;background:#ecfdf5;padding:15px;border-radius:16px;text-align:center;cursor:pointer"><div style="font-size:24px;font-weight:900;color:#059669" id="st-single">0</div><div style="font-size:11px;font-weight:bold;color:#10b981">CA ĐƠN</div></div><div class="card-stat" style="flex:1;background:#fff7ed;padding:15px;border-radius:16px;text-align:center;cursor:pointer"><div style="font-size:24px;font-weight:900;color:#ea580c" id="st-double">0</div><div style="font-size:11px;font-weight:bold;color:#f97316">CA ĐÔI</div></div></div><div onclick="showAssignedDetails()" style="background:#eef2ff;padding:12px;border-radius:12px;text-align:center;font-size:13px;color:#4f46e5;margin-bottom:15px;cursor:pointer;font-weight:bold;border:1px solid #c7d2fe;display:flex;align-items:center;justify-content:center;gap:5px"><i class="material-icons" style="font-size:16px">calendar_month</i> Xem lịch được phân công</div><div style="background:#f1f5f9;padding:10px;border-radius:12px;text-align:center;font-size:13px;color:#64748b;margin-bottom:20px">Tổng số ca đã hoàn thành: <b style="color:#333" id="st-total-done">0</b></div><h3 style="margin:0 0 15px 0;color:#334155">Nhật ký chấm công</h3><div id="hist-list"></div></div></div>
 
-<div id="sc-profile" class="screen"><div style="text-align:center;padding:50px 20px"><div style="position:relative;display:inline-block"><img id="pf-img" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:4px solid white;box-shadow:0 10px 20px rgba(0,0,0,0.1);background:#e2e8f0"></div><h2 id="pf-name" style="margin:15px 0 5px 0;color:#1e293b">...</h2><div id="pf-code" style="color:#64748b;font-weight:500">...</div><div style="margin-top:40px;text-align:left"><div style="padding:15px;background:white;border-radius:12px;margin-bottom:10px;display:flex;align-items:center;gap:15px;box-shadow:0 2px 5px rgba(0,0,0,0.05)"><i class="material-icons" style="color:#64748b">info</i> <span>Phiên bản: PWA v58.0 (Offline)</span></div><button class="btn" style="background:#fee2e2;color:#ef4444;margin-top:20px" onclick="logout()">Đăng xuất tài khoản</button></div></div></div>
+<div id="sc-profile" class="screen"><div style="text-align:center;padding:50px 20px"><div style="position:relative;display:inline-block"><img id="pf-img" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:4px solid white;box-shadow:0 10px 20px rgba(0,0,0,0.1);background:#e2e8f0"></div><h2 id="pf-name" style="margin:15px 0 5px 0;color:#1e293b">...</h2><div id="pf-code" style="color:#64748b;font-weight:500">...</div><div style="margin-top:40px;text-align:left"><div style="padding:15px;background:white;border-radius:12px;margin-bottom:10px;display:flex;align-items:center;gap:15px;box-shadow:0 2px 5px rgba(0,0,0,0.05)"><i class="material-icons" style="color:#64748b">info</i> <span>Phiên bản: PWA v60.0 (Safe Offline)</span></div><button class="btn" style="background:#fee2e2;color:#ef4444;margin-top:20px" onclick="logout()">Đăng xuất tài khoản</button></div></div></div>
 
 <div id="cam-screen" style="position:fixed; inset:0; background:black; z-index:99999; display:none; flex-direction:column;">
   <div style="position:absolute;top:50px;left:0;width:100%;text-align:center;z-index:10"><span id="gps-txt" style="background:rgba(0,0,0,0.6);color:white;padding:5px 12px;border-radius:20px;font-size:12px">Đang khởi động...</span></div>
@@ -160,27 +160,68 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyRd4pxRBrh072ufzHodnrm
 // Hàm gọi API chuẩn CÓ TRANG BỊ BỘ ĐẾM GIỜ (TIMEOUT) CHỐNG MẠNG YẾU
 // Hàm gọi API chuẩn CÓ TRANG BỊ BỘ ĐẾM GIỜ (TIMEOUT) CHỐNG MẠNG YẾU
 async function callAPI(action, payload = {}) {
-    payload.action = action;
-    
-    // Cho phép tối đa 35 giây để điện thoại tải ảnh lên khi mạng yếu
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 35000); 
+  payload.action = action;
+
+  // Khi trình duyệt xác nhận mất mạng, không bắt giáo viên chờ timeout.
+  if (!navigator.onLine) {
+    throw new Error("Offline");
+  }
+
+  var timeoutMs =
+    action === "processCheckIn"
+      ? 25000
+      : 15000;
+
+  var controller = new AbortController();
+  var timeoutId = setTimeout(
+    function() {
+      controller.abort();
+    },
+    timeoutMs
+  );
+
+  try {
+    var response = await fetch(API_URL, {
+      method: "POST",
+      redirect: "follow",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+      cache: "no-store"
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(
+        "HTTP " + response.status
+      );
+    }
+
+    var responseText =
+      await response.text();
 
     try {
-        let res = await fetch(API_URL, { 
-            method: 'POST', 
-            redirect: 'follow', // Quan trọng: Giấy thông hành cho iPhone
-            headers: { "Content-Type": "text/plain;charset=utf-8" }, // Vượt rào bảo mật Apple
-            body: JSON.stringify(payload),
-            signal: controller.signal // Gắn bộ khóa an toàn
-        });
-        clearTimeout(timeoutId); // Hủy bộ đếm nếu Google trả lời sớm
-        return await res.json();
-    } catch (e) { 
-        clearTimeout(timeoutId);
-        // Kích hoạt chế độ lưu Offline nếu quá thời gian hoặc mất mạng
-        throw new Error("Offline"); 
+      return JSON.parse(responseText);
+    } catch (parseError) {
+      throw new Error(
+        "Server trả dữ liệu không hợp lệ"
+      );
     }
+  } catch (error) {
+    clearTimeout(timeoutId);
+
+    if (
+      error &&
+      error.name === "AbortError"
+    ) {
+      throw new Error("NetworkTimeout");
+    }
+
+    throw new Error("Offline");
+  }
 }
 
 var USER=null, LOC=null, CUR_CA='', CUR_LOC='', CUR_TIME='', CUR_END='', CUR_TYPE='', CUR_NOTE='', CUR_DATE='', MODE='CHECKIN';
@@ -189,6 +230,25 @@ var IS_SUBMITTING = false;
 var LOAD_SEQ = 0;
 var SYNCING = false;
 var DB_KEY = 'CC_USER_V11'; 
+
+// ==========================================================
+// OFFLINE SAFE QUEUE V60
+// IndexedDB là kho chính; Cache Storage là kho dự phòng khi IndexedDB tạm lỗi.
+// Không báo thành công cho tới khi ít nhất một kho xác nhận ghi xong.
+// ==========================================================
+const OFFLINE_DB_NAME = "VSP_OfflineDB";
+const OFFLINE_DB_VERSION = 1;
+const OFFLINE_STORE_NAME = "Logs";
+const OFFLINE_BACKUP_CACHE = "vsp-cc-offline-backup-v60";
+const OFFLINE_BACKUP_PATH = "__vsp_offline_queue_v60__/";
+const OFFLINE_MAX_IMAGE_BYTES = 700 * 1024;
+const OFFLINE_MIN_FREE_BYTES = 8 * 1024 * 1024;
+const OFFLINE_HEALTH_TTL_MS = 60 * 1000;
+
+var DB_CONNECTION_PROMISE = null;
+var OFFLINE_HEALTH_CACHE = null;
+var OFFLINE_HEALTH_AT = 0;
+
 
 // Tạo mã duy nhất cho từng thao tác để backend có thể chống xử lý lặp.
 function createRequestId(prefix) {
@@ -370,46 +430,571 @@ function isSuccessfulApiResponse(response) {
   return false;
 }
 
-function deleteOfflineRecord(db, key) {
-  return new Promise(function(resolve, reject) {
-    var tx = db.transaction(["Logs"], "readwrite");
-    var request = tx.objectStore("Logs").delete(key);
+function waitMs(ms) {
+  return new Promise(function(resolve) {
+    setTimeout(resolve, ms);
+  });
+}
 
-    request.onsuccess = function() {
-      resolve();
+function estimateBase64Bytes(base64Text) {
+  var clean = String(base64Text || "").replace(/\s/g, "");
+  if (!clean) return 0;
+  var padding = clean.endsWith("==") ? 2 : (clean.endsWith("=") ? 1 : 0);
+  return Math.max(0, Math.floor(clean.length * 3 / 4) - padding);
+}
+
+async function requestPersistentStorage() {
+  try {
+    if (!navigator.storage) return false;
+    if (typeof navigator.storage.persisted === "function") {
+      var current = await navigator.storage.persisted();
+      if (current) return true;
+    }
+    if (typeof navigator.storage.persist === "function") {
+      return await navigator.storage.persist();
+    }
+  } catch (error) {
+    console.warn("Không xin được persistent storage:", error);
+  }
+  return false;
+}
+
+async function getStorageEstimate() {
+  try {
+    if (!navigator.storage || typeof navigator.storage.estimate !== "function") {
+      return null;
+    }
+    var result = await navigator.storage.estimate();
+    var usage = Number(result.usage || 0);
+    var quota = Number(result.quota || 0);
+    return {
+      usage: usage,
+      quota: quota,
+      free: quota > 0 ? Math.max(0, quota - usage) : null,
+      usagePercent: quota > 0 ? Math.round(usage / quota * 100) : null
+    };
+  } catch (error) {
+    return null;
+  }
+}
+
+async function ensureOfflineStorageCapacity(requiredBytes) {
+  var estimate = await getStorageEstimate();
+  if (!estimate || estimate.free == null) return estimate;
+
+  var required = Math.max(
+    OFFLINE_MIN_FREE_BYTES,
+    Number(requiredBytes || 0) * 3
+  );
+
+  if (estimate.free < required) {
+    throw new Error(
+      "Bộ nhớ trình duyệt gần đầy. Cần tối thiểu " +
+      Math.ceil(required / 1024 / 1024) +
+      " MB trống để lưu chấm công an toàn."
+    );
+  }
+  return estimate;
+}
+
+function resetDBConnection() {
+  var current = DB_CONNECTION_PROMISE;
+  DB_CONNECTION_PROMISE = null;
+  if (current) {
+    current.then(function(db) {
+      try { db.close(); } catch (error) {}
+    }).catch(function() {});
+  }
+}
+
+function deleteOfflineRecord(db, key) {
+  return deleteIndexedDBQueueKey(key);
+}
+
+async function withIndexedDBRetry(operation, attempts) {
+  var maxAttempts = attempts || 3;
+  var lastError = null;
+
+  for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      var db = await initDB(attempt > 1);
+      return await operation(db, attempt);
+    } catch (error) {
+      lastError = error;
+      console.warn("IndexedDB lần " + attempt + " thất bại:", error);
+      resetDBConnection();
+      if (attempt < maxAttempts) {
+        await waitMs(attempt * 450);
+      }
+    }
+  }
+  throw lastError || new Error("IndexedDB không hoạt động.");
+}
+
+function findIndexedDBRecordByRequestId(db, requestId) {
+  return new Promise(function(resolve, reject) {
+    var tx = db.transaction([OFFLINE_STORE_NAME], "readonly");
+    var cursorRequest = tx.objectStore(OFFLINE_STORE_NAME).openCursor();
+    var result = null;
+
+    cursorRequest.onsuccess = function(event) {
+      var cursor = event.target.result;
+      if (!cursor) return;
+      var value = cursor.value || {};
+      if (!value.__healthCheck && String(value.requestId || "") === String(requestId || "")) {
+        result = { key: cursor.primaryKey, log: value, storage: "idb" };
+        return;
+      }
+      cursor.continue();
     };
 
+    cursorRequest.onerror = function() {
+      reject(cursorRequest.error || new Error("Không đọc được hàng đợi IndexedDB."));
+    };
+
+    tx.oncomplete = function() { resolve(result); };
+    tx.onerror = function() { reject(tx.error || new Error("Lỗi đọc IndexedDB.")); };
+    tx.onabort = function() { reject(tx.error || new Error("Đọc IndexedDB bị hủy.")); };
+  });
+}
+
+function addIndexedDBRecord(db, logData) {
+  return new Promise(function(resolve, reject) {
+    var tx = db.transaction([OFFLINE_STORE_NAME], "readwrite");
+    var request = tx.objectStore(OFFLINE_STORE_NAME).add(logData);
+    var key = null;
+    var settled = false;
+
+    request.onsuccess = function() { key = request.result; };
     request.onerror = function() {
-      reject(request.error);
+      if (settled) return;
+      settled = true;
+      reject(request.error || new Error("Không ghi được IndexedDB."));
+    };
+    tx.oncomplete = function() {
+      if (settled) return;
+      settled = true;
+      resolve(key);
+    };
+    tx.onerror = function() {
+      if (settled) return;
+      settled = true;
+      reject(tx.error || new Error("Transaction IndexedDB bị lỗi."));
+    };
+    tx.onabort = function() {
+      if (settled) return;
+      settled = true;
+      reject(tx.error || new Error("Transaction IndexedDB bị hủy."));
     };
   });
+}
+
+async function saveRecordToIndexedDB(logData) {
+  return withIndexedDBRetry(async function(db) {
+    var existing = await findIndexedDBRecordByRequestId(db, logData.requestId);
+    if (existing) return existing;
+    var key = await addIndexedDBRecord(db, logData);
+    var verified = await findIndexedDBRecordByRequestId(db, logData.requestId);
+    if (!verified) throw new Error("Đã ghi nhưng không đọc xác minh được IndexedDB.");
+    return { key: key, log: logData, storage: "idb" };
+  }, 3);
+}
+
+function readIndexedDBQueueItems() {
+  return withIndexedDBRetry(function(db) {
+    return new Promise(function(resolve, reject) {
+      var tx = db.transaction([OFFLINE_STORE_NAME], "readonly");
+      var request = tx.objectStore(OFFLINE_STORE_NAME).openCursor();
+      var items = [];
+
+      request.onsuccess = function(event) {
+        var cursor = event.target.result;
+        if (cursor) {
+          var value = cursor.value || {};
+          if (!value.__healthCheck && value.requestId) {
+            items.push({ key: cursor.primaryKey, log: value, storage: "idb" });
+          }
+          cursor.continue();
+        }
+      };
+      request.onerror = function() { reject(request.error); };
+      tx.oncomplete = function() { resolve(items); };
+      tx.onerror = function() { reject(tx.error || new Error("Không đọc được IndexedDB.")); };
+      tx.onabort = function() { reject(tx.error || new Error("Đọc IndexedDB bị hủy.")); };
+    });
+  }, 2);
+}
+
+function deleteIndexedDBQueueKey(key) {
+  if (key == null) return Promise.resolve();
+  return withIndexedDBRetry(function(db) {
+    return new Promise(function(resolve, reject) {
+      var tx = db.transaction([OFFLINE_STORE_NAME], "readwrite");
+      tx.objectStore(OFFLINE_STORE_NAME).delete(key);
+      tx.oncomplete = function() { resolve(); };
+      tx.onerror = function() { reject(tx.error || new Error("Không xóa được IndexedDB.")); };
+      tx.onabort = function() { reject(tx.error || new Error("Xóa IndexedDB bị hủy.")); };
+    });
+  }, 3);
+}
+
+function getBackupRequestUrl(requestId) {
+  return new URL(
+    "./" + OFFLINE_BACKUP_PATH + encodeURIComponent(String(requestId)),
+    window.location.href
+  ).href;
+}
+
+async function saveRecordToBackupCache(logData) {
+  if (!window.caches) throw new Error("Cache Storage không được hỗ trợ.");
+  var cache = await caches.open(OFFLINE_BACKUP_CACHE);
+  var url = getBackupRequestUrl(logData.requestId);
+  var body = JSON.stringify(logData);
+  await cache.put(
+    new Request(url, { method: "GET" }),
+    new Response(body, {
+      headers: { "Content-Type": "application/json;charset=utf-8" }
+    })
+  );
+  var verify = await cache.match(url);
+  if (!verify) throw new Error("Không xác minh được kho dự phòng.");
+  var parsed = await verify.clone().json();
+  if (String(parsed.requestId || "") !== String(logData.requestId || "")) {
+    throw new Error("Dữ liệu kho dự phòng không khớp.");
+  }
+  return { key: url, log: logData, storage: "cache" };
+}
+
+async function readBackupQueueItems() {
+  if (!window.caches) return [];
+  try {
+    var cache = await caches.open(OFFLINE_BACKUP_CACHE);
+    var requests = await cache.keys();
+    var items = [];
+    for (var i = 0; i < requests.length; i++) {
+      var request = requests[i];
+      if (request.url.indexOf(OFFLINE_BACKUP_PATH) === -1) continue;
+      try {
+        var response = await cache.match(request);
+        if (!response) continue;
+        var log = await response.json();
+        if (log && log.requestId && !log.__healthCheck) {
+          items.push({ key: request.url, log: log, storage: "cache" });
+        }
+      } catch (error) {
+        console.warn("Bản dự phòng bị hỏng:", request.url, error);
+      }
+    }
+    return items;
+  } catch (error) {
+    console.warn("Không đọc được Cache Storage dự phòng:", error);
+    return [];
+  }
+}
+
+async function deleteBackupQueueKey(key) {
+  if (!window.caches || !key) return;
+  var cache = await caches.open(OFFLINE_BACKUP_CACHE);
+  await cache.delete(key);
+}
+
+async function saveQueuedAttendance(logData) {
+  var imageBytes = estimateBase64Bytes(logData.imgBase64 || "");
+  await ensureOfflineStorageCapacity(imageBytes + 64 * 1024);
+
+  try {
+    return await saveRecordToIndexedDB(logData);
+  } catch (idbError) {
+    console.error("IndexedDB lỗi, chuyển sang kho dự phòng:", idbError);
+    try {
+      var backup = await saveRecordToBackupCache(logData);
+      backup.primaryError = idbError;
+      return backup;
+    } catch (backupError) {
+      var finalError = new Error(
+        "Không lưu được vào IndexedDB và kho dự phòng. " +
+        "IndexedDB: " + (idbError.message || idbError) +
+        "; Dự phòng: " + (backupError.message || backupError)
+      );
+      finalError.idbError = idbError;
+      finalError.backupError = backupError;
+      throw finalError;
+    }
+  }
+}
+
+async function getAllQueueItems() {
+  var idbItems = [];
+  try { idbItems = await readIndexedDBQueueItems(); } catch (error) {
+    console.warn("Không đọc được IndexedDB, dùng kho dự phòng:", error);
+  }
+  var backupItems = await readBackupQueueItems();
+  var byRequestId = {};
+
+  idbItems.concat(backupItems).forEach(function(item) {
+    var id = String(item.log.requestId || "");
+    if (!id) return;
+    if (!byRequestId[id] || item.storage === "idb") {
+      byRequestId[id] = item;
+    }
+  });
+  return Object.keys(byRequestId).map(function(id) { return byRequestId[id]; });
+}
+
+async function getAllQueuedLogs() {
+  var items = await getAllQueueItems();
+  return items.map(function(item) { return item.log; });
+}
+
+async function getOfflineQueueCount() {
+  var items = await getAllQueueItems();
+  return items.length;
+}
+
+async function deleteQueueItem(item) {
+  if (!item) return;
+  if (item.storage === "cache") {
+    await deleteBackupQueueKey(item.key);
+  } else {
+    await deleteIndexedDBQueueKey(item.key);
+  }
+
+  // Xóa bản sao cùng requestId ở kho còn lại nếu có.
+  var requestId = item.log && item.log.requestId;
+  if (requestId) {
+    try {
+      var idbItems = await readIndexedDBQueueItems();
+      for (var i = 0; i < idbItems.length; i++) {
+        if (String(idbItems[i].log.requestId) === String(requestId)) {
+          await deleteIndexedDBQueueKey(idbItems[i].key);
+        }
+      }
+    } catch (error) {}
+    try {
+      await deleteBackupQueueKey(getBackupRequestUrl(requestId));
+    } catch (error) {}
+  }
+}
+
+async function testIndexedDBHealth() {
+  var testId = "HEALTH_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+  var testLog = {
+    requestId: testId,
+    __healthCheck: true,
+    createdAt: Date.now()
+  };
+
+  try {
+    var result = await withIndexedDBRetry(async function(db) {
+      var key = await addIndexedDBRecord(db, testLog);
+      var readBack = await new Promise(function(resolve, reject) {
+        var tx = db.transaction([OFFLINE_STORE_NAME], "readonly");
+        var req = tx.objectStore(OFFLINE_STORE_NAME).get(key);
+        req.onsuccess = function() { resolve(req.result); };
+        req.onerror = function() { reject(req.error); };
+      });
+      if (!readBack || readBack.requestId !== testId) {
+        throw new Error("Ghi được nhưng đọc kiểm tra không khớp.");
+      }
+      await deleteIndexedDBQueueKey(key);
+      return true;
+    }, 2);
+    return { idb: !!result, backup: false, mode: "idb" };
+  } catch (idbError) {
+    try {
+      var backup = await saveRecordToBackupCache(testLog);
+      var cache = await caches.open(OFFLINE_BACKUP_CACHE);
+      var response = await cache.match(backup.key);
+      var parsed = response ? await response.json() : null;
+      if (!parsed || parsed.requestId !== testId) {
+        throw new Error("Kho dự phòng không đọc xác minh được.");
+      }
+      await deleteBackupQueueKey(backup.key);
+      return { idb: false, backup: true, mode: "cache", error: idbError };
+    } catch (backupError) {
+      return {
+        idb: false,
+        backup: false,
+        mode: "none",
+        error: new Error(
+          "IndexedDB và kho dự phòng đều lỗi: " +
+          (idbError.message || idbError) + "; " +
+          (backupError.message || backupError)
+        )
+      };
+    }
+  }
+}
+
+async function getOfflineHealthStatus(force) {
+  var now = Date.now();
+  if (!force && OFFLINE_HEALTH_CACHE && now - OFFLINE_HEALTH_AT < OFFLINE_HEALTH_TTL_MS) {
+    return OFFLINE_HEALTH_CACHE;
+  }
+  var persistent = await requestPersistentStorage();
+  var health = await testIndexedDBHealth();
+  health.persistent = persistent;
+  health.storage = await getStorageEstimate();
+  OFFLINE_HEALTH_CACHE = health;
+  OFFLINE_HEALTH_AT = now;
+  return health;
+}
+
+async function compressImageForOffline(image) {
+  var sourceWidth = Number(image.naturalWidth || image.width || 0);
+  var sourceHeight = Number(image.naturalHeight || image.height || 0);
+  if (!sourceWidth || !sourceHeight) throw new Error("Không đọc được kích thước ảnh.");
+
+  var widths = [720, 600, 480, 400];
+  var qualities = [0.55, 0.45, 0.36, 0.28];
+  var best = null;
+
+  for (var wi = 0; wi < widths.length; wi++) {
+    var maxWidth = Math.min(widths[wi], sourceWidth);
+    var scale = maxWidth / sourceWidth;
+    var width = Math.max(1, Math.round(sourceWidth * scale));
+    var height = Math.max(1, Math.round(sourceHeight * scale));
+    var canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    var context = canvas.getContext("2d", { alpha: false });
+    context.drawImage(image, 0, 0, width, height);
+
+    for (var qi = 0; qi < qualities.length; qi++) {
+      var dataUrl = canvas.toDataURL("image/jpeg", qualities[qi]);
+      var base64 = dataUrl.split(",")[1] || "";
+      var bytes = estimateBase64Bytes(base64);
+      best = { base64: base64, bytes: bytes, width: width, height: height };
+      if (bytes > 0 && bytes <= OFFLINE_MAX_IMAGE_BYTES) return best;
+    }
+  }
+
+  throw new Error(
+    "Ảnh sau khi nén vẫn quá lớn (" +
+    Math.ceil((best ? best.bytes : 0) / 1024) +
+    " KB). Vui lòng chụp lại."
+  );
+}
+
+
+
+function setOfflineReadinessStyle(
+  element,
+  background,
+  border,
+  color,
+  message
+) {
+  if (!element) return;
+
+  element.style.display = "block";
+  element.style.background = background;
+  element.style.borderColor = border;
+  element.style.color = color;
+  element.textContent = message;
+}
+
+async function updateOfflineReadiness(forceHealthCheck) {
+  var element = document.getElementById("offline-readiness");
+  if (!element || !USER) {
+    if (element) element.style.display = "none";
+    return;
+  }
+
+  var sequence = ++OFFLINE_STATUS_SEQ;
+  var cacheKey = "CACHE_SCH_" + USER.id;
+  var hasScheduleCache = localStorage.getItem(cacheKey) !== null;
+
+  try {
+    var health = await getOfflineHealthStatus(!!forceHealthCheck);
+    var pendingCount = await getOfflineQueueCount();
+    if (sequence !== OFFLINE_STATUS_SEQ) return;
+
+    var pendingText = pendingCount > 0
+      ? " • " + pendingCount + " lượt chờ đồng bộ"
+      : "";
+
+    if (!health.idb && !health.backup) {
+      setOfflineReadinessStyle(
+        element,
+        "#fef2f2",
+        "#fecaca",
+        "#b91c1c",
+        "🔴 Không thể lưu offline trên thiết bị này. Chỉ chấm khi có mạng." + pendingText
+      );
+      return;
+    }
+
+    var storageNote = health.idb
+      ? (health.persistent ? " • lưu trữ bền vững" : " • IndexedDB đã kiểm tra")
+      : " • đang dùng kho dự phòng an toàn";
+
+    if (!navigator.onLine) {
+      if (hasScheduleCache) {
+        setOfflineReadinessStyle(
+          element,
+          health.idb ? "#ecfdf5" : "#fff7ed",
+          health.idb ? "#a7f3d0" : "#fed7aa",
+          health.idb ? "#047857" : "#c2410c",
+          "🟢 Đang ngoại tuyến • sẵn sàng chấm theo lịch đã lưu" + storageNote + pendingText
+        );
+      } else {
+        setOfflineReadinessStyle(
+          element,
+          "#fff7ed",
+          "#fed7aa",
+          "#c2410c",
+          "🟠 Đang ngoại tuyến • chưa có lịch ca trên máy; chỉ ca phát sinh có thể lưu" + storageNote + pendingText
+        );
+      }
+      return;
+    }
+
+    if (hasScheduleCache) {
+      setOfflineReadinessStyle(
+        element,
+        health.idb ? "#eff6ff" : "#fff7ed",
+        health.idb ? "#bfdbfe" : "#fed7aa",
+        health.idb ? "#1d4ed8" : "#c2410c",
+        "🔵 Đã kiểm tra ghi–đọc–xóa • sẵn sàng offline" + storageNote + pendingText
+      );
+    } else {
+      setOfflineReadinessStyle(
+        element,
+        "#fffbeb",
+        "#fde68a",
+        "#a16207",
+        "🟡 Bộ nhớ an toàn • đang chờ tải lịch ca" + storageNote + pendingText
+      );
+    }
+  } catch (error) {
+    if (sequence !== OFFLINE_STATUS_SEQ) return;
+    setOfflineReadinessStyle(
+      element,
+      "#fef2f2",
+      "#fecaca",
+      "#b91c1c",
+      "🔴 Kiểm tra bộ nhớ thất bại. Không chấm offline cho tới khi trạng thái chuyển xanh."
+    );
+  }
 }
 
 
 // Mở thông báo offline và hiển thị đúng số lượt đang chờ đồng bộ.
 async function showOfflineModal() {
-    var modal = document.getElementById("offline-alert-modal");
-    var countText = document.getElementById("offline-count-text");
-
-    if (modal) modal.style.display = "flex";
-
-    try {
-        var db = await initDB();
-        var count = await new Promise(function(resolve, reject) {
-            var tx = db.transaction(["Logs"], "readonly");
-            var request = tx.objectStore("Logs").count();
-            request.onsuccess = function() { resolve(request.result || 0); };
-            request.onerror = function() { reject(request.error); };
-        });
-
-        if (countText) {
-            countText.textContent = count > 0
-                ? count + " lượt đang lưu ngoại tuyến."
-                : "Dữ liệu chưa gửi được lên hệ thống.";
-        }
-    } catch (error) {
-        if (countText) countText.textContent = "Dữ liệu đang được lưu ngoại tuyến.";
+  var modal = document.getElementById("offline-alert-modal");
+  var countText = document.getElementById("offline-count-text");
+  if (modal) modal.style.display = "flex";
+  try {
+    var count = await getOfflineQueueCount();
+    if (countText) {
+      countText.textContent = count > 0
+        ? count + " lượt đang lưu an toàn trên thiết bị."
+        : "Dữ liệu chưa gửi được lên hệ thống.";
     }
+  } catch (error) {
+    if (countText) countText.textContent = "Dữ liệu đang được giữ trên thiết bị.";
+  }
 }
 
 function setCookieVal(name, value, days) {
@@ -478,22 +1063,23 @@ function initMonthSelector() {
     sel.innerHTML = `<option value="${curVal}" style="color:#333">Tháng ${curM}/${curY} (Hiện tại)</option><option value="${prevVal}" style="color:#333">Tháng ${prevM}/${prevY} (Tháng trước)</option>`;
 }
 
-function initApp(){ 
-    document.getElementById('sc-login').classList.remove('active'); 
-    document.getElementById('nav').style.display='flex'; 
+function initApp(){
+    document.getElementById('sc-login').classList.remove('active');
+    document.getElementById('nav').style.display='flex';
 
     document.getElementById('wc-name').innerText = "Chào, " + USER.name;
     document.getElementById('wc-date').innerText = new Date().toLocaleDateString('vi-VN', {
-      weekday:'long', 
-      day:'2-digit', 
+      weekday:'long',
+      day:'2-digit',
       month:'2-digit'
-    }); 
+    });
 
-    initMonthSelector(); 
+    initMonthSelector();
     go('home');
+    setTimeout(function() { updateOfflineReadiness(true); }, 250);
 }
 
-async function loadData(isRefreshing = false) {
+async function loadData(isRefreshing = false, localOnly = false) {
   var myLoadSequence = ++LOAD_SEQ;
   var cachedSchedule = [];
 
@@ -529,42 +1115,10 @@ async function loadData(isRefreshing = false) {
       );
 
     var offlineLogs = [];
-
     try {
-      var db = await initDB();
-
-      offlineLogs =
-        await new Promise(
-          function(resolve, reject) {
-            var tx =
-              db.transaction(
-                ["Logs"],
-                "readonly"
-              );
-
-            var request =
-              tx
-                .objectStore("Logs")
-                .getAll();
-
-            request.onsuccess =
-              function() {
-                resolve(
-                  request.result || []
-                );
-              };
-
-            request.onerror =
-              function() {
-                reject(request.error);
-              };
-          }
-        );
+      offlineLogs = await getAllQueuedLogs();
     } catch (error) {
-      console.error(
-        "Không đọc được dữ liệu offline:",
-        error
-      );
+      console.error("Không đọc được dữ liệu offline:", error);
     }
 
     if (
@@ -769,6 +1323,10 @@ async function loadData(isRefreshing = false) {
       "</div>";
   }
 
+  if (localOnly) {
+    return;
+  }
+
   try {
     var response =
       await callAPI(
@@ -798,6 +1356,8 @@ async function loadData(isRefreshing = false) {
       await mergeAndRender(
         response.list
       );
+
+      updateOfflineReadiness();
     }
 
     syncOfflineData();
@@ -1297,347 +1857,108 @@ function preCheck(
   openCamUI();
 }
 
-function cancelCurrentShift(
-  caName,
-  key,
-  shiftDate
-) {
+async function cancelCurrentShift(caName, key, shiftDate) {
   if (IS_SUBMITTING) {
-    showToast(
-      "⏳ Hệ thống đang xử lý, vui lòng chờ..."
-    );
+    showToast("⏳ Hệ thống đang xử lý, vui lòng chờ...");
     return;
   }
 
-  var reason = prompt(
-    "Vui lòng nhập lý do hủy ca này (Bắt buộc):"
-  );
+  var reason = prompt("Vui lòng nhập lý do hủy ca:", "Bận việc đột xuất");
+  if (reason === null || !String(reason).trim()) return;
 
-  if (reason === null) return;
-
-  reason = String(reason).trim();
-
-  if (!reason) {
-    alert(
-      "⛔ Bạn phải nhập lý do mới được hủy ca!"
-    );
-    return;
-  }
-
-  var safeId =
-    key ||
-    CUR_KEY ||
-    String(caName).replace(
-      /[^a-zA-Z0-9_-]/g,
-      "_"
-    );
-
+  var safeId = key || CUR_KEY || String(caName).replace(/[^a-zA-Z0-9_-]/g, "_");
   var actionTime = Date.now();
-  var targetShiftDate =
-    normalizeShiftDate(
-      shiftDate,
-      actionTime
-    );
+  var targetShiftDate = normalizeShiftDate(shiftDate, actionTime);
+  var todayVN = formatVNDateFromValue(actionTime);
+
+  if (targetShiftDate !== todayVN) {
+    alert("⛔ Đã qua 00:00. Ca ngày " + targetShiftDate + " không thể hủy vào ngày " + todayVN + ".");
+    return;
+  }
 
   CUR_KEY = safeId;
   CUR_DATE = targetShiftDate;
   IS_SUBMITTING = true;
+  lockCurrentActionBox("Đang hủy...");
 
-  lockCurrentActionBox(
-    "Đang hủy..."
-  );
-
-  var card =
-    document.getElementById(
-      "card_" + safeId
-    );
-
-  var loader =
-    document.getElementById(
-      "smooth-loader"
-    );
-
+  var loader = document.getElementById("smooth-loader");
   if (loader) {
     loader.style.display = "flex";
-
-    setTimeout(function() {
-      loader.style.opacity = "1";
-    }, 10);
-
-    loader.innerHTML =
-      '<i class="material-icons bouncing-ball" style="font-size:60px;color:#EA580C">sports_basketball</i>' +
-      '<div style="margin-top:15px;font-weight:bold;color:#334155">⏳ Đang xử lý hủy ca...</div>';
+    loader.style.opacity = "1";
+    loader.innerHTML = '<i class="material-icons bouncing-ball" style="font-size:60px;color:#EA580C">sports_basketball</i>' +
+      '<div style="margin-top:15px;font-weight:bold;color:#334155">💾 Đang lưu yêu cầu hủy an toàn...</div>';
   }
 
-  function finishLoader(
-    messageHtml,
-    removeCard
-  ) {
-    if (!loader) return;
-
-    loader.innerHTML = messageHtml;
-
-    setTimeout(function() {
-      loader.style.opacity = "0";
-
+  function finish(message, ok) {
+    if (loader) {
+      loader.innerHTML = message;
       setTimeout(function() {
-        loader.style.display = "none";
-
-        loader.innerHTML =
-          '<i id="loader-icon" class="material-icons bouncing-ball" style="font-size:60px;color:#EA580C">sports_basketball</i>' +
-          '<div id="loader-text" style="margin-top:15px;font-weight:bold;color:#334155">Đang xử lý...</div>';
-
-        if (
-          removeCard &&
-          card
-        ) {
-          card.style.opacity = "0";
-          card.style.transform =
-            "scale(.8)";
-
-          setTimeout(function() {
-            card.remove();
-          }, 350);
-        }
-      }, 300);
-    }, 900);
+        loader.style.opacity = "0";
+        setTimeout(function() { loader.style.display = "none"; }, 300);
+      }, ok ? 1100 : 2200);
+    }
   }
 
   var logData = {
-    requestId:
-      createRequestId(
-        USER.id + "_HUY"
-      ),
+    requestId: createRequestId(USER.id + "_HUY"),
     apiAction: "cancelShift",
     maNV: USER.id,
     caName: caName,
-    reason: reason,
+    reason: String(reason).trim(),
     ca: caName,
     loai: "HỦY",
     timeGoc: actionTime,
+    clientTime: actionTime,
     shiftDate: targetShiftDate,
-    actionDateVN:
-      formatVNDateFromValue(
-        actionTime
-      ),
-    actionTimeVN:
-      formatVNTimeFromValue(
-        actionTime
-      )
+    actionDateVN: formatVNDateFromValue(actionTime),
+    actionTimeVN: formatVNTimeFromValue(actionTime)
   };
 
-  initDB()
-    .then(function(db) {
-      var tx =
-        db.transaction(
-          ["Logs"],
-          "readwrite"
-        );
+  try {
+    var queueItem = await saveQueuedAttendance(logData);
+    await loadData(false, true);
+    updateOfflineReadiness();
 
-      var addRequest =
-        tx
-          .objectStore("Logs")
-          .add(logData);
-
-      addRequest.onsuccess =
-        function(event) {
-          var logId =
-            event.target.result;
-
-          try {
-            var cachedText =
-              localStorage.getItem(
-                "CACHE_SCH_" +
-                USER.id
-              );
-
-            if (
-              cachedText &&
-              cachedText !==
-                "undefined"
-            ) {
-              var schedule =
-                JSON.parse(
-                  cachedText
-                );
-
-              schedule =
-                schedule.filter(
-                  function(item) {
-                    return !(
-                      item.ca ===
-                        caName &&
-                      item.date ===
-                        targetShiftDate
-                    );
-                  }
-                );
-
-              localStorage.setItem(
-                "CACHE_SCH_" +
-                  USER.id,
-                JSON.stringify(
-                  schedule
-                )
-              );
-            }
-          } catch (cacheError) {
-            console.error(
-              cacheError
-            );
-          }
-
-          callAPI(
-            "cancelShift",
-            logData
-          )
-            .then(async function(response) {
-              IS_SUBMITTING = false;
-
-              if (
-                !isSuccessfulApiResponse(
-                  response
-                )
-              ) {
-                throw new Error(
-                  typeof response ===
-                    "string"
-                    ? response
-                    : (
-                        response &&
-                        response.msg
-                      ) ||
-                      "Không hủy được ca."
-                );
-              }
-
-              await deleteOfflineRecord(
-                db,
-                logId
-              );
-
-              finishLoader(
-                '<div style="font-size:70px;color:#10b981">✅</div>' +
-                '<div style="margin-top:12px;font-weight:900;color:#10b981;font-size:18px">ĐÃ HỦY CA</div>',
-                true
-              );
-
-              showToast(
-                "✅ Đã hủy ca thành công!"
-              );
-
-              setTimeout(function() {
-                loadData(true);
-              }, 1200);
-            })
-            .catch(async function(error) {
-              IS_SUBMITTING = false;
-
-              if (
-                navigator.onLine &&
-                String(error.message)
-                  .indexOf("Offline") === -1
-              ) {
-                try {
-                  await deleteOfflineRecord(
-                    db,
-                    logId
-                  );
-                } catch (deleteError) {
-                  console.error(
-                    "Không xóa được yêu cầu hủy lỗi:",
-                    deleteError
-                  );
-                }
-
-                unlockCurrentActionBox();
-
-                finishLoader(
-                  '<div style="color:#ef4444;font-weight:bold">❌ ' +
-                  escapeHtml(
-                    error.message
-                  ) +
-                  "</div>",
-                  false
-                );
-
-                showToast(
-                  "⚠️ " +
-                  error.message
-                );
-                return;
-              }
-
-              finishLoader(
-                '<div style="font-size:70px;color:#f59e0b">☁️</div>' +
-                '<div style="margin-top:12px;font-weight:900;color:#f59e0b;font-size:18px">ĐÃ LƯU NGOẠI TUYẾN</div>',
-                true
-              );
-
-              showOfflineModal();
-            });
-        };
-
-      addRequest.onerror =
-        function() {
-          IS_SUBMITTING = false;
-          unlockCurrentActionBox();
-
-          finishLoader(
-            '<div style="color:#ef4444;font-weight:bold">❌ Không lưu được yêu cầu hủy.</div>',
-            false
-          );
-        };
-    })
-    .catch(function(error) {
+    if (!navigator.onLine) {
       IS_SUBMITTING = false;
-      unlockCurrentActionBox();
+      finish('<div style="font-size:70px;color:#f59e0b">☁️</div><div style="font-weight:900;color:#f59e0b">ĐÃ LƯU YÊU CẦU HỦY NGOẠI TUYẾN</div>', true);
+      showOfflineModal();
+      return;
+    }
 
-      callAPI(
-        "cancelShift",
-        logData
-      )
-        .then(function(response) {
-          if (
-            !isSuccessfulApiResponse(
-              response
-            )
-          ) {
-            throw new Error(
-              typeof response ===
-                "string"
-                ? response
-                : (
-                    response &&
-                    response.msg
-                  ) ||
-                  "Không hủy được ca."
-            );
-          }
+    try {
+      var response = await callAPI("cancelShift", logData);
+      if (!isSuccessfulApiResponse(response)) {
+        var msg = typeof response === "string" ? response : ((response && response.msg) || "Không hủy được ca.");
+        await deleteQueueItem(queueItem);
+        IS_SUBMITTING = false;
+        unlockCurrentActionBox();
+        await loadData(true);
+        finish('<div style="color:#ef4444;font-weight:bold">❌ ' + escapeHtml(msg) + '</div>', false);
+        showToast("⚠️ " + msg);
+        return;
+      }
 
-          finishLoader(
-            '<div style="font-size:70px;color:#10b981">✅</div>' +
-            '<div style="margin-top:12px;font-weight:900;color:#10b981;font-size:18px">ĐÃ HỦY CA</div>',
-            true
-          );
-
-          showToast(
-            "✅ Đã hủy ca thành công!"
-          );
-        })
-        .catch(function(sendError) {
-          unlockCurrentActionBox();
-
-          finishLoader(
-            '<div style="color:#ef4444;font-weight:bold">❌ ' +
-            escapeHtml(
-              sendError.message
-            ) +
-            "</div>",
-            false
-          );
-        });
-    });
+      await deleteQueueItem(queueItem);
+      IS_SUBMITTING = false;
+      finish('<div style="font-size:70px;color:#10b981">✅</div><div style="font-weight:900;color:#10b981">ĐÃ HỦY CA</div>', true);
+      showToast("✅ Đã hủy ca thành công!");
+      updateOfflineReadiness();
+      setTimeout(function() { loadData(true); }, 600);
+    } catch (networkError) {
+      IS_SUBMITTING = false;
+      finish('<div style="font-size:70px;color:#f59e0b">☁️</div><div style="font-weight:900;color:#f59e0b">YÊU CẦU ĐÃ ĐƯỢC GIỮ AN TOÀN</div>', true);
+      showOfflineModal();
+      updateOfflineReadiness();
+    }
+  } catch (error) {
+    IS_SUBMITTING = false;
+    unlockCurrentActionBox();
+    finish('<div style="color:#ef4444;font-weight:bold">❌ Dữ liệu chưa được lưu.<br><small>' + escapeHtml(error.message || String(error)) + '</small></div>', false);
+    showToast("❌ Không lưu được yêu cầu hủy. Vui lòng thử lại.");
+    OFFLINE_HEALTH_CACHE = null;
+    updateOfflineReadiness(true);
+  }
 }
 
 
@@ -1759,225 +2080,177 @@ function closeCam(keepLocked) {
 // QUY TRÌNH CHẤM CÔNG: ĐỒNG BỘ UI & XỬ LÝ MẠNG YẾU
 // QUY TRÌNH CHẤM CÔNG: ĐỒNG BỘ UI & XỬ LÝ MẠNG YẾU (ĐÃ FIX LỖI KHỰNG VÀ THÊM HIỆU ỨNG MƯỢT)
 // QUY TRÌNH CHẤM CÔNG: ĐỒNG BỘ UI & XỬ LÝ MẠNG YẾU (ĐÃ FIX CRASH KẸT MÀN HÌNH)
-function processNativePhoto(event) {
-  const file = event.target.files[0];
-
-  // Người dùng mở camera nhưng bấm Hủy/quay lại.
+async function processNativePhoto(event) {
+  var file = event.target.files && event.target.files[0];
   if (!file) {
     closeCam(false);
     event.target.value = "";
     return;
   }
 
-  // Đã có ảnh nên tiếp tục giữ khóa.
-  closeCam(true); 
-  var loader = document.getElementById('smooth-loader'); 
-  var loaderTxt = document.getElementById('loader-text'); 
-  var loaderIcon = document.getElementById('loader-icon');
-  
-  // KIỂM TRA DOM ĐỂ CHỐNG CRASH
-  if(loader) { 
-      loader.style.display = 'flex'; 
-      setTimeout(() => { loader.style.opacity = '1'; }, 10); 
-      if(loaderTxt) loaderTxt.innerText = "⏳ Đang xử lý ảnh..."; 
+  closeCam(true);
+  var loader = document.getElementById("smooth-loader");
+  if (loader) {
+    loader.style.display = "flex";
+    setTimeout(function() { loader.style.opacity = "1"; }, 10);
   }
-  let l = document.getElementById('native-cam-label'); if (l) l.style.display = 'none';
-  
-  // Hàm con: Tắt Loader an toàn và Khôi phục DOM gốc
-  const closeLoaderSafe = (msgHtml, waitTime = 1000) => {
-      if(!loader) return;
-      loader.innerHTML = msgHtml;
-      setTimeout(() => { 
-          loader.style.opacity = '0'; 
-          setTimeout(() => { 
-              loader.style.display = 'none'; 
-              // Bắt buộc khôi phục lại bóng rổ để lần chấm công sau không bị Crash Null DOM
-              loader.innerHTML = `<i id="loader-icon" class="material-icons bouncing-ball" style="font-size:60px; color:#EA580C; text-shadow: 0 4px 6px rgba(0,0,0,0.2);">sports_basketball</i><div id="loader-text" style="margin-top:15px; font-weight:bold; color:#334155; font-size:15px; text-shadow: 0 1px 2px rgba(255,255,255,0.8);">⏳ Đang xử lý ảnh...</div>`;
-          }, 400);
-      }, waitTime);
-  };
+  var cameraLabel = document.getElementById("native-cam-label");
+  if (cameraLabel) cameraLabel.style.display = "none";
 
-  setTimeout(() => {
-      const imgUrl = URL.createObjectURL(file);
-      const img = new Image();
-      img.onload = function() {
-          try {
-              URL.revokeObjectURL(imgUrl); 
-              const cv = document.createElement('canvas'); 
-              const MAX_W = 600; let w = img.width; let h = img.height;
-              if (w > MAX_W) { h = h * (MAX_W / w); w = MAX_W; }
-              cv.width = w; cv.height = h; 
-              cv.getContext('2d').drawImage(img, 0, 0, w, h);
-              const base64 = cv.toDataURL('image/jpeg', 0.4).split(',')[1];
-              lockCurrentActionBox(CUR_TYPE === "VÀO" ? "Đang vào ca..." : "Đang ra ca...");
+  function resetLoader(messageHtml, waitTime) {
+    if (!loader) return;
+    loader.innerHTML = messageHtml;
+    setTimeout(function() {
+      loader.style.opacity = "0";
+      setTimeout(function() {
+        loader.style.display = "none";
+        loader.innerHTML =
+          '<i id="loader-icon" class="material-icons bouncing-ball" style="font-size:60px;color:#EA580C;text-shadow:0 4px 6px rgba(0,0,0,.2)">sports_basketball</i>' +
+          '<div id="loader-text" style="margin-top:15px;font-weight:bold;color:#334155;font-size:15px">Đang xử lý ảnh...</div>';
+      }, 400);
+    }, waitTime || 1200);
+  }
 
-              var exactTime = Date.now();
-              var actionTimeText = formatVNTimeFromValue(exactTime);
-              var actionDateText = formatVNDateFromValue(exactTime);
-              var shiftDateText = normalizeShiftDate(CUR_DATE, exactTime);
+  function setLoaderText(textValue) {
+    var textElement = document.getElementById("loader-text");
+    if (textElement) textElement.innerText = textValue;
+  }
 
-              try {
-                  var cachedSch = localStorage.getItem('CACHE_SCH_' + USER.id);
+  var imageUrl = URL.createObjectURL(file);
+  var image = new Image();
 
-                  if (cachedSch && cachedSch !== "undefined") {
-                      let list = JSON.parse(cachedSch);
+  try {
+    setLoaderText("⏳ Đang nén và kiểm tra ảnh...");
+    await new Promise(function(resolve, reject) {
+      image.onload = resolve;
+      image.onerror = function() { reject(new Error("Ảnh bị lỗi, vui lòng chụp lại.")); };
+      image.src = imageUrl;
+    });
 
-                      let match = list.find(function(item) {
-                          let itemKey = String(
-                              item.id || (item.date + "_" + item.ca)
-                          ).replace(/[^a-zA-Z0-9_-]/g, "_");
+    var compressed = await compressImageForOffline(image);
+    try { URL.revokeObjectURL(imageUrl); } catch (error) {}
 
-                          return (
-                              itemKey === CUR_KEY ||
-                              (
-                                  item.ca === CUR_CA &&
-                                  item.date === shiftDateText
-                              )
-                          );
-                      });
-
-                      if (match) {
-                          if (CUR_TYPE === "VÀO") {
-                              match.status = "WORKING";
-                              match.start = actionTimeText;
-                              match.actualInMs = exactTime;
-                          }
-
-                          if (CUR_TYPE === "RA") {
-                              match.status = "DONE";
-                              match.end = actionTimeText;
-                              match.actualOutMs = exactTime;
-                          }
-                      } else if (CUR_TYPE === "VÀO") {
-                          list.push({
-                              id: CUR_KEY || ("FREE_" + exactTime),
-                              ca: CUR_CA,
-                              date: shiftDateText,
-                              isToday: shiftDateText === formatVNDateFromValue(Date.now()),
-                              loc: CUR_LOC || "Ca phát sinh",
-                              start: actionTimeText,
-                              end: "",
-                              scheduledStart: CUR_TIME || "",
-                              scheduledEnd: CUR_END || "",
-                              actualInMs: exactTime,
-                              actualOutMs: null,
-                              status: "WORKING",
-                              type: "FREE"
-                          });
-                      }
-
-                      localStorage.setItem(
-                          'CACHE_SCH_' + USER.id,
-                          JSON.stringify(list)
-                      );
-
-                      renderSch(list);
-                  }
-              } catch (cacheError) {
-                  console.error("Lỗi cập nhật lịch tạm:", cacheError);
-              }
-
-              var safeLat = LOC ? LOC.lat : 0;
-              var safeLng = LOC ? LOC.lng : 0;
-
-              var logData = {
-                  requestId: createRequestId(USER.id + "_" + CUR_TYPE),
-                  maNV: USER.id,
-                  tenNV: USER.name,
-                  ca: CUR_CA,
-                  loai: CUR_TYPE,
-                  lat: safeLat,
-                  lng: safeLng,
-                  imgBase64: base64,
-                  locN: CUR_LOC,
-                  start: CUR_TIME,
-                  end: CUR_END,
-                  note: CUR_NOTE,
-                  timeGoc: exactTime,
-                  clientTime: exactTime,
-                  shiftDate: shiftDateText,
-                  actionDateVN: actionDateText,
-                  actionTimeVN: actionTimeText
-              };
-
-              initDB().then(db => {
-                  let tx = db.transaction(["Logs"], "readwrite");
-                  let request = tx.objectStore("Logs").add(logData);
-                  
-                 request.onsuccess = function(e) {
-                 let logId = e.target.result;
-                      
-                      // Báo Đã lưu tạm và tự động thoát màn hình mượt mà
-                      let successHtml = `<div style="transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;"><i class="material-icons" style="font-size:70px; color:#10b981;">cloud_upload</i></div><div style="margin-top:12px; font-weight:900; color:#10b981; font-size:18px; transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 0.1s;">⏳ ĐÃ GHI NHẬN!</div><div style="margin-top:6px;color:#64748b;font-size:13px;">Đang xác nhận với hệ thống...</div>`;
-                      closeLoaderSafe(successHtml, 1000);
-
-                      callAPI('processCheckIn', { action: 'processCheckIn', ...logData }).then(r => {
-    IS_SUBMITTING = false;
-
-    if (isSuccessfulApiResponse(r)) {
-        let delTx = db.transaction(["Logs"], "readwrite");
-        delTx.objectStore("Logs").delete(logId);
-        
-        if (r.timeAlert) {
-            showToast("🔔 " + r.timeAlert);
-        } else {
-            showToast("✅ Chấm công thành công" + (r.time ? " lúc " + r.time : "") + ".");
-        }
-
-        if (r.durationMsg) {
-            showToast("🎉 KẾT THÚC CA! " + r.durationMsg.replace(" (Làm: ", "").replace(")", ""));
-        }
-        setTimeout(() => loadData(false), 2000); 
-    } else {
-        showToast("⚠️ Lỗi: " + r.msg); 
-        if (r && r.msg && r.msg.includes("⛔")) {
-            let delTx = db.transaction(["Logs"], "readwrite");
-            delTx.objectStore("Logs").delete(logId);
-        }
-        setTimeout(() => loadData(false), 500); 
+    if (!LOC || !Number.isFinite(Number(LOC.lat)) || !Number.isFinite(Number(LOC.lng))) {
+      throw new Error("Không có tọa độ GPS hợp lệ. Vui lòng bật định vị và thử lại.");
     }
-}).catch(err => {
-    IS_SUBMITTING = false;
-    showOfflineModal();
-});
-                  };
-              }).catch(err => {
-                  let syncHtml = `<div style="transform:scale(0); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;"><i class="material-icons" style="font-size:70px; color:#f59e0b;">cloud_sync</i></div><div style="margin-top:12px; font-weight:900; color:#f59e0b; font-size:18px;">⏳ Đang gửi lên Server...</div>`;
-                  closeLoaderSafe(syncHtml, 1500);
-                  callAPI('processCheckIn', { action: 'processCheckIn', ...logData }).then(r => {
-                  IS_SUBMITTING = false;
 
-                 if (isSuccessfulApiResponse(r)) { 
-                  showToast("✅ THÀNH CÔNG!"); 
-                  setTimeout(() => loadData(false), 2000); 
-                } else {
-               showToast("⚠️ Lỗi: " + r.msg);
-               setTimeout(() => loadData(false), 500);
-               }
-}).catch(e => {
-    IS_SUBMITTING = false;
-    showOfflineModal();
-});
-              });
+    await ensureOfflineStorageCapacity(compressed.bytes + 96 * 1024);
+    lockCurrentActionBox(CUR_TYPE === "VÀO" ? "Đang vào ca..." : "Đang ra ca...");
 
-                    } catch (fatalError) {
-              IS_SUBMITTING = false;
-              unlockCurrentActionBox();
-              closeLoaderSafe(`<div style="color:red;font-weight:bold;">❌ Lỗi phần mềm: ${fatalError.message}</div>`, 2000);
-          }
-      };
-      img.onerror = function() {
+    var exactTime = Date.now();
+    var actionTimeText = formatVNTimeFromValue(exactTime);
+    var actionDateText = formatVNDateFromValue(exactTime);
+    var shiftDateText = normalizeShiftDate(CUR_DATE, exactTime);
+
+    var logData = {
+      requestId: createRequestId(USER.id + "_" + CUR_TYPE),
+      maNV: USER.id,
+      tenNV: USER.name,
+      ca: CUR_CA,
+      loai: CUR_TYPE,
+      lat: Number(LOC.lat),
+      lng: Number(LOC.lng),
+      imgBase64: compressed.base64,
+      imageBytes: compressed.bytes,
+      locN: CUR_LOC,
+      start: CUR_TIME,
+      end: CUR_END,
+      note: CUR_NOTE,
+      timeGoc: exactTime,
+      clientTime: exactTime,
+      shiftDate: shiftDateText,
+      actionDateVN: actionDateText,
+      actionTimeVN: actionTimeText
+    };
+
+    setLoaderText("💾 Đang lưu an toàn trên thiết bị...");
+    var queueItem = await saveQueuedAttendance(logData);
+
+    // Chỉ sau khi kho lưu trữ xác nhận hoàn tất mới thay đổi giao diện ca.
+    await loadData(false, true);
+    updateOfflineReadiness();
+
+    if (!navigator.onLine) {
+      IS_SUBMITTING = false;
+      resetLoader(
+        '<div style="transform:scale(0);animation:popIn .4s forwards"><i class="material-icons" style="font-size:70px;color:#f59e0b">cloud_done</i></div>' +
+        '<div style="margin-top:12px;font-weight:900;color:#d97706;font-size:18px">✅ ĐÃ LƯU NGOẠI TUYẾN AN TOÀN</div>' +
+        '<div style="margin-top:6px;color:#64748b;font-size:13px">Đã xác minh dữ liệu, giờ, GPS và ảnh. Sẽ tự đồng bộ khi có mạng.</div>',
+        1900
+      );
+      showToast(queueItem.storage === "idb"
+        ? "✅ Đã lưu ngoại tuyến lúc " + actionTimeText + "."
+        : "✅ IndexedDB tạm lỗi; dữ liệu đã được giữ trong kho dự phòng.");
+      showOfflineModal();
+      event.target.value = "";
+      return;
+    }
+
+    setLoaderText("☁️ Đã lưu an toàn • đang xác nhận với máy chủ...");
+
+    try {
+      var response = await callAPI("processCheckIn", logData);
+      if (!isSuccessfulApiResponse(response)) {
+        var serverMessage = response && response.msg
+          ? response.msg
+          : (typeof response === "string" ? response : "Server từ chối dữ liệu.");
+
+        // Server đã trả lời chắc chắn: bỏ yêu cầu lỗi để không gửi lặp vô hạn.
+        await deleteQueueItem(queueItem);
+        IS_SUBMITTING = false;
+        unlockCurrentActionBox();
+        await loadData(true);
+        updateOfflineReadiness();
+        resetLoader(
+          '<div style="font-size:65px;color:#ef4444">❌</div>' +
+          '<div style="margin-top:10px;color:#b91c1c;font-weight:bold;padding:0 20px">' + escapeHtml(serverMessage) + '</div>',
+          2300
+        );
+        showToast("⚠️ " + serverMessage);
+        event.target.value = "";
+        return;
+      }
+
+      await deleteQueueItem(queueItem);
+      IS_SUBMITTING = false;
+      resetLoader(
+        '<div style="transform:scale(0);animation:popIn .4s forwards"><i class="material-icons" style="font-size:70px;color:#10b981">check_circle</i></div>' +
+        '<div style="margin-top:12px;font-weight:900;color:#10b981;font-size:18px">✅ CHẤM CÔNG THÀNH CÔNG</div>',
+        1300
+      );
+
+      if (response.timeAlert) showToast("🔔 " + response.timeAlert);
+      else showToast("✅ Chấm công thành công" + (response.time ? " lúc " + response.time : "") + ".");
+      if (response.durationMsg) showToast("🎉 KẾT THÚC CA! " + response.durationMsg.replace(" (Làm: ", "").replace(")", ""));
+      updateOfflineReadiness();
+      setTimeout(function() { loadData(true); }, 700);
+    } catch (networkError) {
+      IS_SUBMITTING = false;
+      resetLoader(
+        '<div style="font-size:70px;color:#f59e0b">☁️</div>' +
+        '<div style="margin-top:12px;font-weight:900;color:#f59e0b;font-size:18px">✅ DỮ LIỆU ĐÃ ĐƯỢC GIỮ AN TOÀN</div>' +
+        '<div style="margin-top:6px;color:#64748b;font-size:13px">Mạng không ổn định; hệ thống sẽ gửi lại tự động.</div>',
+        1800
+      );
+      showToast("⚠️ Mạng không ổn định. Lượt chấm vẫn còn trong hàng đợi an toàn.");
+      showOfflineModal();
+      updateOfflineReadiness();
+    }
+  } catch (error) {
+    try { URL.revokeObjectURL(imageUrl); } catch (revokeError) {}
     IS_SUBMITTING = false;
     unlockCurrentActionBox();
-
-    try { URL.revokeObjectURL(imgUrl); } catch(e) {}
-
-    closeLoaderSafe(`<div style="color:red;font-weight:bold;">❌ Ảnh bị lỗi, vui lòng chụp lại.</div>`, 2000);
-};
-      img.src = imgUrl; 
-  }, 50); 
-
-  event.target.value = '';
+    resetLoader(
+      '<div style="font-size:65px;color:#ef4444">❌</div>' +
+      '<div style="margin-top:10px;color:#b91c1c;font-weight:bold;padding:0 20px">DỮ LIỆU CHƯA ĐƯỢC GHI NHẬN<br><small>' + escapeHtml(error.message || String(error)) + '</small></div>',
+      2800
+    );
+    showToast("❌ Chưa lưu được dữ liệu. Vui lòng bật mạng hoặc giải phóng bộ nhớ rồi thử lại.");
+    OFFLINE_HEALTH_CACHE = null;
+    updateOfflineReadiness(true);
+  } finally {
+    event.target.value = "";
+  }
 }
                    
 // --- 1. HÀM VẼ GIAO DIỆN LỊCH SỬ (TÁCH RA ĐỂ DÙNG CHUNG CHO CẢ ONLINE VÀ OFFLINE) ---
@@ -2032,10 +2305,7 @@ async function loadHist(){
 
         // BƯỚC 3: Nếu mất mạng -> Kiểm tra xem có ca Offline nào vừa chấm chưa kịp gửi không
         try {
-            let db = await initDB(); 
-            let store = db.transaction(["Logs"], "readonly").objectStore("Logs");
-            store.getAll().onsuccess = function(e) {
-            let offLogs = e.target.result;
+            let offLogs = await getAllQueuedLogs();
                 if(offLogs.length > 0) {
                     let offH = '<div style="color:#b45309; background:#fffbeb; border:1px dashed #f59e0b; padding:12px; border-radius:8px; margin-bottom:15px; font-size:13px; font-weight:bold; text-align:center;">' + 
            '⚠️ Có ' + offLogs.length + ' ca ngoại tuyến chưa đồng bộ:<br>' + 
@@ -2057,7 +2327,6 @@ async function loadHist(){
                     var s = document.getElementById('sync-hist-stt'); 
                     if(s) s.innerHTML = '⚠️ Đang xem dữ liệu ngoại tuyến (Offline)';
                 }
-            }
         } catch(dbErr) {
             if(!cachedHist) histContainer.innerHTML = '<div style="color:red; text-align:center;">Lỗi mạng!</div>';
         }
@@ -2087,20 +2356,80 @@ function openCam(mode){ MODE=mode; openCamUI(); }
 function viewStatDetail(title, list){ var modal = document.getElementById('detail-modal'); modal.style.display = 'flex'; document.getElementById('dm-title').innerText = title; var content = document.getElementById('dm-content'); if(!list || list.length == 0){ content.innerHTML = '<div style="padding:30px;text-align:center;color:#94a3b8">Không có dữ liệu.</div>'; } else { var h = ''; list.forEach(item => { h += `<div class="list-item" style="display:flex;align-items:center;gap:15px;padding:15px;border-bottom:1px solid #f1f5f9"><div style="background:#ecfdf5;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#10b981"><i class="material-icons" style="font-size:18px">check_circle</i></div><div style="font-weight:500;color:#334155;font-size:14px">${item}</div></div>`; }); content.innerHTML = h; } }
 
 // ==========================================================
-function initDB() {
-    return new Promise((resolve, reject) => {
-        if (!window.indexedDB) return reject("No IndexedDB");
-        let timer = setTimeout(() => reject("DB Timeout"), 2000); // Tối đa 2s, nếu đơ thì thoát luôn
-        try {
-            let request = indexedDB.open("VSP_OfflineDB", 1);
-            request.onupgradeneeded = e => {
-                let db = e.target.result;
-                if (!db.objectStoreNames.contains("Logs")) db.createObjectStore("Logs", { autoIncrement: true });
-            };
-            request.onsuccess = e => { clearTimeout(timer); resolve(e.target.result); };
-            request.onerror = e => { clearTimeout(timer); reject(e); };
-        } catch (e) { clearTimeout(timer); reject(e); }
-    });
+function initDB(forceReconnect) {
+  if (forceReconnect) resetDBConnection();
+  if (DB_CONNECTION_PROMISE) return DB_CONNECTION_PROMISE;
+
+  DB_CONNECTION_PROMISE = new Promise(function(resolve, reject) {
+    if (!window.indexedDB) {
+      reject(new Error("Trình duyệt không hỗ trợ IndexedDB."));
+      return;
+    }
+
+    var settled = false;
+    var blocked = false;
+    var timer = setTimeout(function() {
+      if (settled) return;
+      settled = true;
+      DB_CONNECTION_PROMISE = null;
+      reject(new Error(blocked
+        ? "IndexedDB bị chặn bởi phiên ứng dụng cũ. Hãy đóng tất cả cửa sổ ứng dụng."
+        : "Mở IndexedDB quá thời gian."));
+    }, 15000);
+
+    var request;
+    try {
+      request = indexedDB.open(OFFLINE_DB_NAME, OFFLINE_DB_VERSION);
+    } catch (error) {
+      clearTimeout(timer);
+      DB_CONNECTION_PROMISE = null;
+      reject(error);
+      return;
+    }
+
+    request.onupgradeneeded = function(event) {
+      var db = event.target.result;
+      if (!db.objectStoreNames.contains(OFFLINE_STORE_NAME)) {
+        db.createObjectStore(OFFLINE_STORE_NAME, { autoIncrement: true });
+      }
+    };
+
+    request.onblocked = function() {
+      blocked = true;
+      console.warn("IndexedDB đang bị phiên ứng dụng khác giữ kết nối.");
+    };
+
+    request.onerror = function() {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      DB_CONNECTION_PROMISE = null;
+      reject(request.error || new Error("Không mở được IndexedDB."));
+    };
+
+    request.onsuccess = function(event) {
+      var db = event.target.result;
+      if (settled) {
+        try { db.close(); } catch (error) {}
+        return;
+      }
+      settled = true;
+      clearTimeout(timer);
+
+      db.onversionchange = function() {
+        try { db.close(); } catch (error) {}
+        DB_CONNECTION_PROMISE = null;
+      };
+      db.onclose = function() { DB_CONNECTION_PROMISE = null; };
+      db.onerror = function(event) {
+        console.error("IndexedDB runtime error:", event.target && event.target.error);
+      };
+      resolve(db);
+    };
+  });
+
+  DB_CONNECTION_PROMISE.catch(function() { DB_CONNECTION_PROMISE = null; });
+  return DB_CONNECTION_PROMISE;
 }
 
 async function saveOfflineLog(
@@ -2117,62 +2446,33 @@ async function saveOfflineLog(
   note,
   shiftDate
 ) {
-  try {
-    var actionTime = Date.now();
-    var db = await initDB();
-
-    var tx =
-      db.transaction(
-        ["Logs"],
-        "readwrite"
-      );
-
-    tx.objectStore("Logs").add({
-      requestId:
-        createRequestId(
-          maNV + "_" + loai
-        ),
-      maNV: maNV,
-      tenNV: tenNV,
-      ca: ca,
-      loai: loai,
-      lat: lat,
-      lng: lng,
-      imgBase64: imgBase64,
-      locN: locN,
-      start: start,
-      end: end,
-      note: note,
-      timeGoc: actionTime,
-      shiftDate:
-        normalizeShiftDate(
-          shiftDate,
-          actionTime
-        ),
-      actionDateVN:
-        formatVNDateFromValue(
-          actionTime
-        ),
-      actionTimeVN:
-        formatVNTimeFromValue(
-          actionTime
-        )
-    });
-
-    tx.oncomplete = function() {
-      showToast(
-        "⚠️ Đã lưu ngoại tuyến. " +
-        "Hệ thống sẽ đồng bộ khi có mạng."
-      );
-
-      loadData(false);
-    };
-  } catch (error) {
-    console.error(
-      "Lỗi lưu Offline:",
-      error
-    );
-  }
+  var actionTime = Date.now();
+  var logData = {
+    requestId: createRequestId(maNV + "_" + loai),
+    maNV: maNV,
+    tenNV: tenNV,
+    ca: ca,
+    loai: loai,
+    lat: lat,
+    lng: lng,
+    imgBase64: imgBase64,
+    locN: locN,
+    start: start,
+    end: end,
+    note: note,
+    timeGoc: actionTime,
+    clientTime: actionTime,
+    shiftDate: normalizeShiftDate(shiftDate, actionTime),
+    actionDateVN: formatVNDateFromValue(actionTime),
+    actionTimeVN: formatVNTimeFromValue(actionTime)
+  };
+  var saved = await saveQueuedAttendance(logData);
+  showToast(saved.storage === "idb"
+    ? "✅ Đã lưu ngoại tuyến an toàn."
+    : "✅ Đã lưu vào kho dự phòng an toàn.");
+  await loadData(false, true);
+  updateOfflineReadiness();
+  return saved;
 }
 
 // ==========================================================
@@ -2196,8 +2496,15 @@ document.addEventListener("visibilitychange", function() {
 
 // Khi điện thoại có mạng trở lại, chủ động đồng bộ và tải lịch mới.
 window.addEventListener("online", function() {
+    showToast("🌐 Đã có mạng. Hệ thống đang kiểm tra dữ liệu chờ đồng bộ.");
+    updateOfflineReadiness();
     syncOfflineData();
     refreshScheduleWhenSafe();
+});
+
+window.addEventListener("offline", function() {
+    showToast("📴 Đã mất mạng. Chấm công sẽ được lưu an toàn trên thiết bị.");
+    updateOfflineReadiness();
 });
 
 // Khi ứng dụng đang mở, kiểm tra lịch mới mỗi 2 phút.
@@ -2206,303 +2513,76 @@ setInterval(function() {
 }, 2 * 60 * 1000);
 
 async function syncOfflineData() {
-  if (SYNCING || !navigator.onLine) {
-    return;
-  }
-
+  if (SYNCING || !navigator.onLine) return;
   SYNCING = true;
 
   try {
-    var db = await initDB();
+    var combined = await getAllQueueItems();
+    if (combined.length === 0) return;
 
-    var bundle =
-      await new Promise(
-        function(resolve, reject) {
-          var tx =
-            db.transaction(
-              ["Logs"],
-              "readonly"
-            );
+    var actionOrder = { "VÀO": 1, "RA": 2, "HỦY": 3 };
+    combined.sort(function(a, b) {
+      var diff = Number(a.log.timeGoc || 0) - Number(b.log.timeGoc || 0);
+      if (diff !== 0) return diff;
+      return (actionOrder[a.log.loai] || 9) - (actionOrder[b.log.loai] || 9);
+    });
 
-          var store =
-            tx.objectStore("Logs");
-
-          var logs = [];
-          var keys = [];
-
-          var cursorRequest =
-            store.openCursor();
-
-          cursorRequest.onsuccess =
-            function(event) {
-              var cursor =
-                event.target.result;
-
-              if (cursor) {
-                logs.push(
-                  cursor.value
-                );
-
-                keys.push(
-                  cursor.primaryKey
-                );
-
-                cursor.continue();
-              } else {
-                resolve({
-                  logs: logs,
-                  keys: keys
-                });
-              }
-            };
-
-          cursorRequest.onerror =
-            function() {
-              reject(
-                cursorRequest.error
-              );
-            };
-        }
-      );
-
-    if (
-      bundle.logs.length === 0
-    ) {
-      return;
-    }
-
-    var combined =
-      bundle.logs.map(
-        function(log, index) {
-          return {
-            log: log,
-            key: bundle.keys[index]
-          };
-        }
-      );
-
-    var actionOrder = {
-      "VÀO": 1,
-      "RA": 2,
-      "HỦY": 3
-    };
-
-    combined.sort(
-      function(a, b) {
-        var timeDifference =
-          Number(
-            a.log.timeGoc || 0
-          ) -
-          Number(
-            b.log.timeGoc || 0
-          );
-
-        if (
-          timeDifference !== 0
-        ) {
-          return timeDifference;
-        }
-
-        return (
-          (
-            actionOrder[
-              a.log.loai
-            ] || 9
-          ) -
-          (
-            actionOrder[
-              b.log.loai
-            ] || 9
-          )
-        );
-      }
-    );
-
-    showToast(
-      "🔄 Đang đồng bộ " +
-      combined.length +
-      " lượt..."
-    );
-
+    showToast("🔄 Đang đồng bộ " + combined.length + " lượt...");
     var successCount = 0;
     var alerts = [];
 
-    for (
-      var index = 0;
-      index < combined.length;
-      index++
-    ) {
-      var item =
-        combined[index];
-
-      var log =
-        Object.assign(
-          {},
-          item.log
-        );
-
-      var actionTime =
-        Number(log.timeGoc) ||
-        Date.now();
+    for (var index = 0; index < combined.length; index++) {
+      var item = combined[index];
+      var log = Object.assign({}, item.log);
+      var actionTime = Number(log.timeGoc) || Date.now();
 
       log.timeGoc = actionTime;
-
-      log.shiftDate =
-        normalizeShiftDate(
-          log.shiftDate,
-          actionTime
-        );
-
-      log.actionDateVN =
-        formatVNDateFromValue(
-          actionTime
-        );
-
-      log.actionTimeVN =
-        formatVNTimeFromValue(
-          actionTime
-        );
-
-      if (!log.requestId) {
-        log.requestId =
-          createRequestId(
-            (
-              log.maNV ||
-              "NV"
-            ) +
-            "_" +
-            (
-              log.loai ||
-              "SYNC"
-            )
-          );
-      }
-
+      log.clientTime = Number(log.clientTime) || actionTime;
+      log.shiftDate = normalizeShiftDate(log.shiftDate, actionTime);
+      log.actionDateVN = formatVNDateFromValue(actionTime);
+      log.actionTimeVN = formatVNTimeFromValue(actionTime);
+      if (!log.requestId) log.requestId = createRequestId((log.maNV || "NV") + "_" + (log.loai || "SYNC"));
       log.offlineSync = true;
 
-      var apiAction =
-        log.apiAction ||
-        (
-          log.loai === "HỦY"
-            ? "cancelShift"
-            : "processCheckIn"
-        );
+      var apiAction = log.apiAction || (log.loai === "HỦY" ? "cancelShift" : "processCheckIn");
 
       try {
-        var response =
-          await callAPI(
-            apiAction,
-            log
-          );
+        var response = await callAPI(apiAction, log);
+        if (!isSuccessfulApiResponse(response)) {
+          var errorMessage = typeof response === "string"
+            ? response
+            : ((response && response.msg) || "Server từ chối dữ liệu.");
 
-        if (
-          !isSuccessfulApiResponse(
-            response
-          )
-        ) {
-          var errorMessage =
-            typeof response ===
-              "string"
-              ? response
-              : (
-                  response &&
-                  response.msg
-                ) ||
-                "Server từ chối dữ liệu.";
-
-          if (
-            errorMessage.indexOf(
-              "⛔"
-            ) === 0
-          ) {
-            await deleteOfflineRecord(
-              db,
-              item.key
-            );
-
-            showToast(
-              "⚠️ Đã bỏ một lượt lỗi: " +
-              errorMessage
-            );
-
-            continue;
-          }
-
-          throw new Error(
-            errorMessage
-          );
+          // Server đã nhận và trả lời: không giữ yêu cầu lỗi để gửi vô hạn.
+          await deleteQueueItem(item);
+          showToast("⚠️ Đã loại một lượt bị server từ chối: " + errorMessage);
+          continue;
         }
 
-        if (
-          response &&
-          typeof response ===
-            "object" &&
-          response.timeAlert
-        ) {
-          alerts.push(
-            (
-              log.ca ||
-              log.caName ||
-              "Ca làm"
-            ) +
-            " (" +
-            log.shiftDate +
-            "): " +
-            response.timeAlert
-          );
+        if (response && typeof response === "object" && response.timeAlert) {
+          alerts.push((log.ca || log.caName || "Ca làm") + " (" + log.shiftDate + "): " + response.timeAlert);
         }
 
-        await deleteOfflineRecord(
-          db,
-          item.key
-        );
-
+        await deleteQueueItem(item);
         successCount++;
       } catch (error) {
-        console.warn(
-          "Dừng đồng bộ để chờ mạng ổn định:",
-          error
-        );
+        console.warn("Dừng đồng bộ để chờ mạng ổn định:", error);
         break;
       }
     }
 
     if (successCount > 0) {
-      showToast(
-        "✅ Đã đồng bộ " +
-        successCount +
-        " lượt."
-      );
-
+      showToast("✅ Đã đồng bộ thành công " + successCount + " lượt.");
       if (alerts.length > 0) {
-        alert(
-          "KẾT QUẢ ĐỒNG BỘ:\n\n" +
-          alerts.join("\n")
-        );
+        setTimeout(function() { alert("THÔNG BÁO SAU ĐỒNG BỘ:\n\n" + alerts.join("\n")); }, 500);
       }
-
-      await loadData(false);
-
-      var historyScreen =
-        document.getElementById(
-          "sc-history"
-        );
-
-      if (
-        historyScreen &&
-        historyScreen.classList
-          .contains("active")
-      ) {
-        loadHist();
-      }
+      setTimeout(function() { loadData(true); }, 600);
     }
   } catch (error) {
-    console.error(
-      "Lỗi đồng bộ offline:",
-      error
-    );
+    console.error("Lỗi đồng bộ offline:", error);
   } finally {
     SYNCING = false;
+    updateOfflineReadiness();
   }
 }
 if ("serviceWorker" in navigator) {
@@ -2526,7 +2606,7 @@ if ("serviceWorker" in navigator) {
 
   window.addEventListener("load", function() {
     navigator.serviceWorker
-      .register("./service-worker.js?v=58", { updateViaCache: "none" })
+      .register("./service-worker.js?v=60", { updateViaCache: "none" })
       .then(function(registration) {
         // Chủ động kiểm tra service worker mới mỗi lần mở ứng dụng.
         registration.update();

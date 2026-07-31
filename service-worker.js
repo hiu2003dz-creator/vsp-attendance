@@ -1,5 +1,5 @@
 // Mỗi lần cập nhật ứng dụng, tăng số phiên bản này.
-const CACHE_NAME = "vsp-cc-cache-v58";
+const CACHE_NAME = "vsp-cc-cache-v60";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -20,7 +20,10 @@ self.addEventListener("activate", event => {
     caches.keys()
       .then(cacheNames => Promise.all(
         cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
+          if (
+            cacheName !== CACHE_NAME &&
+            !cacheName.startsWith("vsp-cc-offline-backup-")
+          ) {
             return caches.delete(cacheName);
           }
         })
