@@ -1,5 +1,5 @@
 // Mỗi lần cập nhật ứng dụng, tăng số phiên bản này.
-const CACHE_NAME = "vsp-cc-cache-v60";
+const CACHE_NAME = "vsp-cc-cache-v62";
 const APP_SHELL = [
   "./",
   "./index.html",

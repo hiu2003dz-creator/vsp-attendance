@@ -861,6 +861,9 @@ async function compressImageForOffline(image) {
     context.drawImage(image, 0, 0, width, height);
 
     for (var qi = 0; qi < qualities.length; qi++) {
+      // [FIX KHỰNG] - Nhường luồng chính (yield) cho trình duyệt vẽ lại hiệu ứng CSS
+      await new Promise(resolve => setTimeout(resolve, 5));
+
       var dataUrl = canvas.toDataURL("image/jpeg", qualities[qi]);
       var base64 = dataUrl.split(",")[1] || "";
       var bytes = estimateBase64Bytes(base64);
@@ -2606,7 +2609,7 @@ if ("serviceWorker" in navigator) {
 
   window.addEventListener("load", function() {
     navigator.serviceWorker
-      .register("./service-worker.js?v=60", { updateViaCache: "none" })
+      .register("./service-worker.js?v=62", { updateViaCache: "none" })
       .then(function(registration) {
         // Chủ động kiểm tra service worker mới mỗi lần mở ứng dụng.
         registration.update();
