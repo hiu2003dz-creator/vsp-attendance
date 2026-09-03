@@ -2173,71 +2173,17 @@ async function processNativePhoto(event) {
     await loadData(false, true);
     updateOfflineReadiness();
 
-    if (!navigator.onLine) {
-      IS_SUBMITTING = false;
-      resetLoader(
-        '<div style="transform:scale(0);animation:popIn .4s forwards"><i class="material-icons" style="font-size:70px;color:#f59e0b">cloud_done</i></div>' +
-        '<div style="margin-top:12px;font-weight:900;color:#d97706;font-size:18px">✅ ĐÃ LƯU NGOẠI TUYẾN AN TOÀN</div>' +
-        '<div style="margin-top:6px;color:#64748b;font-size:13px">Đã xác minh dữ liệu, giờ, GPS và ảnh. Sẽ tự đồng bộ khi có mạng.</div>',
-        1900
-      );
-      showToast(queueItem.storage === "idb"
-        ? "✅ Đã lưu ngoại tuyến lúc " + actionTimeText + "."
-        : "✅ IndexedDB tạm lỗi; dữ liệu đã được giữ trong kho dự phòng.");
-      showOfflineModal();
-      event.target.value = "";
-      return;
-    }
+    // [CẢI TIẾN UX/UI] - Ẩn loader ngay lập tức, cho người dùng cảm giác realtime!
+    IS_SUBMITTING = false;
+    resetLoader(
+      '<div style="transform:scale(0);animation:popIn .4s forwards"><i class="material-icons" style="font-size:70px;color:#10b981">check_circle</i></div>' +
+      '<div style="margin-top:12px;font-weight:900;color:#10b981;font-size:18px">✅ ĐÃ GHI NHẬN</div>',
+      600
+    );
 
-    setLoaderText("☁️ Đã lưu an toàn • đang xác nhận với máy chủ...");
-
-    try {
-      var response = await callAPI("processCheckIn", logData);
-      if (!isSuccessfulApiResponse(response)) {
-        var serverMessage = response && response.msg
-          ? response.msg
-          : (typeof response === "string" ? response : "Server từ chối dữ liệu.");
-
-        // Server đã trả lời chắc chắn: bỏ yêu cầu lỗi để không gửi lặp vô hạn.
-        await deleteQueueItem(queueItem);
-        IS_SUBMITTING = false;
-        unlockCurrentActionBox();
-        await loadData(true);
-        updateOfflineReadiness();
-        resetLoader(
-          '<div style="font-size:65px;color:#ef4444">❌</div>' +
-          '<div style="margin-top:10px;color:#b91c1c;font-weight:bold;padding:0 20px">' + escapeHtml(serverMessage) + '</div>',
-          2300
-        );
-        showToast("⚠️ " + serverMessage);
-        event.target.value = "";
-        return;
-      }
-
-      await deleteQueueItem(queueItem);
-      IS_SUBMITTING = false;
-      resetLoader(
-        '<div style="transform:scale(0);animation:popIn .4s forwards"><i class="material-icons" style="font-size:70px;color:#10b981">check_circle</i></div>' +
-        '<div style="margin-top:12px;font-weight:900;color:#10b981;font-size:18px">✅ CHẤM CÔNG THÀNH CÔNG</div>',
-        1300
-      );
-
-      if (response.timeAlert) showToast("🔔 " + response.timeAlert);
-      else showToast("✅ Chấm công thành công" + (response.time ? " lúc " + response.time : "") + ".");
-      if (response.durationMsg) showToast("🎉 KẾT THÚC CA! " + response.durationMsg.replace(" (Làm: ", "").replace(")", ""));
-      updateOfflineReadiness();
-      setTimeout(function() { loadData(true); }, 700);
-    } catch (networkError) {
-      IS_SUBMITTING = false;
-      resetLoader(
-        '<div style="font-size:70px;color:#f59e0b">☁️</div>' +
-        '<div style="margin-top:12px;font-weight:900;color:#f59e0b;font-size:18px">✅ DỮ LIỆU ĐÃ ĐƯỢC GIỮ AN TOÀN</div>' +
-        '<div style="margin-top:6px;color:#64748b;font-size:13px">Mạng không ổn định; hệ thống sẽ gửi lại tự động.</div>',
-        1800
-      );
-      showToast("⚠️ Mạng không ổn định. Lượt chấm vẫn còn trong hàng đợi an toàn.");
-      showOfflineModal();
-      updateOfflineReadiness();
+    // Kích hoạt đồng bộ ngầm lên server (không khóa màn hình)
+    if (navigator.onLine) {
+      setTimeout(syncOfflineData, 800);
     }
   } catch (error) {
     try { URL.revokeObjectURL(imageUrl); } catch (revokeError) {}
