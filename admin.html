@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script src="./firebase-config.js"></script>
+<script src="./admin-client.js"></script>
+<base target="_self">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1E293B">
+<meta name="apple-mobile-web-app-title" content="Quản Lý CC">
+<meta name="application-name" content="Quản Lý CC">
+<link rel="apple-touch-icon" sizes="180x180" href="https://i.postimg.cc/tTSrX6TX/1.jpg">
+<link rel="icon" type="image/jpeg" href="https://i.postimg.cc/tTSrX6TX/1.jpg">
+<link href="https://fonts.googleapis.com/icon?family=Material&#43;Icons|Material&#43;Icons&#43;Outlined" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+  :root { --primary: #EF4444; --primary-dark: #B91C1C; --bg: #F3F4F6; --sidebar: #1E293B; --sidebar-hover: #334155; --text-main: #111827; --text-sec: #6B7280; --white: #ffffff; --border: #E5E7EB; --success: #10B981; --danger: #EF4444; --warning: #F59E0B; --radius: 12px; }
+  body { margin:0; font-family: 'Inter', sans-serif; background: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text-main); }
+  
+   
+  #admin-login { position:fixed; inset:0; background:rgba(255,255,255,0.95); backdrop-filter:blur(5px); z-index:9999; display:flex; align-items:center; justify-content:center; flex-direction:column; }
+  .login-card { background: var(--white); padding: 40px; border-radius: 24px; width: 90%; max-width: 380px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); text-align: center; border: 1px solid var(--border); }
+  .login-logo { width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 32px; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3); }
+  .inp-group { margin-bottom: 20px; text-align: left; }
+  .inp-field { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px; font-size: 15px; outline: none; transition: 0.2s; box-sizing: border-box; background: #F9FAFB; }
+  .inp-field:focus { border-color: var(--primary); ring: 2px solid #E0E7FF; background: white; }
+  
+   
+  .sidebar { width: 260px; background: var(--sidebar); color: white; display: flex; flex-direction: column; flex-shrink: 0; transition: 0.3s; }
+  .brand { padding: 30px 24px; font-size: 20px; font-weight: 800; color: white; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--sidebar-hover); }
+  .menu { flex: 1; padding: 20px 12px; overflow-y: auto; }
+  .menu-item { padding: 14px 16px; margin-bottom: 4px; cursor: pointer; color: #94A3B8; display: flex; gap: 12px; align-items: center; border-radius: 10px; transition: 0.2s; font-weight: 500; }
+  .menu-item:hover, .menu-item.active { background: var(--primary); color: white; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2); }
+  .main { flex: 1; padding: 20px 30px; overflow-y: auto; position: relative; }
+  
+   
+  .section { display: none; animation: slideUp 0.3s ease-out; } 
+  .section.active { display: block; }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+  .card { background: var(--white); padding: 24px; border-radius: var(--radius); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid var(--border); margin-bottom: 24px; }
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+  .card-title { font-size: 18px; font-weight: 700; color: #1F2937; display: flex; align-items: center; gap: 8px; margin: 0; }
+  
+  .btn { padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; transition: 0.2s; }
+  .btn:hover { background: var(--primary-dark); }
+  .btn-danger { background: #fee2e2; color: #b91c1c; } .btn-danger:hover { background: #fecaca; }
+  .btn-ghost { background: transparent; color: var(--text-sec); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: #f9fafb; border-color: #d1d5db; }
+  .btn.loading { opacity: 0.7; pointer-events: none; }
+  
+  .row-inputs { display: flex; gap: 15px; margin-bottom: 15px; }
+  .col { flex: 1; }
+  
+   
+  .data-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; }
+  .data-table th { background: #F8FAFC; padding: 12px 16px; text-align: left; font-weight: 600; color: var(--text-sec); border-bottom: 1px solid var(--border); position: sticky; top: 0; }
+  .data-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); color: #374151; vertical-align: middle; }
+  .data-table tr:hover td { background: #F9FAFB; }
+  .tag { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .tag.ok { background: #D1FAE5; color: #065F46; } .tag.err { background: #FEE2E2; color: #991B1B; } .tag.wait { background: #EFF6FF; color: #1D4ED8; }
+
+   
+  .acc-group { margin-bottom: 15px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: white; }
+  .acc-head { padding: 15px; background: #f8fafc; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 600; color: #334155; }
+  .acc-head:hover { background: #f1f5f9; }
+  .acc-body { display: none; border-top: 1px solid var(--border); background: #fff; }
+  
+   
+  .date-group-header { background: #EEF2FF; color: #4338CA; padding: 8px 15px; font-size: 12px; font-weight: 700; border-bottom: 1px solid #E5E7EB; border-top: 1px solid #E5E7EB; display: flex; align-items: center; gap: 5px; }
+  .log-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; border-bottom: 1px solid #f1f5f9; }
+  .log-item:hover { background: #f9fafb; }
+  .log-avt { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-right: 10px; }
+  
+   
+  .tkb-card { background:#fff; border:1px solid #e0e7ff; border-radius:6px; padding:6px; margin-bottom:5px; font-size:11px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+  
+   
+  @media (max-width: 768px) { .sidebar { width: 60px; } .sidebar .brand span, .menu-item span { display: none; } .brand { justify-content: center; padding: 20px 0; } .menu-item { justify-content: center; padding: 15px; } .main { padding: 15px; } .row-inputs { flex-direction: column; gap: 10px; } }
+  
+   
+  #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 10000; }
+  .toast { background: white; padding: 16px 20px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 12px; margin-top: 10px; animation: slideInRight 0.3s; border-left: 5px solid var(--primary); min-width: 300px; }
+  @keyframes slideInRight { from { opacity:0; transform:translateX(100%); } to { opacity:1; transform:translateX(0); } }
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:10000; display:flex; align-items:center; justify-content:center; display:none; }
+  .modal-box { background:white; width:90%; max-width:500px; border-radius:12px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,0.2); }
+  .shift-detail-row { padding:10px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; }
+  .stat-badge-link { cursor:pointer; color:#4F46E5; font-weight:bold; text-decoration:underline; }
+  
+   
+  .sch-item-row { display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee; align-items:center; transition:0.3s; }
+  .sch-item-row.deleting { opacity:0; transform:translateX(50px); background:#fee2e2; }
+</style>
+<style>
+button,input,select{font:inherit}button{touch-action:manipulation;transition:background .15s,transform .15s}button:active{transform:scale(.98)}
+input:focus,select:focus{outline:2px solid #4f46e5;outline-offset:2px}
+.main{min-width:0}.card{overflow-x:auto}.top-bar{gap:12px;flex-wrap:wrap}
+@media(max-width:760px){body{height:100dvh}.sidebar{width:60px;min-width:60px}.main{padding:12px}.card{padding:14px}.login-card{padding:24px;box-sizing:border-box}.data-table{font-size:13px}.page-title{font-size:18px}.toast{min-width:0;max-width:calc(100vw - 64px)}.modal-box{box-sizing:border-box}.sidebar>div:last-child{padding:8px!important}.sidebar>div:last-child button{padding:10px}}
+</style></head>
+<body>
+
+<div id="admin-login">
+  <div class="login-card">
+    <div class="login-logo"><i class="material-icons">admin_panel_settings</i></div>
+    <h2 style="margin:0 0 5px 0;color:#111827">Quản Trị Viên</h2>
+    <div class="inp-group"><input id="adm-u" class="inp-field" placeholder="Tên đăng nhập"></div>
+    <div class="inp-group"><input id="adm-p" type="password" class="inp-field" placeholder="Mật khẩu"></div>
+    <button class="btn" onclick="doLogin()" id="btn-login-submit" style="width:100%;padding:14px;font-size:16px">ĐĂNG NHẬP</button>
+  </div>
+</div>
+
+<div class="sidebar">
+  <div class="brand"><i class="material-icons" style="color:#6366f1">grid_view</i> <span>CHẤM CÔNG PRO</span></div>
+  <div class="menu">
+    <div class="menu-item" onclick="sw('monitor',this)"><i class="material-icons-outlined">visibility</i> <span>Giám sát</span></div>
+    <div class="menu-item active" onclick="sw('dash',this)"><i class="material-icons-outlined">dashboard</i> <span>Tổng quan</span></div>
+    <div class="menu-item" onclick="sw('staff',this)"><i class="material-icons-outlined">people</i> <span>Nhân sự</span></div>
+    <div class="menu-item" onclick="sw('schedule',this)"><i class="material-icons-outlined">calendar_today</i> <span>Xếp lịch</span></div>
+    <div class="menu-item" onclick="sw('matrix',this)"><i class="material-icons-outlined">apps</i> <span>TKB Tổng</span></div>
+    <div class="menu-item" onclick="sw('draft',this)"><i class="material-icons-outlined">science</i> <span>Lịch thử nghiệm</span></div>
+    <div class="menu-item" onclick="sw('report',this)"><i class="material-icons-outlined">analytics</i> <span>Báo cáo</span></div>
+  </div>
+  <div style="padding:20px"><button onclick="logout()" class="btn btn-danger" style="width:100%;justify-content:center"><i class="material-icons-outlined">logout</i></button></div>
+</div>
+
+<div class="main">
+  <div id="tab-dash" class="section active">
+    <div class="top-bar"><div class="page-title">📡 Hoạt động chấm công</div><button class="btn btn-ghost" onclick="loadLogs()"><i class="material-icons">refresh</i> Làm mới</button></div>
+    <div class="card"><div id="log-container">Đang tải dữ liệu...</div></div>
+    <div class="card" style="border-top: 4px solid #EF4444; margin-top:20px;">
+      <div class="card-header" style="border:none; padding-bottom:0;"><h3 class="card-title" style="color:#B91C1C"><i class="material-icons">settings</i> CÀI ĐẶT HỆ THỐNG VSP</h3></div>
+      <div style="margin-top:15px;">
+        <label style="display:block; font-size:12px; font-weight:bold; color:#64748b; margin-bottom:5px;">Số phút ân hạn đi muộn:</label>
+        <input type="number" id="conf-late" class="inp-field" placeholder="Ví dụ: 15">
+      </div>
+      <div style="margin-top:15px; margin-bottom:15px;">
+        <label style="display:block; font-size:12px; font-weight:bold; color:#64748b; margin-bottom:5px;">Email nhận thông báo (cách nhau bởi dấu phẩy):</label>
+        <textarea id="conf-emails" class="inp-field" style="height:60px;" placeholder="sếp1@gmail.com, sếp2@gmail.com"></textarea>
+      </div>
+      <button onclick="saveVSPSettings()" class="btn" style="background:#EF4444; width:100%;"><i class="material-icons" style="font-size:16px;">save</i> LƯU CẤU HÌNH VSP</button>
+    </div>
+  </div>
+
+  <div id="tab-staff" class="section">
+    <div class="top-bar"><div class="page-title">👥 Quản lý nhân sự</div></div>
+    <div class="card">
+      <div class="card-header"><h3 class="card-title">Thêm nhân viên mới</h3></div>
+      <div style="display:flex;gap:10px;margin-bottom:15px">
+         <input id="n-ma" class="inp-field col" placeholder="Mã NV (VD: NV01)">
+         <input id="n-ten" class="inp-field col" placeholder="Họ tên" style="flex:1">
+         <input id="n-pass" class="inp-field col" placeholder="Mật khẩu" style="flex:1">
+         <select id="n-cv" class="inp-field col"><option>Giáo viên</option><option>Quản lý</option><option>Thực tập</option></select>
+      </div>
+      <button class="btn" onclick="addStaff()" id="btn-add-st" style="width:100%">LƯU NHÂN VIÊN</button>
+    </div>
+    <div class="card"><div id="staff-list">Đang tải...</div></div>
+  </div>
+
+  <div id="tab-schedule" class="section">
+    <div class="top-bar"><div class="page-title">📅 Xếp lịch cá nhân</div></div>
+    
+    <div class="card" style="border:2px dashed #6366f1;background:#eef2ff">
+        <div class="card-header" style="border-bottom:1px solid #c7d2fe"><h3 class="card-title" style="color:#4338ca">🚀 Sao chép lịch</h3></div>
+        <div class="row-inputs">
+            <div class="col"><label>Nhân viên (Optional)</label><select id="clone-nv" class="inp-field"></select></div>
+            <div class="col"><label>Từ tháng</label><input type="month" id="clone-src" class="inp-field"></div>
+            <div class="col"><label>Đến tháng</label><input type="month" id="clone-tgt" class="inp-field"></div>
+        </div>
+        <button class="btn" onclick="cloneSch()" id="btn-clone" style="width:100%;background:#4338ca">⚡ SAO CHÉP NGAY</button>
+    </div>
+
+    <div class="card">
+       <div class="card-header"><h3 class="card-title">Xếp lịch thủ công</h3></div>
+       <div class="row-inputs">
+          <select id="sch-nv" class="inp-field col"></select>
+          <select id="sch-mode" class="inp-field col" onchange="toggleMode()"><option value="single">Một ngày</option><option value="multi">Lặp lại</option></select>
+       </div>
+       <div id="box-single" class="row-inputs"><input type="date" id="sch-date" class="inp-field"></div>
+       <div id="box-multi" class="row-inputs" style="display:none">
+          <input type="date" id="sch-start" class="inp-field" title="Bắt đầu">
+          <input type="date" id="sch-end" class="inp-field" title="Kết thúc">
+          <div class="col" style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+             <label><input type="checkbox" value="1" class="day-chk"> T2</label> <label><input type="checkbox" value="2" class="day-chk"> T3</label>
+             <label><input type="checkbox" value="3" class="day-chk"> T4</label> <label><input type="checkbox" value="4" class="day-chk"> T5</label>
+             <label><input type="checkbox" value="5" class="day-chk"> T6</label> <label><input type="checkbox" value="6" class="day-chk"> T7</label>
+             <label><input type="checkbox" value="0" class="day-chk"> CN</label>
+          </div>
+       </div>
+       <div class="row-inputs">
+          <input id="sch-name" class="inp-field col" placeholder="Tên ca">
+          <select id="sch-loc" class="inp-field col" onchange="checkLoc('sch')"></select>
+          <input id="sch-h1" type="time" class="inp-field" style="width:100px">
+          <input id="sch-h2" type="time" class="inp-field" style="width:100px">
+       </div>
+       <div id="custom-loc-wrap-sch" style="display:none;margin-bottom:15px"><input id="sch-loc-custom" class="inp-field" placeholder="Nhập tên địa điểm..."></div>
+       <button class="btn" id="btn-sch" onclick="handleSch()" style="width:100%">+ LÊN LỊCH NGAY</button>
+    </div>
+    
+    <div class="card">
+       <div class="card-header">
+          <h3 class="card-title">Lịch đã xếp</h3>
+          <div><button class="btn btn-danger" onclick="deleteSelected()">🗑️ Xóa</button> <button class="btn btn-ghost" onclick="loadSch()">Tải lại</button></div>
+       </div>
+       <div id="sch-list">Đang tải...</div>
+    </div>
+  </div>
+
+  <div id="tab-matrix" class="section">
+    <div class="top-bar"><div class="page-title">🧩 Thời khóa biểu tổng</div></div>
+    <div class="card" style="border:2px dashed #4F46E5;background:#F5F3FF;margin-bottom:20px">
+       <div class="card-header" style="border-bottom:1px solid #E0E7FF"><h3 class="card-title" style="color:#4338CA">👁️ Xem TKB Theo Cơ Sở</h3></div>
+       <div class="row-inputs" style="align-items:flex-end">
+          <div style="flex:1"><label>Chọn tuần xem:</label><input type="date" id="view-week" class="inp-field"></div>
+          <button class="btn" onclick="loadMatrix()" style="background:#4338CA;flex:1">HIỂN THỊ TKB</button>
+       </div>
+       <div style="overflow-x:auto;margin-top:15px">
+           <table class="data-table">
+               <thead><tr><th style="width:150px">ĐỊA ĐIỂM</th><th>THỨ 2</th><th>THỨ 3</th><th>THỨ 4</th><th>THỨ 5</th><th>THỨ 6</th><th>THỨ 7</th><th>CN</th></tr></thead>
+               <tbody id="matrix-body"><tr><td colspan="8" style="text-align:center;padding:20px;color:#999">Vui lòng chọn tuần để xem.</td></tr></tbody>
+           </table>
+       </div>
+    </div>
+
+    <div class="card">
+       <div class="card-header"><h3 class="card-title">✏️ Xếp TKB Thủ công</h3></div>
+       <div class="row-inputs">
+          <div style="flex:1"><label>Tuần bắt đầu</label><input type="date" id="mst-week" class="inp-field"></div>
+       </div>
+       <div class="row-inputs">
+          <input id="mst-ca" class="inp-field col" placeholder="Tên Ca">
+          <input type="time" id="mst-t1" class="inp-field">
+          <input type="time" id="mst-t2" class="inp-field">
+          <select id="mst-loc" class="inp-field col" onchange="checkLoc('mst')"></select>
+          <button class="btn" onclick="addMasterRow()">+ DÒNG</button>
+       </div>
+       <div id="custom-loc-wrap-mst" style="display:none;margin-bottom:15px"><input id="mst-loc-custom" class="inp-field" placeholder="Nhập địa điểm..."></div>
+       <div style="overflow-x:auto;margin-top:15px">
+         <table class="data-table">
+            <thead><tr><th style="width:150px">Ca / Lớp</th><th>Thứ 2</th><th>Thứ 3</th><th>Thứ 4</th><th>Thứ 5</th><th>Thứ 6</th><th>Thứ 7</th><th>CN</th><th></th></tr></thead>
+            <tbody id="master-body"></tbody>
+         </table>
+       </div>
+       <div style="margin-top:20px;text-align:right"><button class="btn" id="btn-save-mst" onclick="saveMaster()">💾 LƯU TOÀN BỘ TKB</button></div>
+    </div>
+  </div>
+
+  <div id="tab-draft" class="section">
+    <div class="top-bar"><div class="page-title">🧪 Xếp Lịch Thử Nghiệm (Nháp)</div></div>
+    
+    <div class="card" style="border: 2px dashed #F59E0B; background: #FFFBEB;">
+        <div class="card-header"><h3 class="card-title" style="color: #D97706;">Bộ công cụ xếp nháp (Không ảnh hưởng TKB thực)</h3></div>
+        
+        <div class="row-inputs">
+            <div class="col"><label>Cơ sở / Địa điểm</label><select id="draft-loc" class="inp-field"></select></div>
+            <div class="col"><label>Nhân sự</label><select id="draft-nv" class="inp-field"></select></div>
+        </div>
+
+        <div class="row-inputs">
+            <div class="col" style="flex:2"><label>Chọn Thứ (Có thể chọn nhiều)</label>
+                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px;">
+                    <label><input type="checkbox" value="1" class="draft-day-chk"> T2</label>
+                    <label><input type="checkbox" value="2" class="draft-day-chk"> T3</label>
+                    <label><input type="checkbox" value="3" class="draft-day-chk"> T4</label>
+                    <label><input type="checkbox" value="4" class="draft-day-chk"> T5</label>
+                    <label><input type="checkbox" value="5" class="draft-day-chk"> T6</label>
+                    <label><input type="checkbox" value="6" class="draft-day-chk"> T7</label>
+                    <label><input type="checkbox" value="0" class="draft-day-chk"> CN</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="row-inputs">
+            <input id="draft-ca" class="inp-field col" placeholder="Tên ca (VD: Ca Sáng)">
+            <div class="col" style="display:flex; gap:5px; align-items:center;">
+                <input type="time" id="draft-t1" class="inp-field" title="Giờ bắt đầu">
+                <span style="font-weight:bold; color:#64748B;">-</span>
+                <input type="time" id="draft-t2" class="inp-field" title="Giờ kết thúc">
+            </div>
+        </div>
+
+        <div class="row-inputs">
+            <button type="button" onclick="findAvailableTeachers()" style="background:#10b981; color:white; padding:10px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; flex: 1; display:flex; justify-content:center; align-items:center; gap:5px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">
+                <i class="material-icons" style="font-size:18px;">person_search</i> TÌM GIÁO VIÊN RẢNH
+            </button> 
+            <button class="btn" onclick="addDraft()" style="background: #D97706; white-space: nowrap; flex: 1; justify-content:center; border-radius:8px;">
+                + THÊM VÀO NHÁP
+            </button>
+        </div>
+        <div style="margin-top:10px; text-align:right;">
+            <button class="btn btn-danger" onclick="clearDraft()">🗑️ XÓA TOÀN BỘ BẢN NHÁP</button>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 20px;">
+        <div class="card-header" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 15px; border-bottom: 2px solid #E5E7EB;">
+            <h3 class="card-title" style="margin: 0; color: #1E293B;">Bảng Theo Dõi & Xuất Lịch</h3>
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:12px; background:#EFF6FF; border-radius:8px; border:1px solid #BFDBFE;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <i class="material-icons" style="color:#2563EB">date_range</i>
+                    <span style="font-weight:600; color:#1E3A8A; font-size:13px;">Rải lịch liên tục từ:</span>
+                    <input type="date" id="export-start" class="inp-field" style="width:auto; padding:6px; font-size:13px;">
+                    <span style="font-weight:600; color:#64748B; font-size:13px;">đến:</span>
+                    <input type="date" id="export-end" class="inp-field" style="width:auto; padding:6px; font-size:13px;">
+                </div>
+                <button onclick="exportDraftToMain()" style="background:#2563EB; color:white; padding:8px 15px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:5px; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2); margin-left:auto;">
+                    <i class="material-icons" style="font-size:18px;">publish</i> CHỐT & RẢI LỊCH TỰ ĐỘNG
+                </button>
+            </div>
+        </div>
+
+        <div id="draft-stats" style="margin-bottom: 15px; margin-top: 15px; display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; background: #F8FAFC; border-radius: 8px; border: 1px dashed #CBD5E1;">
+            <span style="color:#64748b; font-size: 13px; font-style: italic;">Chưa có dữ liệu thống kê...</span>
+        </div>
+
+        <div style="overflow-x:auto; margin-top:15px">
+            <table class="data-table">
+                <thead><tr><th style="width:150px">ĐỊA ĐIỂM</th><th>THỨ 2</th><th>THỨ 3</th><th>THỨ 4</th><th>THỨ 5</th><th>THỨ 6</th><th>THỨ 7</th><th>CN</th></tr></thead>
+                <tbody id="draft-matrix-body"><tr><td colspan="8" style="text-align:center;color:#999">Chưa có dữ liệu nháp.</td></tr></tbody>
+            </table>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <h4 style="color: #4338CA; border-bottom: 2px solid #C7D2FE; padding-bottom: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 5px;">
+                <i class="material-icons">people_alt</i> BẢNG TỔNG QUÁT RẢNH/BẬN (THEO GIÁO VIÊN)
+            </h4>
+            <div style="overflow-x:auto;">
+                <table class="data-table">
+                    <thead><tr><th style="width:150px; background:#EEF2FF; color:#4338CA;">TÊN GIÁO VIÊN</th><th>THỨ 2</th><th>THỨ 3</th><th>THỨ 4</th><th>THỨ 5</th><th>THỨ 6</th><th>THỨ 7</th><th>CN</th></tr></thead>
+                    <tbody id="teacher-matrix-body">
+                        <tr><td colspan="8" style="text-align:center;color:#999;padding:20px;">Vui lòng đợi tải danh sách...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <div id="tab-report" class="section">
+    <div class="top-bar"><div class="page-title">📊 Xuất báo cáo</div></div>
+    <div class="card">
+       <div class="row-inputs"><select id="rpt-nv" class="inp-field col"></select><input type="month" id="rpt-m" class="inp-field col"><button class="btn" id="btn-ex" onclick="doReport()">XUẤT EXCEL</button></div>
+       <div id="rpt-res" style="margin-top:10px"></div>
+       <hr style="margin:20px 0;border:0;border-top:1px dashed #ccc">
+       <p>Lịch sử được giữ trên Firebase. Thao tác xóa từng lượt công có bản sao trong nhật ký quản trị.</p>
+    </div>
+  </div>
+  
+  <div id="tab-monitor" class="section">
+    <div class="top-bar"><div class="page-title">🔴 Giám sát hôm nay</div><button class="btn btn-ghost" onclick="loadMonitor()"><i class="material-icons">refresh</i> Tải lại</button></div>
+    
+    <div class="row-inputs" style="align-items: flex-start;">
+        <div class="card col" style="border-top: 4px solid #10B981;">
+            <div class="card-header" style="border:none;padding-bottom:0"><h3 class="card-title" style="color:#047857"><i class="material-icons">login</i> ĐÃ CHECK-IN (VÀO)</h3></div>
+            <div id="monitor-in-list" style="margin-top:15px">Đang tải...</div>
+        </div>
+
+        <div class="card col" style="border-top: 4px solid #F59E0B;">
+            <div class="card-header" style="border:none;padding-bottom:0"><h3 class="card-title" style="color:#B45309"><i class="material-icons">logout</i> ĐÃ CHECK-OUT (RA)</h3></div>
+            <div id="monitor-out-list" style="margin-top:15px">Đang tải...</div>
+        </div>
+    </div>
+  </div>
+</div>
+
+<div id="detail-modal" class="modal-overlay">
+  <div class="modal-box">
+     <div style="display:flex;justify-content:space-between;margin-bottom:15px"><h3 id="dm-title" style="margin:0">Chi tiết</h3><button onclick="document.getElementById('detail-modal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer">✕</button></div>
+     <div id="dm-content" style="max-height:400px;overflow-y:auto"></div>
+  </div>
+</div>
+<div id="staff-data-store" style="display:none"></div>
+<div id="toast-container"></div>
+
+<script>
+
+var VSP_LOCATIONS=[];
+function showToast(msg, type='info'){
+   msg=String(msg).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+   var d = document.createElement('div');
+   d.className = 'toast';
+   d.style.borderLeftColor = type=='error' ? '5px solid #EF4444' : '5px solid #10B981';
+   d.innerHTML = `<i class="material-icons" style="color:${type=='error'?'#EF4444':'#10B981'}">${type=='error'?'error':'check_circle'}</i> <div>${msg}</div>`;
+   document.getElementById('toast-container').appendChild(d);
+   setTimeout(()=>d.remove(), 3000);
+}
+
+function startLoad(id){ var b=document.getElementById(id); if(b){b.dataset.tx=b.innerText; b.classList.add('loading'); b.innerText='...';} }
+function stopLoad(id){ var b=document.getElementById(id); if(b){b.innerHTML=b.dataset.tx; b.classList.remove('loading');} }
+
+
+function doLogin(){
+  var u=document.getElementById('adm-u').value.trim();
+  var p=document.getElementById('adm-p').value.trim();
+  if(!u || !p) return showToast("Nhập đủ thông tin!","error");
+  
+  var btn=document.getElementById('btn-login-submit'); 
+  var old=btn.innerText; 
+  btn.innerText="Loading..."; 
+  btn.disabled=true;
+  
+  VSPAdmin.rpc.withSuccessHandler(function(r){
+    btn.innerText=old; btn.disabled=false;
+    if(r === true){
+      document.getElementById('admin-login').style.display='none';
+      showToast("Đăng nhập thành công!");
+      VSPAdmin.rpc.withSuccessHandler(l=>{VSP_LOCATIONS=l.map(x=>x[0]);loadLogs();}).getLocationsList();
+    } else {
+      showToast("Sai tài khoản!","error");
+    }
+  }).withFailureHandler(function(){
+    btn.innerText=old; btn.disabled=false; showToast("Lỗi kết nối!","error");
+  }).checkAdmin(u,p);
+}
+function logout(){ VSPAdmin.signOut(); location.reload(); }
+
+
+function sw(id,el){
+  document.querySelectorAll('.section').forEach(e=>e.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  document.querySelectorAll('.menu-item').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  if(id=='dash') loadLogs();
+  if(id=='staff') loadStaff();
+  if(id=='schedule'){ loadStaffSel(); loadLocs(); loadSch(); }
+  if(id=='matrix'){ loadStaffSel(); loadLocs(); }
+  if(id=='report') loadStaffSel();
+  if(id=='monitor') loadMonitor();
+  if(id=='draft'){ loadDraftLocs(); loadStaffSel(); renderDraft(); } }
+
+
+
+function loadLogs(){
+  document.getElementById('log-container').innerHTML = '<div style="text-align:center;padding:20px">Đang tải...</div>';
+  VSPAdmin.rpc.withSuccessHandler(d=>{
+    if(!d || d.length==0){ document.getElementById('log-container').innerHTML='Chưa có dữ liệu.'; return; }
+    
+    var people={}; d.sort((a,b)=>parseTime(a[0])-parseTime(b[0]));
+    d.forEach(r=>{
+        var name=r[2].trim(), tStr=r[0].split(' ')[0], dStr=r[0].split(' ')[1], type=r[3], ca=r[4], st=r[5];
+        if(!people[name]) people[name]={}; 
+        if(!people[name][dStr]) people[name][dStr]={};
+        if(!people[name][dStr][ca]) people[name][dStr][ca]={id:r[1]};
+        var s=people[name][dStr][ca];
+        if(type=='VÀO'){ s.in=tStr; s.tIn=r[0]; if(r[7])s.img=r[7]; }
+        if(type=='RA'){ s.out=tStr; s.tOut=r[0]; s.statusOut=st; } 
+        if(type=='HỦY'){ s.cancel=st; s.tCancel=r[0]; }
+    });
+
+    var h='';
+    for(var p in people){
+        var uid = 'acc-' + Math.floor(Math.random() * 1000000);
+        
+        h += `<div class="acc-group">
+                <div class="acc-head" onclick="toggleAcc('${uid}')">
+                   <div style="display:flex;align-items:center;gap:10px">
+                      <i class="material-icons" style="color:#4F46E5">account_circle</i> ${p}
+                   </div>
+                   <i class="material-icons">expand_more</i>
+                </div>
+                <div id="${uid}" class="acc-body" style="display:none">`;
+        
+        var dates=Object.keys(people[p]).sort((a,b)=>parseDate(b)-parseDate(a));
+        dates.forEach(d=>{
+            h+=`<div class="date-group-header"><i class="material-icons" style="font-size:14px">calendar_today</i> ${d}</div>`;
+            for(var c in people[p][d]){
+                var s=people[p][d][c], stt='', time='', del='';
+                if(s.cancel){
+                    stt='<span class="tag err">ĐÃ HỦY</span>';
+                    time=s.cancel.replace('🚫 ĐÃ HỦY: ','');
+                    del=`<button style="color:red;border:none;background:none;cursor:pointer" onclick="delLog('${s.id}','${s.tCancel}')" title="Xóa"><i class="material-icons">delete</i></button>`;
+                } else if(s.in && s.out){ 
+                    stt='<span class="tag ok">HOÀN THÀNH</span>';
+                    time=`${s.in} - ${s.out}`;
+                    del=`<button style="color:red;border:none;background:none;cursor:pointer" onclick="delLog('${s.id}','${s.tOut}')" title="Xóa giờ Ra"><i class="material-icons">delete</i></button>`;
+                } else if(s.in){
+                    stt='<span class="tag wait">ĐANG LÀM</span>';
+                    time=`${s.in} - ...`;
+                    del=`<button style="color:red;border:none;background:none;cursor:pointer" onclick="delLog('${s.id}','${s.tIn}')" title="Xóa giờ Vào"><i class="material-icons">delete</i></button>`;
+                }
+                
+                var img = s.img ? `<img data-firebase-photo="${s.img}" class="log-avt" alt="Ảnh chấm công">` : `<div class="log-avt" style="background:#eee"></div>`;
+                h += `<div class="log-item">
+                        <div style="display:flex;align-items:center">${img}<div><div style="font-weight:bold">${c}</div><div style="font-size:12px;color:#666">${time}</div></div></div>
+                        <div style="display:flex;align-items:center">${stt} ${del}</div>
+                      </div>`;
+            }
+        });
+        h += '</div></div>';
+    }
+    document.getElementById('log-container').innerHTML = h;
+  }).getAdminStats();
+  VSPAdmin.rpc.withSuccessHandler(c => {
+        if(document.getElementById('conf-late')) {
+            document.getElementById('conf-late').value = c.late;
+            document.getElementById('conf-emails').value = c.emails;
+        }
+    }).getAppConfig();
+}
+
+// HÀM TOGGLE ĐÃ FIX
+function toggleAcc(id){
+    var el = document.getElementById(id);
+    if(el) {
+        if(el.style.display === 'none') el.style.display = 'block';
+        else el.style.display = 'none';
+    }
+}
+
+function delLog(id,t){ if(confirm('Xóa log này?')) VSPAdmin.rpc.withSuccessHandler(()=>{showToast("Đã xóa");loadLogs()}).deleteActivityLog(id,t); }
+
+
+function loadStaff(){
+  VSPAdmin.rpc.withSuccessHandler(d=>{
+     var h='<table class="data-table"><thead><tr><th>Tên</th><th>Công</th><th>Tác vụ</th></tr></thead><tbody>';
+     d.forEach(r=>{
+        h+=`<tr>
+              <td>${r.ten}<br><small>${r.ma}</small></td>
+              <td><span class="stat-badge-link" onclick="viewWork('${r.ma}',this.closest('tr').querySelector('td').textContent)">${r.soCaThangNay} ca (Xem công)</span></td>
+              <td><button style="color:red;border:none;background:none;cursor:pointer" onclick="delStf('${r.ma}')"><i class="material-icons">delete</i></button></td>
+            </tr>`;
+     });
+     document.getElementById('staff-list').innerHTML=h+'</tbody></table>';
+  }).getAllStaffWithStats();
+}
+
+function viewWork(ma, ten) {
+    
+    var m = document.getElementById('detail-modal');
+    m.style.display = 'flex';
+    document.getElementById('dm-title').innerText = 'HỒ SƠ CÔNG: ' + ten.toUpperCase();
+    document.getElementById('dm-content').innerHTML = '<div style="text-align:center;padding:30px;color:#64748b"><div class="spinner" style="border-top-color:#4f46e5"></div><br>Đang trích xuất dữ liệu...</div>';
+
+    VSPAdmin.rpc.withSuccessHandler(d => {
+        var mText = d.month.split('-')[1] + '/' + d.month.split('-')[0];
+        
+        var h = `<div style="background:#e0e7ff; color:#4338ca; padding:10px; border-radius:8px; text-align:center; font-weight:bold; margin-bottom:15px;">DỮ LIỆU THÁNG ${mText}</div>`;
+        h += `<div style="display:flex; flex-direction:column; gap:15px;">`;
+
+        // KHỐI 1: LỊCH ĐÃ PHÂN CÔNG
+        h += `<div style="border:1px solid #cbd5e1; border-radius:12px; overflow:hidden;">
+                <div style="background:#f8fafc; padding:10px 15px; font-weight:bold; color:#334155; border-bottom:1px solid #cbd5e1; display:flex; justify-content:space-between;">
+                    <span>📅 LỊCH ĐƯỢC GIAO</span>
+                    <span style="background:#3b82f6; color:white; padding:2px 8px; border-radius:12px; font-size:12px;">${d.assigned.length} ca</span>
+                </div>
+                <div style="max-height:180px; overflow-y:auto; padding:10px; background:white;">`;
+        if (d.assigned.length == 0) {
+            h += `<div style="color:#94a3b8; font-size:13px; text-align:center; padding:10px;">Chưa xếp lịch nào trong tháng</div>`;
+        } else {
+            d.assigned.forEach(a => {
+                h += `<div style="font-size:13px; border-bottom:1px dashed #e2e8f0; padding:8px 0;">
+                        <span style="font-weight:bold; color:#0f172a;">${a.ngay}</span> | ${a.ca} 
+                        <br><span style="color:#64748b; font-size:12px;">⏰ ${a.gio} &nbsp;📍 ${a.loc}</span>
+                      </div>`;
+            });
+        }
+        h += `</div></div>`;
+
+        // KHỐI 2: THỰC TẾ CHẤM CÔNG
+        h += `<div style="border:1px solid #cbd5e1; border-radius:12px; overflow:hidden;">
+                <div style="background:#f0fdf4; padding:10px 15px; font-weight:bold; color:#166534; border-bottom:1px solid #bbf7d0; display:flex; justify-content:space-between;">
+                    <span>✅ THỰC TẾ CHẤM CÔNG</span>
+                </div>
+                <div style="max-height:220px; overflow-y:auto; padding:10px; background:white;">`;
+        if (d.logs.length == 0) {
+            h += `<div style="color:#94a3b8; font-size:13px; text-align:center; padding:10px;">Chưa có dữ liệu chấm công</div>`;
+        } else {
+            var lastD = '';
+            d.logs.forEach(l => {
+                if (l.ngay !== lastD) { 
+                    lastD = l.ngay; 
+                    h += `<div style="background:#f1f5f9; padding:4px 8px; border-radius:4px; font-weight:bold; color:#475569; margin-top:10px; font-size:11px;">${l.ngay}</div>`; 
+                }
+                var cl = l.loai == 'HỦY' ? '#ef4444' : '#10b981'; 
+                h += `<div style="font-size:13px; margin-top:6px; padding-left:10px; border-left:3px solid ${cl};">
+                        <b style="color:#334155">${l.gio}</b> - <span style="font-weight:500">${l.ca}</span> 
+                        <span style="font-size:11px; font-weight:bold; color:${cl}; background:${cl}20; padding:2px 6px; border-radius:8px; margin-left:5px;">${l.loai}</span>
+                        <div style="font-size:11px; color:#64748b; margin-top:2px;">${l.trangthai}</div>
+                      </div>`;
+            });
+        }
+        h += `</div></div></div>`;
+        
+        document.getElementById('dm-content').innerHTML = h;
+    }).getAdminStaffDetails(ma);
+}
+function addStaff(){ var m=document.getElementById('n-ma').value,t=document.getElementById('n-ten').value,p=document.getElementById('n-pass').value,c=document.getElementById('n-cv').value; if(!m||!t||!p)return showToast("Thiếu thông tin","error"); startLoad('btn-add-st'); VSPAdmin.rpc.withSuccessHandler(r=>{ stopLoad('btn-add-st'); showToast(r); loadStaff(); }).addStaff(m,p,t,'',c); }
+function delStf(m){ if(confirm('Xóa NV này?')) VSPAdmin.rpc.withSuccessHandler(loadStaff).deleteStaff(m); }
+
+function loadStaffSel(){ 
+    VSPAdmin.rpc.withSuccessHandler(d=>{
+        var h='';
+        d.forEach(r=>h+=`<option value="${r.ma}">${r.ten}</option>`);
+        document.getElementById('sch-nv').innerHTML=h;
+        
+        // [ĐÃ SỬA] Thêm tùy chọn TẤT CẢ GIÁO VIÊN lên đầu danh sách Báo cáo
+        document.getElementById('rpt-nv').innerHTML='<option value="ALL">🌟 TẤT CẢ GIÁO VIÊN (Gộp 1 File)</option>' + h;
+        
+        document.getElementById('clone-nv').innerHTML='<option value="">-- Chọn NV --</option>'+h;
+        document.getElementById('staff-data-store').innerHTML='<option value="">-- Chọn GV --</option>'+h; 
+        document.getElementById('draft-nv').innerHTML='<option value="">-- Chọn NV --</option>'+h;
+        
+        if(typeof renderDraft === 'function') renderDraft(); 
+    }).getAllStaffWithStats();
+}
+function loadLocs(){ var l=VSP_LOCATIONS; var h=l.map(x=>`<option value="${x}">${x}</option>`).join('')+'<option value="Khac">Khác...</option>'; document.getElementById('sch-loc').innerHTML=h; document.getElementById('mst-loc').innerHTML=h; }
+function checkLoc(p){ document.getElementById('custom-loc-wrap-'+p).style.display=document.getElementById(p+'-loc').value=='Khac'?'block':'none'; }
+function toggleMode(){ document.getElementById('box-single').style.display=document.getElementById('sch-mode').value=='single'?'flex':'none'; document.getElementById('box-multi').style.display=document.getElementById('sch-mode').value=='multi'?'flex':'none'; }
+function cloneSch(){ var s=document.getElementById('clone-src').value,t=document.getElementById('clone-tgt').value,n=document.getElementById('clone-nv').value; if(!s||!t)return showToast("Chọn tháng","error"); startLoad('btn-clone'); VSPAdmin.rpc.withSuccessHandler(r=>{ stopLoad('btn-clone'); showToast(r); loadSch() }).cloneMonthSchedule(s,t,n); }
+
+function loadSch(){
+    document.getElementById('sch-list').innerHTML='Loading...';
+    VSPAdmin.rpc.withSuccessHandler(g=>{
+        var h='';
+        for(var n in g){
+            var uid = 'sch-' + Math.floor(Math.random() * 1000000);
+            var ms = g[n], t = 0;
+            for(var m in ms) t += ms[m].length;
+            h += `<div class="acc-group">
+                    <div class="acc-head" onclick="toggleAcc('${uid}')">
+                        <div style="display:flex;align-items:center;gap:10px"><i class="material-icons" style="color:#6366f1">account_circle</i><span><b>${n}</b> <span style="font-weight:normal;color:#666">(${t} ca)</span></span></div>
+                        <i class="material-icons">expand_more</i>
+                    </div>
+                    <div id="${uid}" class="acc-body" style="display:none">`;
+            for(var m in ms){
+                h += `<div style="background:#f1f5f9;padding:5px 15px;font-size:12px;font-weight:bold;color:#475569;margin-top:5px">${m}</div>`;
+                ms[m].forEach(s => {
+                    h += `<div class="sch-item-row" id="row-${s.id}">
+                            <div style="display:flex;gap:10px;align-items:center">
+                                <input type="checkbox" class="sch-chk" value="${s.id}">
+                                <div><b>${s.ngay}</b> - ${s.ca} (${s.loc})</div>
+                            </div>
+                            <button onclick="delSch('${s.id}')" style="color:red;border:none;background:none;cursor:pointer"><i class="material-icons">close</i></button>
+                          </div>`;
+                });
+            }
+            h += `</div></div>`;
+        }
+        document.getElementById('sch-list').innerHTML = h;
+    }).getAllSchedules();
+}
+
+function deleteSelected() {
+    var ids = [];
+    var checkboxes = document.querySelectorAll('.sch-chk:checked');
+    checkboxes.forEach(function(c) {
+        ids.push(String(c.value).trim());
+    });
+
+    if(ids.length === 0) return showToast("⚠️ Bạn chưa tích chọn ô nào!", "error");
+
+    var cf = confirm("⚠️ XÁC NHẬN XÓA LỊCH:\nBạn có chắc chắn muốn xóa " + ids.length + " ca đã tích chọn không?");
+    if(!cf) return;
+
+    showToast("⏳ Đang tiến hành xóa...");
+    VSPAdmin.rpc.withSuccessHandler(function(res) {
+        alert("✅ " + res);
+        loadSch();
+    }).withFailureHandler(function(err) {
+        alert("❌ Lỗi: " + err);
+    }).deleteBatchSchedules(ids);
+}
+function delSch(id){ if(confirm('Xóa?')) VSPAdmin.rpc.withSuccessHandler(loadSch).deleteSchedule(id); }
+function handleSch(){ var nv=document.getElementById('sch-nv').value,ca=document.getElementById('sch-name').value,loc=document.getElementById('sch-loc').value; if(loc=='Khac')loc=document.getElementById('sch-loc-custom').value; if(!ca||!loc)return showToast("Thiếu thông tin","error"); startLoad('btn-sch'); var m=document.getElementById('sch-mode').value; if(m=='single'){ var d=document.getElementById('sch-date').value; VSPAdmin.rpc.withSuccessHandler(()=>{ stopLoad('btn-sch'); showToast("OK"); loadSch() }).addSmartSchedule(nv,d,d,[new Date(d).getDay()],ca,document.getElementById('sch-h1').value,document.getElementById('sch-h2').value,loc); } else { var s=document.getElementById('sch-start').value,e=document.getElementById('sch-end').value,days=[]; document.querySelectorAll('.day-chk:checked').forEach(c=>days.push(parseInt(c.value))); if(days.length==0)return showToast("Chọn ngày","error"); VSPAdmin.rpc.withSuccessHandler(()=>{ stopLoad('btn-sch'); showToast("OK"); loadSch() }).addSmartSchedule(nv,s,e,days,ca,document.getElementById('sch-h1').value,document.getElementById('sch-h2').value,loc); } }
+
+// --- MATRIX (HIỆN THEO CƠ SỞ) ---
+// --- MATRIX (HIỆN THEO CƠ SỞ VÀ GỘP NHÓM CA GIỐNG NHAU) ---
+function loadMatrix(){
+    var d = document.getElementById('view-week').value;
+    if(!d) return showToast("Chọn tuần!", "error");
+    document.getElementById('matrix-body').innerHTML = '<tr><td colspan="8" style="text-align:center">Đang tải...</td></tr>';
+    
+    var locations = VSP_LOCATIONS;
+    
+    VSPAdmin.rpc.withSuccessHandler(list => {
+        var h = '';
+        
+        // HÀM PHỤ TRỢ: GỘP NHÓM VÀ VẼ GIAO DIỆN THẺ CA LÀM
+        function renderGroupedShifts(shiftsData, isKhac) {
+            if(shiftsData.length === 0) return '';
+            
+            var grouped = {};
+            // Thuật toán gộp theo Tên ca + Giờ (+ Tên địa điểm nếu là cơ sở Khác)
+            shiftsData.forEach(s => {
+                var key = s.ca + "|" + s.time + (isKhac ? "|" + s.loc : ""); 
+                if(!grouped[key]) {
+                    grouped[key] = { ca: s.ca, time: s.time, loc: s.loc, teachers: [] };
+                }
+                grouped[key].teachers.push(s.nv);
+            });
+            
+            var cellHtml = '';
+            for(var key in grouped) {
+                var g = grouped[key];
+                // Vẽ danh sách giáo viên
+                var nvList = g.teachers.map(t => `<div style="font-size:11px; margin-top:3px; display:flex; align-items:center; gap:3px;"><i class="material-icons" style="font-size:12px;color:#4338CA">person</i> ${t}</div>`).join('');
+                
+                // Nếu là cơ sở Khác thì hiện thêm tên địa điểm nhỏ ở trên
+                var locDisplay = isKhac ? `<div style="font-size:10px;color:#EA580C;margin-bottom:2px;font-weight:bold;">📍 ${g.loc}</div>` : '';
+                
+                // Đóng gói thành 1 Thẻ (Card)
+                cellHtml += `<div class="tkb-card" style="border-left:3px solid #4F46E5; background:#FFF; padding:6px; margin-bottom:6px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                                ${locDisplay}
+                                <div style="font-weight:bold;color:#4338CA;font-size:11px;">${g.ca}</div>
+                                <div style="font-size:9px;color:#666;margin-bottom:4px;">🕒 ${g.time}</div>
+                                <div style="border-top:1px dashed #E0E7FF; padding-top:4px;">
+                                    ${nvList}
+                                </div>
+                             </div>`;
+            }
+            return cellHtml;
+        }
+
+        // 1. XỬ LÝ CÁC CƠ SỞ CHUẨN
+        locations.forEach(locName => {
+            h += `<tr><td style="font-weight:bold;background:#F9FAFB">${locName}</td>`;
+            [1,2,3,4,5,6,0].forEach(day => {
+                var shifts = list.filter(x => x.day == day && x.loc.includes(locName));
+                h += `<td style="vertical-align:top; background:#FAFAFA;">${renderGroupedShifts(shifts, false)}</td>`;
+            });
+            h += `</tr>`;
+        });
+        
+        // 2. XỬ LÝ CÁC CƠ SỞ "KHÁC"
+        h += `<tr><td style="font-weight:bold;background:#FFF7ED;color:#EA580C">CƠ SỞ KHÁC</td>`;
+        [1,2,3,4,5,6,0].forEach(day => {
+            var shifts = list.filter(x => x.day == day && !locations.some(l => x.loc.includes(l)));
+            h += `<td style="vertical-align:top; background:#FAFAFA;">${renderGroupedShifts(shifts, true)}</td>`;
+        });
+        h += `</tr>`;
+        
+        document.getElementById('matrix-body').innerHTML = h;
+    }).getWeeklyMatrix(d);
+}
+function addMasterRow(){
+   var ca=document.getElementById('mst-ca').value, t1=document.getElementById('mst-t1').value, t2=document.getElementById('mst-t2').value, loc=document.getElementById('mst-loc').value; 
+   if(loc=='Khac') loc=document.getElementById('mst-loc-custom').value;
+   if(!ca || !t1 || !t2) return showToast("Thiếu thông tin","error");
+   
+   var ops=document.getElementById('staff-data-store').innerHTML;
+   var rid='mr-'+Date.now();
+   var h=`<tr id="${rid}" data-ca="${ca}" data-t1="${t1}" data-t2="${t2}" data-loc="${loc}">
+            <td style="background:#FFF7ED;border-left:3px solid #F97316">
+                <div style="font-weight:bold;color:#C2410C">${ca}</div>
+                <div style="font-size:11px">${t1} - ${t2}</div>
+                <div style="font-size:11px;color:#666">📍 ${loc}</div>
+                <div style="margin-top:5px;cursor:pointer;color:red;font-size:11px;text-decoration:underline" onclick="document.getElementById('${rid}').remove()">Xóa</div>
+            </td>`;
+   [1,2,3,4,5,6,0].forEach(d=>{ h+=`<td><select class="inp-field teacher-select" data-d="${d}" style="min-width:80px;font-size:12px;padding:5px">${ops}</select></td>`; });
+   document.getElementById('master-body').insertAdjacentHTML('beforeend', h+'</tr>');
+}
+function saveMaster(){
+   var wk=document.getElementById('mst-week').value; if(!wk) return showToast("Chọn tuần","error");
+   var rows=document.querySelectorAll('#master-body tr'); if(rows.length==0) return showToast("Trống","error");
+   var dt=[];
+   rows.forEach(r=>{
+      var ca=r.dataset.ca, t1=r.dataset.t1, t2=r.dataset.t2, loc=r.dataset.loc;
+      r.querySelectorAll('.teacher-select').forEach(s=>{ if(s.value) dt.push({ma:s.value, day:s.dataset.d, ca:ca, start:t1, end:t2, loc:loc}); });
+   });
+   if(dt.length==0) return showToast("Chưa chọn giáo viên nào!","error");
+   startLoad('btn-save-mst'); VSPAdmin.rpc.withSuccessHandler(r=>{stopLoad('btn-save-mst');showToast(r)}).saveMasterSchedule(wk, dt);
+}
+
+function doReport() {
+  var staffId =
+    document.getElementById(
+      "rpt-nv"
+    ).value;
+
+  var month =
+    document.getElementById(
+      "rpt-m"
+    ).value;
+
+  var button =
+    document.getElementById(
+      "btn-ex"
+    );
+
+  if (!staffId) {
+    showToast(
+      "Bạn chưa chọn nhân viên.",
+      "error"
+    );
+    return;
+  }
+
+  if (
+    !/^\d{4}-(0[1-9]|1[0-2])$/.test(
+      month
+    )
+  ) {
+    showToast(
+      "Bạn chưa chọn tháng hợp lệ.",
+      "error"
+    );
+    return;
+  }
+
+  if (
+    button &&
+    button.dataset.reportBusy ===
+      "true"
+  ) {
+    showToast(
+      "Báo cáo đang được tạo, vui lòng chờ.",
+      "error"
+    );
+    return;
+  }
+
+  var popup = null;
+
+  try {
+    popup = window.open(
+      "",
+      "_blank"
+    );
+
+    if (popup) {
+      popup.document.write(
+        "<!doctype html>" +
+        "<html><head><meta charset='utf-8'>" +
+        "<title>Đang tạo báo cáo</title></head>" +
+        "<body style='font-family:Arial;text-align:center;padding:50px'>" +
+        "<h3>Đang tạo file Excel...</h3>" +
+        "<p>Vui lòng giữ cửa sổ này mở.</p>" +
+        "</body></html>"
+      );
+
+      popup.document.close();
+    }
+  } catch (popupError) {
+    popup = null;
+  }
+
+  if (button) {
+    button.dataset.reportBusy =
+      "true";
+    button.disabled = true;
+  }
+
+  startLoad("btn-ex");
+
+  var finished = false;
+
+  var watchdog = setTimeout(
+    function() {
+      if (finished) return;
+
+      finished = true;
+
+      stopLoad("btn-ex");
+
+      if (button) {
+        button.dataset.reportBusy =
+          "false";
+        button.disabled = false;
+      }
+
+      if (
+        popup &&
+        !popup.closed
+      ) {
+        popup.close();
+      }
+
+      showToast(
+        "Quá thời gian tạo báo cáo. Vui lòng thử lại hoặc kiểm tra kết nối mạng.",
+        "error"
+      );
+    },
+    330000
+  );
+
+  function finishReportUi() {
+    clearTimeout(watchdog);
+    stopLoad("btn-ex");
+
+    if (button) {
+      button.dataset.reportBusy =
+        "false";
+      button.disabled = false;
+    }
+  }
+
+  VSPAdmin.rpc
+    .withSuccessHandler(
+      function(result) {
+        if (finished) return;
+        finished = true;
+
+        finishReportUi();
+
+        if (
+          result &&
+          result.success
+        ) {
+          var targetUrl =
+            result.downloadUrl ||
+            result.url;
+
+          if (
+            popup &&
+            !popup.closed
+          ) {
+            popup.location.replace(
+              targetUrl
+            );
+          } else {
+            var openedReport =
+              window.open(
+                targetUrl,
+                "_blank"
+              );
+
+            if (!openedReport) {
+              window.location.href =
+                targetUrl;
+            }
+          }
+
+          showToast(
+            "Đã tạo báo cáo: " +
+            (result.sessionCount || 0) +
+            " ca, " +
+            (result.staffCount || 0) +
+            " nhân viên."
+          );
+
+          return;
+        }
+
+        if (
+          popup &&
+          !popup.closed
+        ) {
+          popup.close();
+        }
+
+        showToast(
+          result && result.msg
+            ? result.msg
+            : "Không tạo được báo cáo.",
+          "error"
+        );
+      }
+    )
+    .withFailureHandler(
+      function(error) {
+        if (finished) return;
+        finished = true;
+
+        finishReportUi();
+
+        if (
+          popup &&
+          !popup.closed
+        ) {
+          popup.close();
+        }
+
+        var message =
+          error &&
+          error.message
+            ? error.message
+            : String(
+                error ||
+                "Lỗi không xác định"
+              );
+
+        showToast(
+          "Lỗi tạo báo cáo: " +
+          message,
+          "error"
+        );
+      }
+    )
+    .exportReport(
+      staffId,
+      month
+    );
+}
+
+function parseTime(t){try{var p=t.split(' '),hm=p[0].split(':'),d=p[1].split('/');return new Date(d[2],d[1]-1,d[0],hm[0],hm[1]).getTime()}catch(e){return 0}}
+function parseDate(d){try{var p=d.split('/');return new Date(p[2],p[1]-1,p[0]).getTime()}catch(e){return 0}}
+
+
+function loadMonitor(){
+    document.getElementById('monitor-in-list').innerHTML = '<div class="spinner"></div>';
+    document.getElementById('monitor-out-list').innerHTML = '<div class="spinner"></div>';
+    
+    VSPAdmin.rpc.withSuccessHandler(d => {
+        
+        var hIn = '';
+        if(d.in.length == 0) hIn = '<div style="color:#999;font-style:italic">Chưa có ai vào ca.</div>';
+        else d.in.forEach(r => {
+            hIn += `<div style="padding:10px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px">
+                        <div style="width:8px;height:8px;background:#10B981;border-radius:50%"></div>
+                        <div>
+                            <div style="font-weight:bold;color:#1F2937">${r.ten}</div>
+                            <div style="font-size:12px;color:#666">🕒 ${r.gio} | 📍 ${r.loc}</div>
+                            <div style="font-size:11px;color:#4F46E5;font-weight:500">${r.ca}</div>
+                        </div>
+                    </div>`;
+        });
+        document.getElementById('monitor-in-list').innerHTML = hIn;
+
+        
+        var hOut = '';
+        if(d.out.length == 0) hOut = '<div style="color:#999;font-style:italic">Chưa có ai ra về.</div>';
+        else d.out.forEach(r => {
+            hOut += `<div style="padding:10px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px">
+                        <div style="width:8px;height:8px;background:#F59E0B;border-radius:50%"></div>
+                        <div>
+                            <div style="font-weight:bold;color:#1F2937">${r.ten}</div>
+                            <div style="font-size:12px;color:#666">🕒 ${r.gio} | 📍 ${r.loc}</div>
+                            <div style="font-size:11px;color:#666;font-weight:500">${r.ca}</div>
+                        </div>
+                    </div>`;
+        });
+        document.getElementById('monitor-out-list').innerHTML = hOut;
+
+    }).getTodayMonitorData();
+}
+
+
+
+
+
+
+let draftData = [];
+try {
+    let savedData = localStorage.getItem('DRAFT_SCH_PRO');
+    if (savedData && savedData !== "undefined" && savedData !== "[object Object]") {
+        draftData = JSON.parse(savedData);
+    }
+} catch(e) {
+    draftData = [];
+    localStorage.removeItem('DRAFT_SCH_PRO');
+}
+
+function loadDraftLocs() {
+    var l = VSP_LOCATIONS;
+    document.getElementById('draft-loc').innerHTML = l.map(x=>`<option value="${x}">${x}</option>`).join('')+'<option value="Khac">Khác...</option>';
+}
+
+function loadDraftStaff() {
+    document.getElementById('draft-nv').innerHTML = document.getElementById('staff-data-store').innerHTML;
+}
+
+function checkTimeOverlap(t1, t2) {
+    try {
+        var parseToMin = (t) => { var p = t.split(':'); return parseInt(p[0]) * 60 + parseInt(p[1]); };
+        var [s1, e1] = t1.split('-').map(x => x.trim());
+        var [s2, e2] = t2.split('-').map(x => x.trim());
+        return (parseToMin(s1) < parseToMin(e2) && parseToMin(s2) < parseToMin(e1)); 
+    } catch(e) { return t1.toLowerCase() === t2.toLowerCase(); }
+}
+
+function addDraft() {
+    var loc = document.getElementById('draft-loc').value;
+    var nvSel = document.getElementById('draft-nv');
+    if(nvSel.selectedIndex < 0) return showToast("Vui lòng đợi tải DS Nhân viên", "error");
+    var nv = nvSel.options[nvSel.selectedIndex].text;
+    var ca = document.getElementById('draft-ca').value.trim();
+    
+    var t1 = document.getElementById('draft-t1').value;
+    var t2 = document.getElementById('draft-t2').value;
+    if(!loc || !nv || nv.includes("-- Chọn") || !ca || !t1 || !t2) return showToast("Vui lòng nhập đủ thông tin và chọn giờ!", "error");
+    var time = t1 + " - " + t2; 
+
+    var days = [];
+    document.querySelectorAll('.draft-day-chk:checked').forEach(c => days.push(parseInt(c.value)));
+    if(days.length === 0) return showToast("Vui lòng tích chọn ít nhất 1 Thứ!", "error");
+
+    var conflictMsgs = [];
+    var dayNames = {1:"Thứ 2", 2:"Thứ 3", 3:"Thứ 4", 4:"Thứ 5", 5:"Thứ 6", 6:"Thứ 7", 0:"Chủ Nhật"};
+    days.forEach(d => {
+        var existShifts = draftData.filter(x => x.nv === nv && x.day === d);
+        existShifts.forEach(es => {
+            if(checkTimeOverlap(time, es.time)) conflictMsgs.push(`- ${dayNames[d]}: Trùng ca "${es.ca}" (${es.time}) tại ${es.loc}`);
+        });
+    });
+
+    if(conflictMsgs.length > 0) {
+        var warnMsg = `⚠️ PHÁT HIỆN TRÙNG LỊCH [${nv}]:\n\n` + conflictMsgs.join('\n') + `\n\nBạn có CHẮC CHẮN muốn xếp đè không?`;
+        if(!confirm(warnMsg)) return showToast("Đã hủy thao tác.", "error");
+    }
+
+    // Dòng CŨ của bạn: days.forEach(d => { draftData.push({ id: Date.now() + Math.random(), loc: loc, nv: nv, ca: ca, time: time, day: d }); });
+    
+    // THAY BẰNG DÒNG MỚI NÀY:
+    days.forEach(d => { 
+        var uniqueId = 'DRAFT_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+        draftData.push({ id: uniqueId, loc: loc, nv: nv, ca: ca, time: time, day: d }); 
+    });
+    localStorage.setItem('DRAFT_SCH_PRO', JSON.stringify(draftData));
+    showToast("Đã thêm vào bảng nháp!");
+    document.querySelectorAll('.draft-day-chk').forEach(c => c.checked = false);
+    renderDraft();
+}
+
+function findAvailableTeachers() {
+    var t1 = document.getElementById('draft-t1').value;
+    var t2 = document.getElementById('draft-t2').value;
+    var days = [];
+    document.querySelectorAll('.draft-day-chk:checked').forEach(c => days.push(parseInt(c.value)));
+    
+    if(days.length === 0 || !t1 || !t2) return alert("⚠️ Vui lòng CHỌN ÍT NHẤT 1 THỨ và CHỌN ĐỦ GIỜ (Bắt đầu - Kết thúc) trước khi tìm!");
+    var time = t1 + " - " + t2;
+
+    var nvSel = document.getElementById('draft-nv');
+    var allTeachers = [];
+    for(var i = 0; i < nvSel.options.length; i++) {
+        var name = nvSel.options[i].text;
+        if(name && !name.includes("--")) allTeachers.push(name);
+    }
+
+    var freeTeachers = [], busyTeachers = [];
+    var dayNames = {1:"T2", 2:"T3", 3:"T4", 4:"T5", 5:"T6", 6:"T7", 0:"CN"};
+
+    allTeachers.forEach(nv => {
+        var isBusy = false, busyDetails = [];
+        days.forEach(d => {
+            var existShifts = draftData.filter(x => x.nv === nv && x.day === d);
+            existShifts.forEach(es => {
+                if(checkTimeOverlap(time, es.time)) { isBusy = true; busyDetails.push(`${dayNames[d]} kẹt ca ở ${es.loc}`); }
+            });
+        });
+        if(isBusy) busyTeachers.push(`❌ ${nv} [${busyDetails.join(', ')}]`); else freeTeachers.push(`✅ ${nv}`);
+    });
+
+    var html = '<div style="margin-bottom:20px;"><h4 style="color:#10B981; margin:0 0 10px 0; border-bottom:2px solid #D1FAE5; padding-bottom:5px;">🟢 CÓ THỂ NHẬN CA:</h4>';
+    if(freeTeachers.length > 0) freeTeachers.forEach(t => html += `<div style="padding:8px 0; border-bottom:1px dashed #E5E7EB; font-weight:500; color:#374151;">${t}</div>`);
+    else html += '<div style="color:#9CA3AF; font-style:italic;">Không có giáo viên nào rảnh!</div>';
+    
+    html += '</div><div><h4 style="color:#EF4444; margin:0 0 10px 0; border-bottom:2px solid #FEE2E2; padding-bottom:5px;">🔴 ĐANG BỊ KẸT LỊCH:</h4>';
+    if(busyTeachers.length > 0) busyTeachers.forEach(t => html += `<div style="padding:8px 0; border-bottom:1px dashed #E5E7EB; color:#B91C1C;">${t}</div>`);
+    else html += '<div style="color:#9CA3AF; font-style:italic;">Không có ai bị kẹt lịch!</div>';
+    html += '</div>';
+
+    document.getElementById('dm-title').innerText = "KẾT QUẢ TÌM GIÁO VIÊN (" + time + ")";
+    document.getElementById('dm-content').innerHTML = html;
+    document.getElementById('detail-modal').style.display = 'flex';
+}
+
+function exportDraftToMain() {
+    if(draftData.length === 0) return alert("Bảng nháp đang trống!");
+    var sD = document.getElementById('export-start').value;
+    var eD = document.getElementById('export-end').value;
+    if(!sD || !eD) return alert("⚠️ BẠN QUÊN CHỌN NGÀY!\nVui lòng chọn khoảng thời gian (Từ ngày - Đến ngày) để rải lịch.");
+    if(new Date(sD) > new Date(eD)) return alert("Ngày kết thúc phải lớn hơn ngày bắt đầu!");
+
+    // [ĐÃ FIX LỖI] Thêm hàm tự đảo ngày ngay tại đây để không bị lỗi "đơ" nút
+    var formatVN = (dStr) => { var p = dStr.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; };
+
+    var cf = confirm(`🚀 XÁC NHẬN RẢI LỊCH TỰ ĐỘNG:\nHệ thống sẽ rải lặp lại ${draftData.length} ca này từ ngày ${formatVN(sD)} đến ${formatVN(eD)}.\n\nBạn có chắc chắn muốn chốt không?`);
+    if(!cf) return;
+
+    showToast("⏳ Đang rải lịch...");
+    VSPAdmin.rpc.withSuccessHandler(function(res) {
+        alert(res);
+        if(confirm("Bạn có muốn XÓA SẠCH bảng nháp này không?")) {
+            draftData = [];
+            localStorage.removeItem('DRAFT_SCH_PRO');
+            renderDraft();
+        }
+    }).withFailureHandler(function(err) { alert("❌ Lỗi: " + err); }).saveDraftToMain(draftData, sD, eD);
+}
+
+
+
+function editDraft(id) {
+    
+    var item = draftData.find(x => String(x.id) === String(id));
+    if(!item) return;
+
+    
+    document.getElementById('draft-loc').value = item.loc;
+    document.getElementById('draft-ca').value = item.ca;
+    
+    var nvSel = document.getElementById('draft-nv');
+    for(var i=0; i<nvSel.options.length; i++) {
+        if(nvSel.options[i].text === item.nv) { nvSel.selectedIndex = i; break; }
+    }
+
+    var times = item.time.split('-');
+    document.getElementById('draft-t1').value = times[0].trim();
+    document.getElementById('draft-t2').value = times[1].trim();
+
+    document.querySelectorAll('.draft-day-chk').forEach(c => c.checked = false);
+    var chk = document.querySelector(`.draft-day-chk[value="${item.day}"]`);
+    if(chk) chk.checked = true;
+
+    
+    draftData = draftData.filter(x => String(x.id) !== String(id));
+    localStorage.setItem('DRAFT_SCH_PRO', JSON.stringify(draftData));
+    renderDraft();
+
+    showToast("Đã kéo dữ liệu lên. Hãy chỉnh sửa và bấm [+ THÊM VÀO NHÁP] nhé!");
+}
+
+function clearDraft() {
+    if(confirm("Bạn có chắc muốn xóa sạch bản nháp hiện tại?")) {
+        draftData = [];
+        localStorage.removeItem('DRAFT_SCH_PRO');
+        renderDraft();
+    }
+}
+
+function deleteDraft(id) {
+    
+    draftData = draftData.filter(x => String(x.id) !== String(id));
+    localStorage.setItem('DRAFT_SCH_PRO', JSON.stringify(draftData));
+    renderDraft();
+}
+
+function renderDraft() {
+    var tbody = document.getElementById('draft-matrix-body');
+    var statsBox = document.getElementById('draft-stats');
+    var tbodyGV = document.getElementById('teacher-matrix-body');
+    var allTeachers = [];
+    var nvSel = document.getElementById('draft-nv');
+    if(nvSel) {
+        for(var i=0; i<nvSel.options.length; i++) {
+            var txt = nvSel.options[i].text;
+            if(txt && !txt.includes("--")) allTeachers.push(txt);
+        }
+    }
+    
+    var teacherStats = {};
+    var teacherStats = {};
+    var dayNames = {1:"T2", 2:"T3", 3:"T4", 4:"T5", 5:"T6", 6:"T7", 0:"CN"};
+    draftData.forEach(item => { if(!teacherStats[item.nv]) teacherStats[item.nv] = []; teacherStats[item.nv].push(item); });
+    var zeroShiftTeachers = allTeachers.filter(nv => !teacherStats[nv]);
+
+    
+    if(statsBox) {
+        var statsHtml = '<div style="width:100%; font-size:13px; font-weight:900; color:#1E293B; margin-bottom:8px;">📊 CHI TIẾT LỊCH ĐÃ XẾP:</div><div style="display: flex; flex-wrap: wrap; gap: 12px; width: 100%;">';
+        for(var nv in teacherStats) {
+            var shifts = teacherStats[nv];
+            shifts.sort((a, b) => (a.day === 0 ? 7 : a.day) - (b.day === 0 ? 7 : b.day));
+            var conflictIds = [];
+            for(var i=0; i<shifts.length; i++){
+                for(var j=i+1; j<shifts.length; j++){
+                    if(shifts[i].day === shifts[j].day && checkTimeOverlap(shifts[i].time, shifts[j].time)) {
+                        conflictIds.push(shifts[i].id); conflictIds.push(shifts[j].id);
+                    }
+                }
+            }
+            var detailHtml = ''; var hasConflict = false;
+            shifts.forEach(s => {
+                var isConflict = conflictIds.includes(s.id); if(isConflict) hasConflict = true;
+                var bgStyle = isConflict ? 'background: #FEF2F2; border-left: 3px solid #EF4444; border-radius: 4px;' : 'border-top: 1px dashed #C7D2FE;';
+                var alertIcon = isConflict ? '<i class="material-icons" style="font-size:14px; color:#EF4444; vertical-align:middle;" title="Trùng giờ!">warning</i> ' : '';
+                detailHtml += `<div style="font-size: 11px; color: #475569; margin-top: 5px; padding: 6px 4px; line-height: 1.4; ${bgStyle}">${alertIcon}<span style="font-weight:bold; color:#D97706">${dayNames[s.day]}</span>: ${s.ca} <span style="font-weight:bold; color:#2563EB;">(${s.time})</span><br><span style="font-size:10px; color:#64748B">📍 ${s.loc}</span></div>`;
+            });
+            var cardBg = hasConflict ? '#FEF2F2' : '#EEF2FF'; var cardBorder = hasConflict ? '#FCA5A5' : '#C7D2FE'; var cardTitleColor = hasConflict ? '#DC2626' : '#4338CA';
+            statsHtml += `<div style="background: ${cardBg}; padding: 12px; border-radius: 12px; border: 1px solid ${cardBorder}; min-width: 175px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);"><div style="color: ${cardTitleColor}; font-size: 13px; font-weight: 900; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;"><span><i class="material-icons" style="font-size: 16px; vertical-align: bottom;">person</i> ${nv}</span><span style="color: #EF4444; background: #FEE2E2; padding: 2px 6px; border-radius: 6px; font-size: 11px;">${shifts.length} ca</span></div>${detailHtml}</div>`;
+        }
+        statsHtml += '</div>';
+        
+        if(zeroShiftTeachers.length > 0) {
+            statsHtml += '<div style="width:100%; font-size:12px; font-weight:bold; color:#D97706; margin-top:20px; margin-bottom:8px; border-top:1px dashed #CBD5E1; padding-top:15px;">⚠️ GIÁO VIÊN ĐANG TRỐNG LỊCH:</div><div style="display: flex; flex-wrap: wrap; gap: 8px; width: 100%;">';
+            zeroShiftTeachers.forEach(nv => { statsHtml += `<div style="background: #FFFBEB; color: #B45309; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid #FDE68A;"><i class="material-icons" style="font-size: 14px; vertical-align: middle;">person_off</i> ${nv}</div>`; });
+            statsHtml += '</div>';
+        }
+        statsBox.innerHTML = statsHtml;
+    }
+
+    // Render Bảng Cơ Sở
+    if(draftData.length === 0) { 
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#999;padding:30px;">Chưa có dữ liệu nháp. Hãy thêm ca để xem lịch!</td></tr>'; 
+    } else {
+        var uniqueLocs = [...new Set(draftData.map(item => item.loc))]; var h = '';
+        uniqueLocs.forEach(locName => {
+            h += `<tr><td style="font-weight:bold;background:#FFFBEB;color:#B45309;border-left:4px solid #F59E0B">${locName}</td>`;
+            [1,2,3,4,5,6,0].forEach(day => {
+                var cellHtml = ''; var shifts = draftData.filter(x => x.day === day && x.loc === locName);
+                if(shifts.length > 0){
+                    var grouped = {};
+                    shifts.forEach(s => { var key = s.ca + " | " + s.time; if(!grouped[key]) grouped[key] = { ca: s.ca, time: s.time, teachers: [] }; grouped[key].teachers.push({ id: s.id, nv: s.nv }); });
+                    for(var key in grouped) {
+                        var g = grouped[key]; var nvHtml = '';
+                        g.teachers.forEach(t => { nvHtml += `<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-top:4px;padding-top:4px;border-top:1px dashed #FDE68A;"><span><i class="material-icons" style="font-size:10px;color:#D97706">person</i> ${t.nv}</span><div style="display:flex;gap:10px"><button onclick="editDraft('${t.id}')" style="color:#2563EB;background:none;border:none;cursor:pointer;padding:0;display:flex;" title="Sửa ca"><i class="material-icons" style="font-size:14px">edit</i></button><button onclick="deleteDraft('${t.id}')" style="color:#EF4444;background:none;border:none;cursor:pointer;padding:0;display:flex;" title="Xóa ca"><i class="material-icons" style="font-size:14px">close</i></button></div></div>`; });
+                        cellHtml += `<div class="tkb-card" style="border-color:#FDE68A; background:#FFF; padding:8px; margin-bottom:8px; box-shadow:0 2px 4px rgba(217, 119, 6, 0.1);"><div style="font-weight:bold;color:#D97706;margin-bottom:2px;font-size:12px;">${g.ca}</div><div style="font-size:10px;color:#666;margin-bottom:6px;">🕒 ${g.time}</div>${nvHtml}</div>`;
+                    }
+                }
+                h += `<td style="vertical-align:top; background:#FAFAFA;">${cellHtml}</td>`;
+            }); h += `</tr>`;
+        });
+        tbody.innerHTML = h;
+    }
+
+    // Render Bảng Giáo Viên Rảnh/Bận
+    if(tbodyGV) {
+        var hGV = '';
+        if(allTeachers.length === 0) hGV = '<tr><td colspan="8" style="text-align:center;color:#999;padding:30px;">Đang tải danh sách giáo viên...</td></tr>';
+        else {
+            allTeachers.forEach(nv => {
+                hGV += `<tr><td style="font-weight:bold; background:#F8FAFC; color:#334155; border-right:2px solid #E2E8F0;">${nv}</td>`;
+                [1,2,3,4,5,6,0].forEach(day => {
+                    var shifts = draftData.filter(x => x.nv === nv && x.day === day);
+                    if(shifts.length === 0) {
+                        hGV += `<td style="background:#F0FDF4; text-align:center; vertical-align:middle; border: 1px solid #DCFCE7;"><span style="color:#16A34A; font-size:11px; font-weight:bold; background:#BBF7D0; padding:4px 12px; border-radius:12px;">RẢNH</span></td>`;
+                    } else {
+                        var cellHtml = '';
+                        shifts.sort((a,b) => a.time.localeCompare(b.time)); 
+                        shifts.forEach(s => { cellHtml += `<div style="background:#FEF2F2; border:1px solid #FCA5A5; border-left:4px solid #EF4444; padding:6px; margin-bottom:4px; border-radius:4px;"><div style="font-weight:bold; color:#B91C1C; font-size:11px;">${s.ca}</div><div style="color:#DC2626; font-size:11px; font-weight:900; margin:2px 0;">🕒 ${s.time}</div><div style="color:#7F1D1D; font-size:10px;">📍 ${s.loc}</div></div>`; });
+                        hGV += `<td style="vertical-align:top; background:#FAFAFA; border: 1px solid #F1F5F9;">${cellHtml}</td>`;
+                    }
+                });
+                hGV += `</tr>`;
+            });
+        }
+        tbodyGV.innerHTML = hGV;
+    }
+}
+// --- BỔ SUNG: LƯU CÀI ĐẶT VSP ---
+function saveVSPSettings() {
+    var late = document.getElementById('conf-late').value;
+    var emails = document.getElementById('conf-emails').value;
+    showToast("⏳ Đang lưu cấu hình...");
+    VSPAdmin.rpc.withSuccessHandler(msg => alert(msg)).saveConfigToSheet(late, emails);
+}
+
+</script>
+</body>
+</html>

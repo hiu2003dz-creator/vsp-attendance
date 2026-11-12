@@ -10,6 +10,7 @@
   let session = null;
   let refreshPromise = null;
   let loginNoticeShown = false;
+  const photoUrls = new Set();
   function legacyValue(name) {
     try {
       const saved = localStorage.getItem(name);
@@ -59,6 +60,8 @@
     target.setItem(key, JSON.stringify(next));
   }
   function signOut() {
+    for (const url of photoUrls) URL.revokeObjectURL(url);
+    photoUrls.clear();
     session = null;
     sessionStorage.removeItem(key);
     localStorage.removeItem(key);
@@ -135,7 +138,19 @@
       return { success: true, ...profile, avatar: profile.img };
     } catch (error) { signOut(); throw error; }
   }
+  async function photo(imageId) {
+    const prefix = 'gs://' + config.storageBucket + '/attendance/';
+    if (!String(imageId).startsWith(prefix)) return '';
+    const object = imageId.slice(('gs://' + config.storageBucket + '/').length);
+    const current = readSession();
+    const response = await fetch('https://firebasestorage.googleapis.com/v0/b/' + config.storageBucket + '/o/' + encodeURIComponent(object) + '?alt=media',
+      {headers:{Authorization:'Firebase ' + await token()},cache:'no-store'});
+    if (!response.ok) throw new Error('Không tải được ảnh Firebase.');
+    const blob = await response.blob();
+    if (readSession()?.uid !== current?.uid) return '';
+    const url = URL.createObjectURL(blob);photoUrls.add(url);return url;
+  }
   window.VSPFirebase = Object.freeze({ enabled, preview, staging, legacySite, legacyUsername, resumeLegacySession, clearLegacyAuth,
-    call, signOut, hasSession: () => Boolean(readSession()), emailFor });
+    call, photo, signOut, hasSession: () => Boolean(readSession()), emailFor });
   if (preview || staging) document.body.classList.add('firebase-preview');
 })();

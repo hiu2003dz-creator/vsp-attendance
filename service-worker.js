@@ -1,5 +1,5 @@
 // Mỗi lần cập nhật ứng dụng, tăng số phiên bản này.
-const CACHE_NAME = "vsp-cc-cache-v66";
+const CACHE_NAME = "vsp-cc-cache-v67";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -57,9 +57,7 @@ self.addEventListener("fetch", event => {
 
   // API Apps Script luôn đi thẳng ra mạng, không lưu cache.
   if (
-    new URL(requestUrl).origin !== self.location.origin ||
-    requestUrl.includes("script.google.com") ||
-    requestUrl.includes("script.googleusercontent.com")
+    new URL(requestUrl).origin !== self.location.origin
   ) {
     return;
   }
@@ -84,7 +82,7 @@ self.addEventListener("fetch", event => {
         await cache.put(request, networkResponse.clone());
 
         // Lưu thêm bản index ổn định để dùng khi mất mạng.
-        if (request.mode === "navigate") {
+        if (request.mode === "navigate" && !new URL(requestUrl).pathname.endsWith("/admin.html")) {
           await cache.put("./index.html", networkResponse.clone());
         }
       }
@@ -94,7 +92,7 @@ self.addEventListener("fetch", event => {
       const cachedResponse = await caches.match(request);
       if (cachedResponse) return cachedResponse;
 
-      if (request.mode === "navigate") {
+      if (request.mode === "navigate" && !new URL(requestUrl).pathname.endsWith("/admin.html")) {
         const cachedIndex = await caches.match("./index.html");
         if (cachedIndex) return cachedIndex;
       }

@@ -159,84 +159,9 @@
 // ==========================================================
 // CẤU HÌNH API VÀ ĐỘNG CƠ LƯU TRỮ OFFLINE
 // ==========================================================
-const API_URL = 'https://script.google.com/macros/s/AKfycbyRd4pxRBrh072ufzHodnrmCkE6xXbYIGIaPvwgWbkImHSiOuAU0i2VBKqL6VZFSAqbhw/exec'; // 🔴 NHỚ DÁN LINK VÀO ĐÂY
-
-// Hàm gọi API chuẩn CÓ TRANG BỊ BỘ ĐẾM GIỜ (TIMEOUT) CHỐNG MẠNG YẾU
-// Hàm gọi API chuẩn CÓ TRANG BỊ BỘ ĐẾM GIỜ (TIMEOUT) CHỐNG MẠNG YẾU
 async function callAPI(action, payload = {}) {
-  var firebaseRequired = Boolean(window.VSP_FIREBASE_CONFIG && window.VSP_FIREBASE_CONFIG.enabled)
-    || window.location.hostname === 'vsp-cham-cong.web.app'
-    || window.location.hostname === 'vsp-cham-cong.firebaseapp.com'
-    || (window.location.hostname === 'hiu2003dz-creator.github.io' && /^\/vsp-attendance(?:\/|$)/.test(window.location.pathname))
-    || new URLSearchParams(window.location.search).get('firebase') === 'preview';
-  if (firebaseRequired && !(window.VSPFirebase && window.VSPFirebase.enabled)) {
-    throw new Error('Không tải được kết nối Firebase. Vui lòng mở lại ứng dụng.');
-  }
-  if (window.VSPFirebase && window.VSPFirebase.enabled) {
-    return window.VSPFirebase.call(action, payload);
-  }
-  payload.action = action;
-
-  // Khi trình duyệt xác nhận mất mạng, không bắt giáo viên chờ timeout.
-  if (!navigator.onLine) {
-    throw new Error("Offline");
-  }
-
-  var timeoutMs =
-    action === "processCheckIn"
-      ? 25000
-      : 15000;
-
-  var controller = new AbortController();
-  var timeoutId = setTimeout(
-    function() {
-      controller.abort();
-    },
-    timeoutMs
-  );
-
-  try {
-    var response = await fetch(API_URL, {
-      method: "POST",
-      redirect: "follow",
-      headers: {
-        "Content-Type": "text/plain;charset=utf-8"
-      },
-      body: JSON.stringify(payload),
-      signal: controller.signal,
-      cache: "no-store"
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(
-        "HTTP " + response.status
-      );
-    }
-
-    var responseText =
-      await response.text();
-
-    try {
-      return JSON.parse(responseText);
-    } catch (parseError) {
-      throw new Error(
-        "Server trả dữ liệu không hợp lệ"
-      );
-    }
-  } catch (error) {
-    clearTimeout(timeoutId);
-
-    if (
-      error &&
-      error.name === "AbortError"
-    ) {
-      throw new Error("NetworkTimeout");
-    }
-
-    throw new Error("Offline");
-  }
+  if (!window.VSPFirebase?.enabled) throw new Error('Kh?ng t?i ???c k?t n?i Firebase. Vui l?ng m? l?i ?ng d?ng.');
+  return window.VSPFirebase.call(action, payload);
 }
 
 var USER=null, LOC=null, CUR_CA='', CUR_LOC='', CUR_TIME='', CUR_END='', CUR_TYPE='', CUR_NOTE='', CUR_DATE='', MODE='CHECKIN';
@@ -2380,7 +2305,15 @@ function showAssignedDetails() {
     }); 
 }
 
-function loadProfile(){ callAPI('getUserProfile', {maNV: USER.id}).then(u => { document.getElementById('pf-name').innerText=u.name; document.getElementById('pf-code').innerText=u.id; if(u.img) document.getElementById('pf-img').src="https://drive.google.com/thumbnail?id="+u.img+"&sz=400"; }); }
+function loadProfile(){
+  const uid=USER?.id;
+  callAPI('getUserProfile', {maNV: uid}).then(async u => {
+    if(USER?.id!==uid)return;
+    document.getElementById('pf-name').innerText=u.name;
+    document.getElementById('pf-code').innerText=u.id;
+    if(u.img){try{const url=await window.VSPFirebase.photo(u.img);if(url && USER?.id===uid)document.getElementById('pf-img').src=url;}catch{}}
+  }).catch(()=>{});
+}
 function openCam(mode){ MODE=mode; openCamUI(); }
 
     
