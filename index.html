@@ -160,7 +160,7 @@
 // CẤU HÌNH API VÀ ĐỘNG CƠ LƯU TRỮ OFFLINE
 // ==========================================================
 async function callAPI(action, payload = {}) {
-  if (!window.VSPFirebase?.enabled) throw new Error('Kh?ng t?i ???c k?t n?i Firebase. Vui l?ng m? l?i ?ng d?ng.');
+  if (!window.VSPFirebase?.enabled) throw new Error('Không tải được kết nối Firebase. Vui lòng mở lại ứng dụng.');
   return window.VSPFirebase.call(action, payload);
 }
 
