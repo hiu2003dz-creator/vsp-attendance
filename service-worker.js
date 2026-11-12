@@ -1,9 +1,12 @@
 // Mỗi lần cập nhật ứng dụng, tăng số phiên bản này.
-const CACHE_NAME = "vsp-cc-cache-v62";
+const CACHE_NAME = "vsp-cc-cache-v66";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./manifest.json"
+  "./manifest.json",
+  "./ui.css",
+  "./firebase-config.js",
+  "./firebase-client.js"
 ];
 
 self.addEventListener("install", event => {
@@ -21,8 +24,8 @@ self.addEventListener("activate", event => {
       .then(cacheNames => Promise.all(
         cacheNames.map(cacheName => {
           if (
-            cacheName !== CACHE_NAME &&
-            !cacheName.startsWith("vsp-cc-offline-backup-")
+            cacheName.startsWith("vsp-cc-cache-") &&
+            cacheName !== CACHE_NAME
           ) {
             return caches.delete(cacheName);
           }
@@ -54,6 +57,7 @@ self.addEventListener("fetch", event => {
 
   // API Apps Script luôn đi thẳng ra mạng, không lưu cache.
   if (
+    new URL(requestUrl).origin !== self.location.origin ||
     requestUrl.includes("script.google.com") ||
     requestUrl.includes("script.googleusercontent.com")
   ) {

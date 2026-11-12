@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
 <base target="_top">
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="https://i.postimg.cc/026rs9YM/1.png" type="image/png">
 <link rel="apple-touch-icon" href="https://i.postimg.cc/026rs9YM/1.png">
@@ -80,8 +80,10 @@
       animation: shimmer 1.5s infinite linear forwards; 
   }
 </style>
+<link rel="stylesheet" href="ui.css">
 </head>
 <body>
+<div id="firebase-preview-banner" role="status">Bản kiểm thử Firebase · Chưa chuyển hệ thống chấm công</div>
 <div id="offline-alert-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:999999; align-items:center; justify-content:center; backdrop-filter: blur(3px);">
   <div style="background:white; width:85%; max-width:320px; border-radius:20px; padding:25px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2); transform:scale(0); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;">
     <div style="width:70px; height:70px; background:#FFFBEB; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 15px auto;">
@@ -135,6 +137,8 @@
 
 <input type="file" id="native-cam" accept="image/*" capture="user" style="display:none" onchange="processNativePhoto(event)">
 
+<script src="firebase-config.js"></script>
+<script src="firebase-client.js"></script>
 <script>
 // --- CHẶN TRÌNH DUYỆT APP (Zalo/FB) ---
 (function() {
@@ -160,6 +164,17 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyRd4pxRBrh072ufzHodnrm
 // Hàm gọi API chuẩn CÓ TRANG BỊ BỘ ĐẾM GIỜ (TIMEOUT) CHỐNG MẠNG YẾU
 // Hàm gọi API chuẩn CÓ TRANG BỊ BỘ ĐẾM GIỜ (TIMEOUT) CHỐNG MẠNG YẾU
 async function callAPI(action, payload = {}) {
+  var firebaseRequired = Boolean(window.VSP_FIREBASE_CONFIG && window.VSP_FIREBASE_CONFIG.enabled)
+    || window.location.hostname === 'vsp-cham-cong.web.app'
+    || window.location.hostname === 'vsp-cham-cong.firebaseapp.com'
+    || (window.location.hostname === 'hiu2003dz-creator.github.io' && /^\/vsp-attendance(?:\/|$)/.test(window.location.pathname))
+    || new URLSearchParams(window.location.search).get('firebase') === 'preview';
+  if (firebaseRequired && !(window.VSPFirebase && window.VSPFirebase.enabled)) {
+    throw new Error('Không tải được kết nối Firebase. Vui lòng mở lại ứng dụng.');
+  }
+  if (window.VSPFirebase && window.VSPFirebase.enabled) {
+    return window.VSPFirebase.call(action, payload);
+  }
   payload.action = action;
 
   // Khi trình duyệt xác nhận mất mạng, không bắt giáo viên chờ timeout.
@@ -229,18 +244,22 @@ var CUR_KEY = '';
 var IS_SUBMITTING = false;
 var LOAD_SEQ = 0;
 var SYNCING = false;
-var DB_KEY = 'CC_USER_V11'; 
+var IS_FIREBASE = Boolean(window.VSPFirebase && window.VSPFirebase.enabled);
+var USE_LEGACY_STORAGE = IS_FIREBASE && window.VSPFirebase.legacySite;
+var FIREBASE_PROJECT = IS_FIREBASE ? window.VSP_FIREBASE_CONFIG.projectId : '';
+var DB_KEY = IS_FIREBASE ? 'CC_USER_FIREBASE_V1_' + FIREBASE_PROJECT : 'CC_USER_V11';
+var CACHE_PREFIX = IS_FIREBASE && !USE_LEGACY_STORAGE ? 'FIREBASE_' + FIREBASE_PROJECT + '_' : '';
 
 // ==========================================================
 // OFFLINE SAFE QUEUE V60
 // IndexedDB là kho chính; Cache Storage là kho dự phòng khi IndexedDB tạm lỗi.
 // Không báo thành công cho tới khi ít nhất một kho xác nhận ghi xong.
 // ==========================================================
-const OFFLINE_DB_NAME = "VSP_OfflineDB";
+const OFFLINE_DB_NAME = IS_FIREBASE && !USE_LEGACY_STORAGE ? "VSP_FirebaseOfflineDB_" + FIREBASE_PROJECT : "VSP_OfflineDB";
 const OFFLINE_DB_VERSION = 1;
 const OFFLINE_STORE_NAME = "Logs";
-const OFFLINE_BACKUP_CACHE = "vsp-cc-offline-backup-v60";
-const OFFLINE_BACKUP_PATH = "__vsp_offline_queue_v60__/";
+const OFFLINE_BACKUP_CACHE = IS_FIREBASE && !USE_LEGACY_STORAGE ? "vsp-cc-offline-backup-firebase-" + FIREBASE_PROJECT : "vsp-cc-offline-backup-v60";
+const OFFLINE_BACKUP_PATH = IS_FIREBASE && !USE_LEGACY_STORAGE ? "__vsp_firebase_" + FIREBASE_PROJECT + "/" : "__vsp_offline_queue_v60__/";
 const OFFLINE_MAX_IMAGE_BYTES = 700 * 1024;
 const OFFLINE_MIN_FREE_BYTES = 8 * 1024 * 1024;
 const OFFLINE_HEALTH_TTL_MS = 60 * 1000;
@@ -248,6 +267,7 @@ const OFFLINE_HEALTH_TTL_MS = 60 * 1000;
 var DB_CONNECTION_PROMISE = null;
 var OFFLINE_HEALTH_CACHE = null;
 var OFFLINE_HEALTH_AT = 0;
+var OFFLINE_STATUS_SEQ = 0;
 
 
 // Tạo mã duy nhất cho từng thao tác để backend có thể chống xử lý lặp.
@@ -743,12 +763,17 @@ async function getAllQueueItems() {
 
 async function getAllQueuedLogs() {
   var items = await getAllQueueItems();
-  return items.map(function(item) { return item.log; });
+  return items.filter(queueItemBelongsToCurrentUser).map(function(item) { return item.log; });
+}
+
+function queueItemBelongsToCurrentUser(item) {
+  if (!IS_FIREBASE) return true;
+  return !!USER && String(item.log.maNV || '').trim().toUpperCase() === String(USER.id || '').trim().toUpperCase();
 }
 
 async function getOfflineQueueCount() {
   var items = await getAllQueueItems();
-  return items.length;
+  return items.filter(queueItemBelongsToCurrentUser).length;
 }
 
 async function deleteQueueItem(item) {
@@ -898,6 +923,11 @@ function setOfflineReadinessStyle(
 }
 
 async function updateOfflineReadiness(forceHealthCheck) {
+  if (window.VSPFirebase && window.VSPFirebase.staging) {
+    var stagingStatus = document.getElementById('offline-readiness');
+    if (stagingStatus) { stagingStatus.style.display = 'block'; stagingStatus.textContent = 'Bản kiểm thử: đang đối chiếu dữ liệu, chưa mở nhận chấm công.'; }
+    return;
+  }
   var element = document.getElementById("offline-readiness");
   if (!element || !USER) {
     if (element) element.style.display = "none";
@@ -905,7 +935,7 @@ async function updateOfflineReadiness(forceHealthCheck) {
   }
 
   var sequence = ++OFFLINE_STATUS_SEQ;
-  var cacheKey = "CACHE_SCH_" + USER.id;
+  var cacheKey = CACHE_PREFIX + "CACHE_SCH_" + USER.id;
   var hasScheduleCache = localStorage.getItem(cacheKey) !== null;
 
   try {
@@ -1013,7 +1043,35 @@ function getCookieVal(name) {
     return "";
 }
 
+var LEGACY_AUTH_RESTORE_PENDING = false;
+async function restoreRememberedLegacyLogin() {
+    if (!IS_FIREBASE || !USE_LEGACY_STORAGE || USER || LEGACY_AUTH_RESTORE_PENDING || !navigator.onLine) return;
+    var username = window.VSPFirebase.legacyUsername();
+    if (!username) return;
+    document.getElementById('u').value = username;
+    LEGACY_AUTH_RESTORE_PENDING = true;
+    startLoad('btn-login');
+    try {
+        var restored = await window.VSPFirebase.resumeLegacySession();
+        if (restored) {
+            localStorage.setItem(DB_KEY, JSON.stringify(restored));
+            USER = restored;
+            window.VSPFirebase.clearLegacyAuth();
+            initApp();
+        }
+    } catch (error) {
+        showToast('Vui lòng đăng nhập bằng mã nhân viên và mật khẩu cũ. Công chờ vẫn được giữ trên thiết bị.');
+    } finally { LEGACY_AUTH_RESTORE_PENDING = false; stopLoad('btn-login'); }
+}
+
 (function checkAutoLogin() {
+    if (IS_FIREBASE) {
+        var saved = sessionStorage.getItem(DB_KEY) || localStorage.getItem(DB_KEY);
+        if (saved && window.VSPFirebase.hasSession()) {
+            try { USER = JSON.parse(saved); setTimeout(initApp, 100); } catch (e) { }
+        } else restoreRememberedLegacyLogin();
+        return;
+    }
     var s = localStorage.getItem(DB_KEY) || getCookieVal("CC_USER_DATA");
     if(s){ try { USER = JSON.parse(s); setTimeout(initApp, 100); return; } catch(e) { } } 
     window.addEventListener('load', function() {
@@ -1024,11 +1082,12 @@ function getCookieVal(name) {
     });
 })();
 
-function showToast(msg){ var d=document.createElement('div'); d.className='toast'; d.innerHTML='<i class="material-icons">info</i> '+msg; document.getElementById('toast-container').appendChild(d); setTimeout(()=>d.remove(),3000); }
-function startLoad(id){ var b=document.getElementById(id); if(b){b.dataset.tx=b.innerText; b.innerHTML='<div class="spinner"></div>'; b.classList.add('loading')} }
-function stopLoad(id){ var b=document.getElementById(id); if(b){b.innerHTML=b.dataset.tx; b.classList.remove('loading')} }
+function showToast(msg){ var d=document.createElement('div'); d.className='toast'; d.setAttribute('role','status'); var icon=document.createElement('i'); icon.className='material-icons'; icon.textContent='info'; d.appendChild(icon); d.appendChild(document.createTextNode(String(msg))); document.getElementById('toast-container').appendChild(d); setTimeout(()=>d.remove(),4000); }
+function startLoad(id){ var b=document.getElementById(id); if(b){b.dataset.tx=b.innerText; b.innerHTML='<div class="spinner"></div>'; b.classList.add('loading'); b.disabled=true; b.setAttribute('aria-busy','true');} }
+function stopLoad(id){ var b=document.getElementById(id); if(b){b.innerHTML=b.dataset.tx; b.classList.remove('loading'); b.disabled=false; b.removeAttribute('aria-busy');} }
 
 function login(){
+  if (document.getElementById('btn-login').disabled) return;
   document.activeElement.blur();
   var u=document.getElementById('u').value.trim(), p=document.getElementById('p').value.trim();
   var isRemember = document.getElementById('chk-save').checked;
@@ -1039,6 +1098,16 @@ function login(){
       stopLoad('btn-login');
       if(r.success){ 
           USER=r; 
+          if (IS_FIREBASE) {
+              var storage = isRemember ? localStorage : sessionStorage;
+              var otherStorage = isRemember ? sessionStorage : localStorage;
+              storage.setItem(DB_KEY, JSON.stringify(r));
+              otherStorage.removeItem(DB_KEY);
+              window.VSPFirebase.clearLegacyAuth();
+              document.getElementById('p').value = '';
+              initApp();
+              return;
+          }
           if(isRemember) {
               localStorage.setItem(DB_KEY, JSON.stringify(r)); 
               localStorage.setItem('MY_SAVED_U', u); localStorage.setItem('MY_SAVED_P', p);
@@ -1053,7 +1122,10 @@ function login(){
 }
 
 function logout(){ 
-    localStorage.clear(); // HỦY DIỆT TOÀN BỘ RÁC CACHE THÁNG CŨ
+    if (IS_FIREBASE) { window.VSPFirebase.signOut(); window.VSPFirebase.clearLegacyAuth(); }
+    localStorage.removeItem(DB_KEY);
+    sessionStorage.removeItem(DB_KEY);
+    // Keep cached schedules and every pending offline attendance record.
     setCookieVal("CC_USER_DATA", "", -1); 
     location.reload(); 
 }
@@ -1089,7 +1161,7 @@ async function loadData(isRefreshing = false, localOnly = false) {
   try {
     var cachedText =
       localStorage.getItem(
-        "CACHE_SCH_" + USER.id
+        CACHE_PREFIX + "CACHE_SCH_" + USER.id
       );
 
     if (
@@ -1350,7 +1422,7 @@ async function loadData(isRefreshing = false, localOnly = false) {
       Array.isArray(response.list)
     ) {
       localStorage.setItem(
-        "CACHE_SCH_" + USER.id,
+        CACHE_PREFIX + "CACHE_SCH_" + USER.id,
         JSON.stringify(
           response.list
         )
@@ -1801,6 +1873,10 @@ function preCheck(
   button,
   shiftDate
 ) {
+  if (window.VSPFirebase && window.VSPFirebase.staging) {
+    showToast('Bản kiểm thử chỉ xem dữ liệu. Hãy chấm công trên ứng dụng đang sử dụng.');
+    return;
+  }
   if (IS_SUBMITTING) {
     showToast(
       "⏳ Hệ thống đang xử lý, vui lòng chờ..."
@@ -1861,6 +1937,10 @@ function preCheck(
 }
 
 async function cancelCurrentShift(caName, key, shiftDate) {
+  if (window.VSPFirebase && window.VSPFirebase.staging) {
+    showToast('Bản kiểm thử chưa mở nhận thao tác hủy ca.');
+    return;
+  }
   if (IS_SUBMITTING) {
     showToast("⏳ Hệ thống đang xử lý, vui lòng chờ...");
     return;
@@ -1991,6 +2071,10 @@ function unlockCurrentActionBox() {
   });
 }
 function promptFreeNote() {
+  if (window.VSPFirebase && window.VSPFirebase.staging) {
+    showToast('Bản kiểm thử chỉ xem dữ liệu. Hãy chấm công trên ứng dụng đang sử dụng.');
+    return;
+  }
   if (IS_SUBMITTING) {
     showToast(
       "⏳ Hệ thống đang xử lý, vui lòng chờ..."
@@ -2205,28 +2289,29 @@ async function processNativePhoto(event) {
 // --- 1. HÀM VẼ GIAO DIỆN LỊCH SỬ (TÁCH RA ĐỂ DÙNG CHUNG CHO CẢ ONLINE VÀ OFFLINE) ---
 function renderHist(d) {
     var h='', lastD=''; 
+    var stats = d && d.stats || {single:0,double:0,total_done:0,details:{single:[],double:[]}};
+    document.getElementById('st-single').innerText = stats.single || 0;
+    document.getElementById('st-double').innerText = stats.double || 0;
+    document.getElementById('st-total-done').innerText = stats.total_done || 0;
+    document.getElementById('st-single').parentElement.onclick = function(){ viewStatDetail("CHI TIẾT CA ĐƠN", stats.details && stats.details.single || []); };
+    document.getElementById('st-double').parentElement.onclick = function(){ viewStatDetail("CHI TIẾT CA ĐÔI", stats.details && stats.details.double || []); };
     if(!d || !d.list || d.list.length === 0) {
         document.getElementById('hist-list').innerHTML = '<div style="text-align:center;padding:20px;color:#999">Không có dữ liệu tháng này</div>';
         return;
     }
     d.list.forEach(r=>{ 
-        if(r.ngay!==lastD){ lastD=r.ngay; h+=`<div style="font-weight:bold;color:#64748b;margin:15px 0 5px 0;font-size:13px">${lastD}</div>`; } 
-        var cl = r.trangthai.includes('✅') ? '#10b981' : '#ef4444'; 
-        h+=`<div class="ca-card" style="padding:12px;margin-bottom:8px;border-left:4px solid ${cl}"><div style="display:flex;justify-content:space-between"><span style="font-weight:bold">${r.ca} <span style="font-weight:normal;font-size:12px">(${r.loai})</span></span><span style="font-size:12px;font-weight:bold">${r.gio}</span></div><div style="font-size:11px;color:${cl};margin-top:2px">${r.trangthai}</div></div>`; 
+        if(r.ngay!==lastD){ lastD=r.ngay; h+=`<div style="font-weight:bold;color:#64748b;margin:15px 0 5px 0;font-size:13px">${escapeHtml(lastD)}</div>`; }
+        var cl = String(r.trangthai || '').includes('✅') ? '#10b981' : '#ef4444';
+        h+=`<div class="ca-card" style="padding:12px;margin-bottom:8px;border-left:4px solid ${cl}"><div style="display:flex;justify-content:space-between"><span style="font-weight:bold">${escapeHtml(r.ca)} <span style="font-weight:normal;font-size:12px">(${escapeHtml(r.loai)})</span></span><span style="font-size:12px;font-weight:bold">${escapeHtml(r.gio)}</span></div><div style="font-size:11px;color:${cl};margin-top:2px">${escapeHtml(r.trangthai)}</div></div>`;
     }); 
     document.getElementById('hist-list').innerHTML = h; 
-    document.getElementById('st-single').innerText = d.stats.single; 
-    document.getElementById('st-double').innerText = d.stats.double; 
-    document.getElementById('st-total-done').innerText = d.stats.total_done; 
-    document.getElementById('st-single').parentElement.onclick = function(){ viewStatDetail("CHI TIẾT CA ĐƠN", d.stats.details.single); };
-    document.getElementById('st-double').parentElement.onclick = function(){ viewStatDetail("CHI TIẾT CA ĐÔI", d.stats.details.double); };
 }
 
 // --- 2. HÀM TẢI LỊCH SỬ CẢI TIẾN (CÓ CACHE SIÊU TỐC & OFFLINE TỰ ĐỘNG) ---
 // --- 2. HÀM TẢI LỊCH SỬ CẢI TIẾN (CÓ BẢO HIỂM CHỐNG ĐƠ + OFFLINE TỰ ĐỘNG) ---
 async function loadHist(){ 
     var sel = document.getElementById('hist-month'); var mStr = sel ? sel.value : "";
-    var cacheKey = 'HIST_CACHE_' + USER.id + '_' + mStr;
+    var cacheKey = CACHE_PREFIX + 'HIST_CACHE_' + USER.id + '_' + mStr;
     var histContainer = document.getElementById('hist-list');
 
     // KHÓA NÚT CHỌN THÁNG LẠI CHỐNG NHÂN VIÊN ẤN LIÊN TỤC GÂY ĐƠ MÁY
@@ -2445,6 +2530,7 @@ document.addEventListener("visibilitychange", function() {
 
 // Khi điện thoại có mạng trở lại, chủ động đồng bộ và tải lịch mới.
 window.addEventListener("online", function() {
+    restoreRememberedLegacyLogin();
     showToast("🌐 Đã có mạng. Hệ thống đang kiểm tra dữ liệu chờ đồng bộ.");
     updateOfflineReadiness();
     syncOfflineData();
@@ -2462,11 +2548,13 @@ setInterval(function() {
 }, 2 * 60 * 1000);
 
 async function syncOfflineData() {
+  if (window.VSPFirebase && window.VSPFirebase.staging) return;
+  if (!USER || (IS_FIREBASE && !window.VSPFirebase.hasSession())) return;
   if (SYNCING || !navigator.onLine) return;
   SYNCING = true;
 
   try {
-    var combined = await getAllQueueItems();
+    var combined = (await getAllQueueItems()).filter(queueItemBelongsToCurrentUser);
     if (combined.length === 0) return;
 
     var actionOrder = { "VÀO": 1, "RA": 2, "HỦY": 3 };
@@ -2555,7 +2643,7 @@ if ("serviceWorker" in navigator) {
 
   window.addEventListener("load", function() {
     navigator.serviceWorker
-      .register("./service-worker.js?v=62", { updateViaCache: "none" })
+      .register("./service-worker.js?v=66", { updateViaCache: "none" })
       .then(function(registration) {
         // Chủ động kiểm tra service worker mới mỗi lần mở ứng dụng.
         registration.update();
