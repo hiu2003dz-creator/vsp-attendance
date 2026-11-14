@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script src="./firebase-config.js"></script>
-<script src="./admin-client.js"></script>
+<script src="./admin-client.js?v=20261114-login"></script>
 <base target="_self">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="mobile-web-app-capable" content="yes">
@@ -105,8 +105,8 @@ input:focus,select:focus{outline:2px solid #4f46e5;outline-offset:2px}
   <div class="login-card">
     <div class="login-logo"><i class="material-icons">admin_panel_settings</i></div>
     <h2 style="margin:0 0 5px 0;color:#111827">Quản Trị Viên</h2>
-    <div class="inp-group"><input id="adm-u" class="inp-field" placeholder="Tên đăng nhập"></div>
-    <div class="inp-group"><input id="adm-p" type="password" class="inp-field" placeholder="Mật khẩu"></div>
+    <div class="inp-group"><input id="adm-u" class="inp-field" placeholder="Tên đăng nhập" aria-label="Tên đăng nhập quản trị" autocomplete="username" autocapitalize="none" spellcheck="false" onkeydown="if(event.key==='Enter'){event.preventDefault();doLogin();}"></div>
+    <div class="inp-group" style="position:relative"><input id="adm-p" type="password" class="inp-field" placeholder="Mật khẩu" aria-label="Mật khẩu quản trị" autocomplete="current-password" enterkeyhint="go" style="padding-right:76px" onkeydown="if(event.key==='Enter'){event.preventDefault();doLogin();}"><button type="button" aria-controls="adm-p" aria-pressed="false" aria-label="Hiện mật khẩu" onclick="toggleAdminPassword(this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);padding:8px;border:0;border-radius:6px;background:transparent;color:#475569;cursor:pointer">Hiện</button></div>
     <button class="btn" onclick="doLogin()" id="btn-login-submit" style="width:100%;padding:14px;font-size:16px">ĐĂNG NHẬP</button>
   </div>
 </div>
@@ -390,6 +390,14 @@ function startLoad(id){ var b=document.getElementById(id); if(b){b.dataset.tx=b.
 function stopLoad(id){ var b=document.getElementById(id); if(b){b.innerHTML=b.dataset.tx; b.classList.remove('loading');} }
 
 
+function toggleAdminPassword(button){
+  var field=document.getElementById('adm-p');
+  var visible=field.type==='password';
+  field.type=visible?'text':'password';
+  button.textContent=visible?'Ẩn':'Hiện';
+  button.setAttribute('aria-pressed',String(visible));
+  button.setAttribute('aria-label',visible?'Ẩn mật khẩu':'Hiện mật khẩu');
+}
 function doLogin(){
   var u=document.getElementById('adm-u').value.trim();
   var p=document.getElementById('adm-p').value.trim();
@@ -407,10 +415,10 @@ function doLogin(){
       showToast("Đăng nhập thành công!");
       VSPAdmin.rpc.withSuccessHandler(l=>{VSP_LOCATIONS=l.map(x=>x[0]);loadLogs();}).getLocationsList();
     } else {
-      showToast("Sai tài khoản!","error");
+      showToast("Sai tài khoản hoặc mật khẩu quản trị.","error");
     }
-  }).withFailureHandler(function(){
-    btn.innerText=old; btn.disabled=false; showToast("Lỗi kết nối!","error");
+  }).withFailureHandler(function(error){
+    btn.innerText=old; btn.disabled=false; showToast(error && error.message ? error.message : "Không kết nối được máy chủ quản trị. Vui lòng thử lại.","error");
   }).checkAdmin(u,p);
 }
 function logout(){ VSPAdmin.signOut(); location.reload(); }
