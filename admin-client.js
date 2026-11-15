@@ -1,10 +1,10 @@
 (function(){
  'use strict';
  const config=window.VSP_FIREBASE_CONFIG,key='VSP_ADMIN_SESSION_'+config.projectId;
- let session=null,refreshing=null;const photos=new Map();
+ let session=null,refreshing=null,reportUrl=null;const photos=new Map();
  try{session=JSON.parse(sessionStorage.getItem(key)||'null');}catch{}
  function save(value){session=value;sessionStorage.setItem(key,JSON.stringify(value));}
- function signOut(){session=null;sessionStorage.removeItem(key);for(const url of photos.values())URL.revokeObjectURL(url);photos.clear();}
+ function signOut(){session=null;sessionStorage.removeItem(key);for(const url of photos.values())URL.revokeObjectURL(url);photos.clear();if(reportUrl)URL.revokeObjectURL(reportUrl);reportUrl=null;}
  function requestError(message,kind,status,code){const error=new Error(message);error.kind=kind;error.status=status||0;error.code=code||'';return error;}
  async function post(url,data,headers={}){
   let response;
@@ -44,7 +44,7 @@
  async function invoke(action,args){
   if(action==='checkAdmin')return login(...args);
   const result=await call(action,args);
-  if(action==='exportReport'&&result.base64){const bytes=Uint8Array.from(atob(result.base64),c=>c.charCodeAt(0));const url=URL.createObjectURL(new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));setTimeout(()=>URL.revokeObjectURL(url),300000);return {...result,downloadUrl:url};}
+  if(action==='exportReport'&&result.base64){if(!session)throw new Error('Vui lòng đăng nhập lại để tải báo cáo.');const bytes=Uint8Array.from(atob(result.base64),c=>c.charCodeAt(0));const url=URL.createObjectURL(new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));if(reportUrl)URL.revokeObjectURL(reportUrl);reportUrl=url;return {...result,downloadUrl:url};}
   if(['getAdminStats','getAllStaffWithStats','getAllSchedules','getTodayMonitorData','getAdminStaffDetails','getWeeklyMatrix','getLocationsList'].includes(action))return safe(result);
   return result;
  }

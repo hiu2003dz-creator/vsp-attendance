@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script src="./firebase-config.js"></script>
-<script src="./admin-client.js?v=20261114-login"></script>
+<script src="./admin-client.js?v=20261115-payroll"></script>
 <base target="_self">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="mobile-web-app-capable" content="yes">
@@ -338,10 +338,10 @@ input:focus,select:focus{outline:2px solid #4f46e5;outline-offset:2px}
   </div>
 
   <div id="tab-report" class="section">
-    <div class="top-bar"><div class="page-title">📊 Xuất báo cáo</div></div>
+    <div class="top-bar"><div class="page-title">📊 Xuất bảng lương</div></div>
     <div class="card">
-       <div class="row-inputs"><select id="rpt-nv" class="inp-field col"></select><input type="month" id="rpt-m" class="inp-field col"><button class="btn" id="btn-ex" onclick="doReport()">XUẤT EXCEL</button></div>
-       <div id="rpt-res" style="margin-top:10px"></div>
+       <div class="row-inputs"><select id="rpt-nv" class="inp-field col"></select><input type="month" id="rpt-m" class="inp-field col"><button class="btn" id="btn-ex" onclick="doReport()">XUẤT BẢNG LƯƠNG EXCEL</button></div>
+       <p style="font-size:13px;color:#64748b;line-height:1.6">Mỗi giáo viên một tab, có tổng số ca và ô nhập đơn giá/khoản trừ để tính lương. Có thể mở file bằng Excel hoặc nhập vào Google Sheets.</p><div id="rpt-res" style="margin-top:10px" aria-live="polite"></div>
        <hr style="margin:20px 0;border:0;border-top:1px dashed #ccc">
        <p>Lịch sử được giữ trên Firebase. Thao tác xóa từng lượt công có bản sao trong nhật ký quản trị.</p>
     </div>
@@ -771,224 +771,31 @@ function saveMaster(){
 }
 
 function doReport() {
-  var staffId =
-    document.getElementById(
-      "rpt-nv"
-    ).value;
-
-  var month =
-    document.getElementById(
-      "rpt-m"
-    ).value;
-
-  var button =
-    document.getElementById(
-      "btn-ex"
-    );
-
-  if (!staffId) {
-    showToast(
-      "Bạn chưa chọn nhân viên.",
-      "error"
-    );
-    return;
-  }
-
-  if (
-    !/^\d{4}-(0[1-9]|1[0-2])$/.test(
-      month
-    )
-  ) {
-    showToast(
-      "Bạn chưa chọn tháng hợp lệ.",
-      "error"
-    );
-    return;
-  }
-
-  if (
-    button &&
-    button.dataset.reportBusy ===
-      "true"
-  ) {
-    showToast(
-      "Báo cáo đang được tạo, vui lòng chờ.",
-      "error"
-    );
-    return;
-  }
-
-  var popup = null;
-
-  try {
-    popup = window.open(
-      "",
-      "_blank"
-    );
-
-    if (popup) {
-      popup.document.write(
-        "<!doctype html>" +
-        "<html><head><meta charset='utf-8'>" +
-        "<title>Đang tạo báo cáo</title></head>" +
-        "<body style='font-family:Arial;text-align:center;padding:50px'>" +
-        "<h3>Đang tạo file Excel...</h3>" +
-        "<p>Vui lòng giữ cửa sổ này mở.</p>" +
-        "</body></html>"
-      );
-
-      popup.document.close();
-    }
-  } catch (popupError) {
-    popup = null;
-  }
-
-  if (button) {
-    button.dataset.reportBusy =
-      "true";
-    button.disabled = true;
-  }
-
-  startLoad("btn-ex");
-
-  var finished = false;
-
-  var watchdog = setTimeout(
-    function() {
-      if (finished) return;
-
-      finished = true;
-
-      stopLoad("btn-ex");
-
-      if (button) {
-        button.dataset.reportBusy =
-          "false";
-        button.disabled = false;
-      }
-
-      if (
-        popup &&
-        !popup.closed
-      ) {
-        popup.close();
-      }
-
-      showToast(
-        "Quá thời gian tạo báo cáo. Vui lòng thử lại hoặc kiểm tra kết nối mạng.",
-        "error"
-      );
-    },
-    330000
-  );
-
-  function finishReportUi() {
-    clearTimeout(watchdog);
-    stopLoad("btn-ex");
-
-    if (button) {
-      button.dataset.reportBusy =
-        "false";
-      button.disabled = false;
-    }
-  }
-
-  VSPAdmin.rpc
-    .withSuccessHandler(
-      function(result) {
-        if (finished) return;
-        finished = true;
-
-        finishReportUi();
-
-        if (
-          result &&
-          result.success
-        ) {
-          var targetUrl =
-            result.downloadUrl ||
-            result.url;
-
-          if (
-            popup &&
-            !popup.closed
-          ) {
-            popup.location.replace(
-              targetUrl
-            );
-          } else {
-            var openedReport =
-              window.open(
-                targetUrl,
-                "_blank"
-              );
-
-            if (!openedReport) {
-              window.location.href =
-                targetUrl;
-            }
-          }
-
-          showToast(
-            "Đã tạo báo cáo: " +
-            (result.sessionCount || 0) +
-            " ca, " +
-            (result.staffCount || 0) +
-            " nhân viên."
-          );
-
-          return;
-        }
-
-        if (
-          popup &&
-          !popup.closed
-        ) {
-          popup.close();
-        }
-
-        showToast(
-          result && result.msg
-            ? result.msg
-            : "Không tạo được báo cáo.",
-          "error"
-        );
-      }
-    )
-    .withFailureHandler(
-      function(error) {
-        if (finished) return;
-        finished = true;
-
-        finishReportUi();
-
-        if (
-          popup &&
-          !popup.closed
-        ) {
-          popup.close();
-        }
-
-        var message =
-          error &&
-          error.message
-            ? error.message
-            : String(
-                error ||
-                "Lỗi không xác định"
-              );
-
-        showToast(
-          "Lỗi tạo báo cáo: " +
-          message,
-          "error"
-        );
-      }
-    )
-    .exportReport(
-      staffId,
-      month
-    );
+  var staffId=document.getElementById('rpt-nv').value;
+  var month=document.getElementById('rpt-m').value;
+  var button=document.getElementById('btn-ex');
+  var resultBox=document.getElementById('rpt-res');
+  if(!staffId){showToast('Bạn chưa chọn giáo viên.','error');return;}
+  if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)){showToast('Bạn chưa chọn tháng hợp lệ.','error');return;}
+  if(button.dataset.reportBusy==='true')return;
+  button.dataset.reportBusy='true';button.disabled=true;startLoad('btn-ex');
+  resultBox.replaceChildren();
+  var status=document.createElement('p');status.setAttribute('role','status');status.textContent='Đang tổng hợp bảng lương theo từng giáo viên…';resultBox.appendChild(status);
+  var finished=false;
+  var timer=setTimeout(function(){if(finished)return;finished=true;finish();status.textContent='Chưa nhận được báo cáo. Vui lòng thử lại sau.';showToast('Quá thời gian tạo báo cáo. Vui lòng thử lại.','error');},115000);
+  function finish(){clearTimeout(timer);button.dataset.reportBusy='false';button.disabled=false;stopLoad('btn-ex');}
+  function failed(error){if(finished)return;finished=true;finish();var message=error&&error.message?error.message:'Không tạo được báo cáo.';status.textContent=message;showToast(message,'error');}
+  VSPAdmin.rpc.withSuccessHandler(function(result){
+    if(finished)return;
+    if(!result||result.success!==true||!result.downloadUrl){failed({message:result&&result.msg?result.msg:'Không tạo được báo cáo.'});return;}
+    finished=true;finish();resultBox.replaceChildren();
+    var title=document.createElement('p');title.style.fontWeight='700';title.setAttribute('role','status');
+    title.textContent='Đã tạo bảng lương: '+(result.staffCount||0)+' giáo viên, '+(result.totalUnits===undefined?(result.sessionCount||0):result.totalUnits)+' ca.';resultBox.appendChild(title);
+    var link=document.createElement('a');link.className='btn';link.style.display='inline-flex';link.href=result.downloadUrl;link.download=result.fileName||('Bang_Luong_'+month+'.xlsx');link.textContent='⬇ Tải '+link.download;resultBox.appendChild(link);
+    var help=document.createElement('p');help.style.cssText='font-size:13px;color:#64748b;line-height:1.6';
+    help.textContent='Mỗi giáo viên có một tab. Nhập đơn giá và khoản trừ vào ô màu xanh nhạt; tổng lương tự tính. File mở được bằng Excel hoặc nhập vào Google Sheets.';resultBox.appendChild(help);
+    link.click();showToast('Đã tạo xong bảng lương.');
+  }).withFailureHandler(failed).exportReport(staffId,month);
 }
 
 function parseTime(t){try{var p=t.split(' '),hm=p[0].split(':'),d=p[1].split('/');return new Date(d[2],d[1]-1,d[0],hm[0],hm[1]).getTime()}catch(e){return 0}}
